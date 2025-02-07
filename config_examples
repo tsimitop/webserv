@@ -1,0 +1,110 @@
+server {
+    listen 80;
+    server_name example.com www.example.com;
+    
+    error_page 404 /errors/404.html;
+    error_page 500 502 503 504 /errors/50x.html;
+    
+    client_max_body_size 10M;
+    
+    location / {
+        root /var/www/html;
+        index index.html;
+        allow_methods GET POST;
+    }
+    
+    location /uploads {
+        root /var/www/data;
+        allow_methods POST;
+        upload_store /var/www/uploads;
+    }
+    
+    location /redirect {
+        return 301 https://www.redirected.com;
+    }
+    
+    location /files {
+        root /var/www/files;
+        autoindex on;
+    }
+    
+    location /cgi-bin {
+        root /var/www/cgi-bin;
+        cgi_pass /usr/bin/python3;
+        cgi_extension .py;
+    }
+}
+
+________________________EXAMPLE WITH COMMENTS________________________
+
+server {
+    # Listen on ports 80 and 8080
+    listen 80;
+    listen 8080;
+    
+    # Define server names
+    server_name example.com www.example.com;
+    
+    # Define custom error pages
+    error_page 404 /errors/404.html;
+    error_page 500 502 503 504 /errors/50x.html;
+    
+    # Set maximum client body size
+    client_max_body_size 10M;
+    
+    # Default location block
+    location / {
+        # Root directory for serving files
+        root /var/www/html;
+        # Default index file
+        index index.html;
+        # Allowed HTTP methods
+        allow_methods GET POST;
+    }
+    
+    # Location block for file uploads
+    location /uploads {
+        root /var/www/data;
+        allow_methods POST;
+        # Directory to store uploaded files
+        upload_store /var/www/uploads;
+    }
+    
+    # Redirect requests to another domain
+    location /redirect {
+        return 301 https://www.redirected.com;
+    }
+    
+    # Enable directory listing for /files
+    location /files {
+        root /var/www/files;
+        autoindex on;
+    }
+    
+    # CGI execution for Python scripts
+    location /cgi-bin {
+        root /var/www/cgi-bin;
+        # Path to the CGI interpreter
+        cgi_pass /usr/bin/python3;
+        # Define CGI file extension
+        cgi_extension .py;
+    }
+}
+
+________________________multiple servers and ports________________________
+->can two servers listen to the same port?
+http {
+    server {
+        listen 7898;
+        listen 6767;
+
+        server_name example1.com;
+    }
+
+    server {
+        listen 2332;
+        listen 4445;
+
+        server_name example2.com;
+    }
+}
