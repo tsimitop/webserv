@@ -54,6 +54,8 @@ public:
 	void	parseLine(std::string line);
 	void	extractPortFromHost();
 	bool	isValid();
+	bool	validatePost();
+	// bool	validateDelete();
 
 	// Debug
 	void	printHeaders(void) const;

@@ -144,6 +144,87 @@ void	HttpRequest::readRequest(std::string requestLine)
 	}
 }
 
+static bool isOnlyWhitespace(const std::string& str)
+{
+	for (char c : str)
+	{
+		if (!std::isspace(static_cast<unsigned char>(c)))
+			return false;
+	}
+	return true;
+}
+
+static bool isOnlyDigit(const std::string& str)
+{
+	int i = 0;
+	for (char c : str)
+	{
+		if (i == 0)
+		{
+			if (std::isspace(static_cast<unsigned char>(c)))
+			continue;
+		}
+		if (!std::isdigit(static_cast<unsigned char>(c)))
+			return false;
+		i++;
+	}
+	return true;
+}
+
+// bool	HttpRequest::validateDelete(void)
+// {
+	// to be coded only if Authorization is found to be required or we implement cookies
+// }
+
+// RFC 9110: A user agent SHOULD NOT send a Content-Length header field when the request
+// message does not contain content and the method semantics do not anticipate such data.
+// https://httpwg.org/specs/rfc9110.html#field.content-length
+bool	HttpRequest::validatePost(void)
+{
+	auto it = _headers.begin();
+	int	contType = 0;
+	int	contLength = 0;
+
+	for (it = _headers.begin(); it != _headers.end(); it++)
+	{
+		if (it->first == "Content-Type")
+		{
+			// std::cout << "'" << it->first << "' " << "'" << it->second << "'\n";
+			if (it->second.empty() || isOnlyWhitespace(it->second)) // else make sure it's acceptable input
+			{
+				std::cout << RED << "Content-Type isn't specified" << QUIT << std::endl;
+				return (false);
+			}
+			contType++;
+		}
+		if (it->first == "Content-Length") // else make sure it's acceptable input
+		{
+			if (it->second.empty() || isOnlyWhitespace(it->second))
+			{
+				std::cout << RED << "Content-Length isn't specified" << QUIT << std::endl;
+				return (false);
+			}
+			try
+			{
+				if (stoi(it->second) < 0 || !isOnlyDigit(it->second))
+				{
+					std::cout << RED << "Content-Length is not acceptable: " << it->second << QUIT << std::endl;
+					return (false);
+				}
+			}
+			catch (const std::invalid_argument)
+			{
+				std::cout << RED << "Content-Length specifier is not an int" << QUIT << std::endl;
+				return (false);
+			}
+			contLength++;
+		}
+	}
+	if (contType == 1 && contLength == 1)
+		return (true);
+	return (false);
+}
+
 bool	HttpRequest::isValid()
 {
 	if (_method == "UKNOWN" || _url.empty() || _version.empty())
@@ -165,6 +246,16 @@ bool	HttpRequest::isValid()
 		std::cout << RED << "Didn't find Host" << QUIT << std::endl;
 		return (false);
 	}
+	if (_method == "POST")
+	{
+		if (!validatePost())
+		{
+			std::cout << RED << "Post could not be validated" << QUIT << std::endl;
+			return (1);
+		}
+	}
+	// if (_method == "DELETE") //NOT YET I THINK
+	// 	if (!validateDelete())
 	return (true);
 }
 
@@ -202,19 +293,19 @@ void	HttpRequest::extractPortFromHost()
 void	HttpRequest::printRequest(void) const
 {
 	std::cout << MAGENTA << "Printing request: " << std::endl;
-    std::cout << _httpRequest << std::endl;
-    std::cout << "method: "<< _method << std::endl;
-    std::cout << "url: "<< _url << std::endl;
-    std::cout << "version: "<< _version << std::endl;
-    std::cout << "PORT: "<< _port << QUIT << std::endl;
+	std::cout << _httpRequest << std::endl;
+	std::cout << "method:\t\t"<< _method << std::endl;
+	std::cout << "url:\t\t"<< _url << std::endl;
+	std::cout << "version:\t"<< _version << std::endl;
+	std::cout << "PORT:\t\t"<< _port << QUIT << std::endl;
 	std::cout << std::endl;
 }
 
 void	HttpRequest::printHeaders(void) const
 {
 	std::cout << CYAN << "Printing headers: " << std::endl;
-    for (const auto& pair : _headers)
-        std::cout << pair.first << ": " << pair.second << std::endl;;
+	for (const auto& pair : _headers)
+		std::cout << pair.first << ":\t" << pair.second << std::endl;;
 	std::cout << QUIT << std::endl;
 }
 
