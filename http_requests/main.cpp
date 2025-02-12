@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 
 	// std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
 	std::string	req = "DELETE /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
-	// std::string	req = "POST /api/user HTTP/1.1\r\nHost: www.example.com\r\nContent-Type: application/json\r\nContent-Length: 3b\r\nAuthorization: Bearer <your_token>\r\n\r\n";
+	// std::string	req = "POST /api/user HTTP/1.1\r\nHost: www.example.com\r\nContent-Type: application/json\r\nContent-Length: 33\r\nAuthorization: Bearer <your_token>\r\n\r\n";
 	request.readRequest(req);
 	request.extractPortFromHost(); //verify it's the expected behaviour
 	request.printRequest();
