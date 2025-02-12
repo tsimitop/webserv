@@ -39,6 +39,9 @@ std::string HttpRequest::getUrl(void) const
 std::string HttpRequest::getVersion(void) const
 {return (_version);}
 
+int HttpRequest::getPort(void) const
+{return (_port);}
+
 // Setters
 void HttpRequest::setHttpRequest(std::string req)
 {_httpRequest = req;}
@@ -75,6 +78,7 @@ void	HttpRequest::parseRequestLine(std::string& line)
 	std::string				url;
 	std::string				version;
 
+// Request method
 	_httpRequest = line;
 	firstSpace = line.find(' ');
 	method = line.substr(0, firstSpace);
@@ -83,6 +87,7 @@ void	HttpRequest::parseRequestLine(std::string& line)
 	else
 		_method = "UKNOWN";
 	
+// Url
 	line = removeFirstWord(line);
 	firstSpace = line.find(' ');
 	if (firstSpace == std::string::npos)
@@ -92,12 +97,11 @@ void	HttpRequest::parseRequestLine(std::string& line)
 	}
 	else
 		_url = line.substr(0, firstSpace);
+
+// HTTP version
 	version = removeFirstWord(line);
-	// version = line.substr(0, std::string::npos);
 	if (version.size() == 0)
-	{
 		std::cout << "no version provided";
-	}
 	else
 		_version = version;
 
@@ -164,6 +168,36 @@ bool	HttpRequest::isValid()
 	return (true);
 }
 
+void	HttpRequest::extractPortFromHost()
+{
+	auto	it = _headers.begin();
+	for (it = _headers.begin(); it != _headers.end(); it++)
+		if (it->first == "Host")
+			break;
+
+	std::string	host = it->second;
+	auto		pos = host.find(':');
+	if (pos == std::string::npos)
+	{
+		_port = 80;
+		return ;
+	}
+	std::string	port = it->second.substr(pos + 1, std::string::npos);
+	int			portNbr;
+	try {
+		portNbr = stoi(port);
+	}
+	catch (const std::invalid_argument) {
+		std::cout << RED << "Exception thrown: Couldn't convert port to int" << QUIT << std::endl;
+		return;
+	}
+
+	if (portNbr > 0 && portNbr < 65536) // NOT SURE ABOUT THIS CHECK!!!
+		_port = portNbr;
+	else
+		std::cout << RED << "Consider choosing another port instead of PORT:" << portNbr << QUIT << std::endl;
+}
+
 // Debug
 void	HttpRequest::printRequest(void) const
 {
@@ -171,7 +205,8 @@ void	HttpRequest::printRequest(void) const
     std::cout << _httpRequest << std::endl;
     std::cout << "method: "<< _method << std::endl;
     std::cout << "url: "<< _url << std::endl;
-    std::cout << "version: "<< _version << QUIT << std::endl;
+    std::cout << "version: "<< _version << std::endl;
+    std::cout << "PORT: "<< _port << QUIT << std::endl;
 	std::cout << std::endl;
 }
 

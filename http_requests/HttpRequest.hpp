@@ -2,7 +2,9 @@
 #include <iostream>
 #include <algorithm>
 #include <unordered_map>
+#include <string>
 #include <fstream>
+// #include <stoi>
 // #include <getline>
 
 #define RED "\033[31m"
@@ -21,6 +23,7 @@ private:
 	std::string										_method;
 	std::string										_url;
 	std::string										_version;
+	int												_port;
 public:
 	// Orthodox Canonical Class Form
 	HttpRequest();
@@ -34,9 +37,10 @@ public:
 	// Getters
 	std::unordered_map<std::string, std::string>	getHeaders(void) const;
 	std::string										getHttpRequest(void) const;
-	std::string 									getMethod(void) const;
-	std::string 									getUrl(void) const;
-	std::string 									getVersion(void) const;
+	std::string										getMethod(void) const;
+	std::string										getUrl(void) const;
+	std::string										getVersion(void) const;
+	int												getPort(void) const;
 
 	// Setters
 	void	setHttpRequest(std::string req);
@@ -48,6 +52,7 @@ public:
 	void	readRequest(std::string requestLine);
 	void	parseRequestLine(std::string& line);
 	void	parseLine(std::string line);
+	void	extractPortFromHost();
 	bool	isValid();
 
 	// Debug

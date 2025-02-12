@@ -1,5 +1,3 @@
-#include <iostream>
-#include <string>
 #include "HttpRequest.hpp"
 
 int main(int argc, char **argv)
@@ -9,8 +7,9 @@ int main(int argc, char **argv)
 	(void)argc;
 	(void)argv;
 
-	std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com\r\nConnection: keep-alive\r\n\r\n";
+	std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
 	request.readRequest(req);
+	request.extractPortFromHost();
 	request.printRequest();
 	request.printHeaders();
 	if (!request.isValid())
