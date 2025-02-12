@@ -57,7 +57,7 @@ static std::string removeFirstWord(const std::string &input)
 {
 	std::string::size_type firstSpace = input.find(' ');
 	if (firstSpace == std::string::npos)
-		return "";
+		return (input);
 	return (input.substr(firstSpace + 1, std::string::npos));
 }
 
@@ -74,13 +74,6 @@ void	HttpRequest::parseRequestLine(std::string& line)
 	std::string				method;
 	std::string				url;
 	std::string				version;
-	
-	if (line.find("\r\n") == std::string::npos)
-	{
-		std::cout << "Didn't find \\r\\n in : " << line << std::endl;
-		//throw exeption
-		return ;
-	}
 
 	_httpRequest = line;
 	firstSpace = line.find(' ');
@@ -99,8 +92,8 @@ void	HttpRequest::parseRequestLine(std::string& line)
 	}
 	else
 		_url = line.substr(0, firstSpace);
-	line = removeFirstWord(line);
-	version = line.substr(0, line.find("\r\n"));
+	version = removeFirstWord(line);
+	// version = line.substr(0, std::string::npos);
 	if (version.size() == 0)
 	{
 		std::cout << "no version provided";
@@ -113,12 +106,6 @@ void	HttpRequest::parseRequestLine(std::string& line)
 void	HttpRequest::parseLine(std::string line)
 {
 	std::string::size_type	colonPos;
-	if (line.find("\r\n") == std::string::npos) //maybe remove +2 from previous function
-	{
-		std::cout << RED << "Didn't find \\r\\n in : " << line << QUIT  << std::endl;
-		//throw exeption
-		return ;
-	}
 	colonPos = line.find(':');
 	if (colonPos != std::string::npos)
 	{
@@ -135,28 +122,34 @@ void	HttpRequest::parseLine(std::string line)
 
 void	HttpRequest::readRequest(std::string requestLine)
 {
-	std::string	line = requestLine.substr(0, requestLine.find("\r\n") + 2);
+	std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
 	if (!line.empty())
 		parseRequestLine(line);
 
 	requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-	line = requestLine.substr(0, requestLine.find("\r\n") + 2);
+// std::cout << "requestLine: " << requestLine << std::endl;
+	line = requestLine.substr(0, requestLine.find("\r\n"));
+// std::cout << "line: " << line << std::endl;
 	while (!line.empty())
 	{
 		parseLine(line);
 		requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-		line = requestLine.substr(0, requestLine.find("\r\n") + 2);
+// std::cout << "requestLine: " << requestLine << std::endl;
+		line = requestLine.substr(0, requestLine.find("\r\n"));
+// std::cout << "line: " << line << std::endl;
 	}
 }
 
 bool	HttpRequest::isValid()
 {
-	if (_method == "UNNOWN" || _version.empty())
+	if (_method == "UKNOWN" || _url.empty() || _version.empty())
 	{
-		if (_method == "UNNOWN")
-			std::cout << RED << "Can't handle uknown method" << QUIT << std::endl;
+		if (_method == "UKNOWN")
+			std::cout << RED << "Can't handle uknown method->400 Bad Request" << QUIT << std::endl;
+		if (_url.empty())
+			std::cout << RED << "No url->server should be closed by foreign host" << QUIT << std::endl;
 		if (_version.empty())
-			std::cout << RED << "HTTP version requred" << QUIT << std::endl;
+			std::cout << RED << "No HTTP version->server should be close by foreign host" << QUIT << std::endl;
 		return (false);
 	}
 	auto it = _headers.begin();
@@ -186,6 +179,6 @@ void	HttpRequest::printHeaders(void) const
 {
 	std::cout << CYAN << "Printing headers: " << std::endl;
     for (const auto& pair : _headers)
-        std::cout << pair.first << ": " << pair.second;
+        std::cout << pair.first << ": " << pair.second << std::endl;;
 	std::cout << QUIT << std::endl;
 }
