@@ -5,6 +5,14 @@
 #include <fstream>
 // #include <getline>
 
+#define RED "\033[31m"
+#define GREEN "\033[32m"
+#define YELLOW "\033[33m"
+#define BLUE "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN "\033[36m"
+#define QUIT "\033[0m"
+
 class HttpRequest
 {
 private:
@@ -36,10 +44,13 @@ public:
 	void	setUrl(std::string url);
 	void	setVersion(std::string ver);
 
-	void	readRequest(std::ifstream&	requestFile);
+	// Parse
+	void	readRequest(std::string requestLine);
 	void	parseRequestLine(std::string& line);
 	void	parseLine(std::string line);
+	bool	isValid();
 
 	// Debug
 	void	printHeaders(void) const;
+	void	printRequest(void) const;
 };

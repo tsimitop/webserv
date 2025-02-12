@@ -2,133 +2,26 @@
 #include <string>
 #include "HttpRequest.hpp"
 
-std::string removeFirstWord(const std::string &input)
-{
-	std::string::size_type firstSpace = input.find(' ');
-	if (firstSpace == std::string::npos)
-		return "";
-	return (input.substr(firstSpace + 1));
-}
-
-std::string *parseRequest(std::string &httpRequest)
-{
-	std::string *parsedRequest = new std::string[3];
-	std::string get = "GET";
-	int		 compared;
-
-	compared = httpRequest.compare(0, 3, get);
-	if (compared == 0)
-	{
-		std::cout << "Request method is GET" << std::endl;
-		parsedRequest[0] = "GET";
-	}
-	else
-		parsedRequest[0] = "UNKNOWN";
-	httpRequest = removeFirstWord(httpRequest);
-
-	std::string::size_type firstSpace = httpRequest.find(' ');
-	std::string url;
-	if (firstSpace == std::string::npos)
-	{
-		std::cout << "no second word\n";
-		parsedRequest[1] = "";
-	}
-	else
-	{
-		url = httpRequest.substr(0, firstSpace);
-		parsedRequest[1] = url;
-	}
-	httpRequest = removeFirstWord(httpRequest);
-	firstSpace = httpRequest.find(' ');
-	std::string version;
-	version = httpRequest.substr(0, firstSpace);
-	parsedRequest[2] = version;
-	return (parsedRequest);
-}
-
 int main(int argc, char **argv)
 {
 	HttpRequest		request;
-	std::ifstream	infile(argv[1]);
 
-	if (argc != 2)
-	{
-		std::cout << "Wrong input\n";
-		return (1);
-	}
-	if (!infile)
-	{
-		std::cout << "unable to open file\n";
-		return (1);
-	}
+	(void)argc;
+	(void)argv;
 
-	request.readRequest(infile);
-	infile.close();
-// std::cout << request.getMethod() << std::endl;
+	std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com\r\nConnection: keep-alive\r\n\r\n";
+	request.readRequest(req);
+	request.printRequest();
 	request.printHeaders();
-	// std::string toParse = "GET /home/page HTTP/1.1\r\nHost: ramy.com\r\nContent-Length: 90\r\n";
+	if (!request.isValid())
+	{
+		std::cout << RED << "Error: Invalid Request" << QUIT << std::endl;
+		return (1);
+	}
 	return (0);
 }
 
 //____________________________________________________________________
-// #include <iostream>
-// #include <string>
-
-
-// std::string removeFirstWord(const std::string &input)
-// {
-// 	std::string::size_type firstSpace = input.find(' ');
-// 	if (firstSpace == std::string::npos)
-// 		return "";
-// 	return (input.substr(firstSpace + 1));
-// }
-
-// std::string *parseRequest(std::string &httpRequest)
-// {
-// 	std::string *parsedRequest = new std::string[3];
-// 	std::string get = "GET";
-// 	int		 compared;
-
-// 	compared = httpRequest.compare(0, 3, get);
-// 	if (compared == 0)
-// 	{
-// 		std::cout << "Request method is GET" << std::endl;
-// 		parsedRequest[0] = "GET";
-// 	}
-// 	else
-// 		parsedRequest[0] = "UNKNOWN";
-// 	httpRequest = removeFirstWord(httpRequest);
-
-// 	std::string::size_type firstSpace = httpRequest.find(' ');
-// 	std::string url;
-// 	if (firstSpace == std::string::npos)
-// 	{
-// 		std::cout << "no second word\n";
-// 		parsedRequest[1] = "";
-// 	}
-// 	else
-// 	{
-// 		url = httpRequest.substr(0, firstSpace);
-// 		parsedRequest[1] = url;
-// 	}
-// 	httpRequest = removeFirstWord(httpRequest);
-// 	firstSpace = httpRequest.find(' ');
-// 	std::string version;
-// 	version = httpRequest.substr(0, firstSpace);
-// 	parsedRequest[2] = version;
-// 	return (parsedRequest);
-// }
-
-// int main(void)
-// {
-// 	std::string toParse = "GET /home/page HTTP/1.1";
-// 	std::string *parsedRequest = parseRequest(toParse);
-// 	std::cout << parsedRequest[0] << std::endl;
-// 	std::cout << parsedRequest[1] << std::endl;
-// 	std::cout << parsedRequest[2] << std::endl;
-// 	delete [] parsedRequest;
-// 	return (0);
-// }
 
 // Name: HTTP Method = GET
 
