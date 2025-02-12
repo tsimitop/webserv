@@ -217,3 +217,27 @@ void	HttpRequest::printHeaders(void) const
         std::cout << pair.first << ": " << pair.second << std::endl;;
 	std::cout << QUIT << std::endl;
 }
+
+
+/*
+Mandatory Headers
+GET
+Host: example.com
+
+POST
+Host: example.com
+Content-Type: /text/plain
+Content-Length: 15
+
+also request body if needed ie
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+
+
+DELETE
+Host: example.com
+Authorization: Bearer <token>  (if required)
+Accept: application/json  (if required)
+*/

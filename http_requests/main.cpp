@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 
 	std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
 	request.readRequest(req);
-	request.extractPortFromHost();
+	request.extractPortFromHost(); //verify it's the expected behaviour
 	request.printRequest();
 	request.printHeaders();
 	if (!request.isValid())
