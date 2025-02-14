@@ -212,7 +212,7 @@ bool	HttpRequest::validatePost(void)
 					return (false);
 				}
 			}
-			catch (const std::invalid_argument)
+			catch (const std::invalid_argument& e)
 			{
 				std::cout << RED << "Content-Length specifier is not an int" << QUIT << std::endl;
 				return (false);
@@ -278,7 +278,7 @@ void	HttpRequest::extractPortFromHost()
 	try {
 		portNbr = stoi(port);
 	}
-	catch (const std::invalid_argument) {
+	catch (const std::invalid_argument& e) {
 		std::cout << RED << "Exception thrown: Couldn't convert port to int" << QUIT << std::endl;
 		return;
 	}
