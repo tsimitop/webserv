@@ -1,4 +1,4 @@
-#include "HttpRequest.hpp"
+#include "../../inc/http_requests/HttpRequest.hpp"
 
 // Orthodox Canonical Class Form
 HttpRequest::HttpRequest() : _httpRequest(""), _method(""), _url(""), _version("") {}
@@ -126,21 +126,29 @@ void	HttpRequest::parseLine(std::string line)
 
 void	HttpRequest::readRequest(std::string requestLine)
 {
-	std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
-	if (!line.empty())
-		parseRequestLine(line);
-
-	requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-// std::cout << "requestLine: " << requestLine << std::endl;
-	line = requestLine.substr(0, requestLine.find("\r\n"));
-// std::cout << "line: " << line << std::endl;
-	while (!line.empty())
+	try
 	{
-		parseLine(line);
+		std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
+		if (!line.empty())
+			parseRequestLine(line);
+
 		requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-// std::cout << "requestLine: " << requestLine << std::endl;
+	// std::cout << "requestLine: " << requestLine << std::endl;
 		line = requestLine.substr(0, requestLine.find("\r\n"));
-// std::cout << "line: " << line << std::endl;
+	// std::cout << "line: " << line << std::endl;
+		while (!line.empty())
+		{
+				parseLine(line);
+				requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
+		// std::cout << "requestLine: " << requestLine << std::endl;
+				line = requestLine.substr(0, requestLine.find("\r\n"));
+		// std::cout << "line: " << line << std::endl;
+		}
+	}
+	catch (const std::out_of_range& e)
+	{
+		std::cout << "Caught exception\n";
+		return ;
 	}
 }
 
