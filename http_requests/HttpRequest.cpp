@@ -266,6 +266,8 @@ void	HttpRequest::extractPortFromHost()
 		if (it->first == "Host")
 			break;
 
+	if (it == _headers.end())
+		return ;
 	std::string	host = it->second;
 	auto		pos = host.find(':');
 	if (pos == std::string::npos)
