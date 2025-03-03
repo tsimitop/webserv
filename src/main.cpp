@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: tsimitop <tsimitop@student.42heilbronn.    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/02/12 12:51:41 by daspring          #+#    #+#             */
-/*   Updated: 2025/02/14 21:10:23 by tsimitop         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include <cstdlib>
 #include "../inc/sockets/sockets.hpp"
 #include "../inc/http_requests/HttpRequest.hpp"
@@ -33,6 +21,8 @@ int	main(int argc, char** argv)
 	// request.printHeaders();
 	return EXIT_SUCCESS;
 }
+
+// GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n
 /*
 start_server();
 instantiate Socket object (?)

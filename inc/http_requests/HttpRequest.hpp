@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <unordered_map>
+#include <vector>
 #include <string>
 #include <fstream>
 // #include <stoi>
@@ -19,6 +20,8 @@ class HttpRequest
 {
 private:
 	std::unordered_map<std::string, std::string>	_headers;
+	std::vector<std::string>						_bodyVector; //for POST key1=value1&key2=value2&key3=value3 
+	std::string										_bodyComplete;
 	std::string										_httpRequest;
 	std::string										_method;
 	std::string										_url;
@@ -49,15 +52,20 @@ public:
 	void	setVersion(std::string ver);
 
 	// Parse
-	void	readRequest(std::string requestLine);
+	void	readRequest(std::string& requestLine);
 	void	parseRequestLine(std::string& line);
 	void	parseLine(std::string line);
 	void	extractPortFromHost();
 	bool	isValid();
 	bool	validatePost();
 	// bool	validateDelete();
+	void	parseMethod(std::string& line);
+	void	parseUrl(std::string& line);
+	void	parseHttpVersion(std::string& line);
+	void	fillBody(std::string& requestLine);
 
 	// Debug
 	void	printHeaders(void) const;
 	void	printRequest(void) const;
+	void	printBody(void) const;
 };

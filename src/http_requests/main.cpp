@@ -7,9 +7,11 @@ int main(int argc, char **argv)
 	(void)argc;
 	(void)argv;
 
-	std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
+	// std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
 	// std::string	req = "DELETE /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
 	// std::string	req = "POST /api/user HTTP/1.1\r\nHost: www.example.com\r\nContent-Type: application/json\r\nContent-Length: 33\r\nAuthorization: Bearer <your_token>\r\n\r\n";
+	// std::string	req = "POST /submit-form HTTP/1.1\r\nHost: example.com\r\nContent-Length: 27\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John+Doe&email=john@example.com\r\n";
+	std::string	req = "POST /submit-form HTTP/1.1\r\nHost: example.com\r\nContent-Length: 75\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John+Doe&email=john@example.com&name=Mary+Doe&email=mary@example.com\r\n";
 	request.readRequest(req);
 	if (!request.isValid())
 	{
@@ -19,6 +21,7 @@ int main(int argc, char **argv)
 	request.extractPortFromHost(); //verify it's the expected behaviour
 	request.printRequest();
 	request.printHeaders();
+	request.printBody();
 	return (0);
 }
 

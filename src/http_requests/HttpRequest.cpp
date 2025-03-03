@@ -55,6 +55,16 @@ void HttpRequest::setUrl(std::string url)
 void HttpRequest::setVersion(std::string ver)
 {_version = ver;}
 
+static bool isOnlyWhitespace(const std::string& str)
+{
+	for (char c : str)
+	{
+		if (!std::isspace(static_cast<unsigned char>(c)))
+			return false;
+	}
+	return true;
+}
+
 // Parse
 static std::string removeFirstWord(const std::string &input)
 {
@@ -70,15 +80,11 @@ static bool	isValidMethod(std::string method)
 		return (true);
 	return (false);
 }
-
-void	HttpRequest::parseRequestLine(std::string& line)
+void	HttpRequest::parseMethod(std::string& line)
 {
 	std::string::size_type	firstSpace;
 	std::string				method;
-	std::string				url;
-	std::string				version;
 
-// Request method
 	_httpRequest = line;
 	firstSpace = line.find(' ');
 	method = line.substr(0, firstSpace);
@@ -86,8 +92,13 @@ void	HttpRequest::parseRequestLine(std::string& line)
 		_method = method;
 	else
 		_method = "UKNOWN";
-	
-// Url
+}
+
+void	HttpRequest::parseUrl(std::string& line)
+{
+	std::string::size_type	firstSpace;
+	std::string				url;
+
 	line = removeFirstWord(line);
 	firstSpace = line.find(' ');
 	if (firstSpace == std::string::npos)
@@ -97,14 +108,24 @@ void	HttpRequest::parseRequestLine(std::string& line)
 	}
 	else
 		_url = line.substr(0, firstSpace);
+}
 
-// HTTP version
+void	HttpRequest::parseHttpVersion(std::string& line)
+{
+	std::string				version;
+
 	version = removeFirstWord(line);
 	if (version.size() == 0)
 		std::cout << "no version provided";
 	else
 		_version = version;
+}
 
+void	HttpRequest::parseRequestLine(std::string& line)
+{
+	parseMethod(line);
+	parseUrl(line);
+	parseHttpVersion(line);
 }
 
 void	HttpRequest::parseLine(std::string line)
@@ -124,42 +145,70 @@ void	HttpRequest::parseLine(std::string line)
 	}
 }
 
-void	HttpRequest::readRequest(std::string requestLine)
+void	HttpRequest::fillBody(std::string& requestLine)
 {
+	_bodyComplete = requestLine;
+	std::string	element;
+
+	while ((requestLine.size() > 0 && !requestLine.empty()) && !isOnlyWhitespace(requestLine))
+	{
+		if (requestLine.find("&") > 0 && requestLine.find("&") < requestLine.size()) // weird, fix it
+		{
+			// std::cout << RED << "requestLine.find('&') = " << requestLine.find("&") << QUIT << std::endl;
+			element = requestLine.substr(0, requestLine.find("&"));
+			requestLine = requestLine.substr(requestLine.find("&") + 1);
+		}
+		else
+		{
+			// std::cout << RED << "requestLine.find('\\r\\n') = " << requestLine.find("\r\n") << QUIT << std::endl;
+			element = requestLine.substr(0, requestLine.find("\r\n"));
+			requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
+		}
+		_bodyVector.push_back(element);
+		if (requestLine == element) // weird, fix it
+			break;
+	}
+}
+
+void	HttpRequest::readRequest(std::string& requestLine)
+{
+	int post = 0;
 	try
 	{
 		std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
-		if (!line.empty())
+		if (!line.empty() && line.size() > 0)
 			parseRequestLine(line);
 
 		requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 	// std::cout << "requestLine: " << requestLine << std::endl;
 		line = requestLine.substr(0, requestLine.find("\r\n"));
 	// std::cout << "line: " << line << std::endl;
-		while (!line.empty())
+		while ((!line.empty() && line.size() > 0) || post == 0)
 		{
 				parseLine(line);
 				requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 		// std::cout << "requestLine: " << requestLine << std::endl;
 				line = requestLine.substr(0, requestLine.find("\r\n"));
 		// std::cout << "line: " << line << std::endl;
+			if (line.empty() || line.size() == 0)
+			{
+				post = 1;
+				if (_method == "POST")
+				{
+					requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
+					std::cout << "POST requestLine: " << requestLine << std::endl;
+						fillBody(requestLine);
+					break;
+				}
+			}
 		}
+		std::cout << "READ REQUEST" << std::endl;
 	}
 	catch (const std::out_of_range& e)
 	{
 		std::cout << "Caught exception\n";
 		return ;
 	}
-}
-
-static bool isOnlyWhitespace(const std::string& str)
-{
-	for (char c : str)
-	{
-		if (!std::isspace(static_cast<unsigned char>(c)))
-			return false;
-	}
-	return true;
 }
 
 static bool isOnlyDigit(const std::string& str)
@@ -187,7 +236,7 @@ static bool isOnlyDigit(const std::string& str)
 // RFC 9110: A user agent SHOULD NOT send a Content-Length header field when the request
 // message does not contain content and the method semantics do not anticipate such data.
 // https://httpwg.org/specs/rfc9110.html#field.content-length
-bool	HttpRequest::validatePost(void)
+bool	HttpRequest::validatePost(void) // what about Connection → Optional; defaults to keep-alive in HTTP/1.1.
 {
 	auto it = _headers.begin();
 	int	contType = 0;
@@ -195,34 +244,31 @@ bool	HttpRequest::validatePost(void)
 
 	for (it = _headers.begin(); it != _headers.end(); it++)
 	{
-		if (it->first == "Content-Type")
+		if (it->second.empty() || isOnlyWhitespace(it->second))
 		{
-			// std::cout << "'" << it->first << "' " << "'" << it->second << "'\n";
-			if (it->second.empty() || isOnlyWhitespace(it->second)) // else make sure it's acceptable input
-			{
+			if (it->first == "Content-Type")
 				std::cout << RED << "Content-Type isn't specified" << QUIT << std::endl;
-				return (false);
-			}
-			contType++;
-		}
-		if (it->first == "Content-Length") // else make sure it's acceptable input
-		{
-			if (it->second.empty() || isOnlyWhitespace(it->second))
-			{
+			else if (it->first == "Content-Length")
 				std::cout << RED << "Content-Length isn't specified" << QUIT << std::endl;
-				return (false);
-			}
+			return (false);
+		}
+		if (it->first == "Content-Type")
+			contType++;
+		else if (it->first == "Content-Length")
+		{
+			int i;
 			try
 			{
-				if (stoi(it->second) < 0 || !isOnlyDigit(it->second))
-				{
-					std::cout << RED << "Content-Length is not acceptable: " << it->second << QUIT << std::endl;
-					return (false);
-				}
+				i = stoi(it->second);
 			}
 			catch (const std::invalid_argument& e)
 			{
 				std::cout << RED << "Content-Length specifier is not an int" << QUIT << std::endl;
+				return (false);
+			}
+			if (i < 0 || !isOnlyDigit(it->second))
+			{
+				std::cout << RED << "Content-Length is not acceptable: " << it->second << QUIT << std::endl;
 				return (false);
 			}
 			contLength++;
@@ -242,7 +288,7 @@ bool	HttpRequest::isValid()
 		if (_url.empty())
 			std::cout << RED << "No url->server should be closed by foreign host" << QUIT << std::endl;
 		if (_version.empty())
-			std::cout << RED << "No HTTP version->server should be close by foreign host" << QUIT << std::endl;
+			std::cout << RED << "No HTTP version->server should be closed by foreign host" << QUIT << std::endl;
 		return (false);
 	}
 	auto it = _headers.begin();
@@ -254,13 +300,10 @@ bool	HttpRequest::isValid()
 		std::cout << RED << "Didn't find Host" << QUIT << std::endl;
 		return (false);
 	}
-	if (_method == "POST")
+	if (_method == "POST" && !validatePost())
 	{
-		if (!validatePost())
-		{
-			std::cout << RED << "Post could not be validated" << QUIT << std::endl;
-			return (1);
-		}
+		std::cout << RED << "Post could not be validated" << QUIT << std::endl;
+		return (false);
 	}
 	// if (_method == "DELETE") //NOT YET I THINK
 	// 	if (!validateDelete())
@@ -319,7 +362,15 @@ void	HttpRequest::printHeaders(void) const
 	std::cout << QUIT << std::endl;
 }
 
-
+void	HttpRequest::printBody(void) const
+{
+	std::cout << BLUE << "Printing whole body: " << std::endl;
+	std::cout << _bodyComplete << std::endl;
+	std::cout << "Printing body elements: " << std::endl;
+	for (auto it = _bodyVector.begin(); it != _bodyVector.end(); it++)
+		std::cout << "'" << *it << "' ";
+	std::cout << QUIT << std::endl << std::endl;
+}
 /*
 Mandatory Headers
 GET
