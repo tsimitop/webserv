@@ -1,26 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   sockets.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: daspring <daspring@student.42heilbronn.de  +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/02/12 12:51:41 by daspring          #+#    #+#             */
-/*   Updated: 2025/02/14 12:19:52 by daspring         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
-#include <netdb.h>
-#include <unistd.h>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-
-#define PORT "8080"
-#define BUFF_LEN 4096
+#include "../../inc/sockets/sockets.hpp"
 
 void	start_server()
 {
@@ -71,11 +49,10 @@ void	start_server()
 		std::cout << "accept failed\n";
 	}
 	
-	send(new_filedes, "Juhei!\n", 9, 0);
-	char	buffer[BUFF_LEN];							// isn't it better to instead use a cpp-string?
+	send(new_filedes, "Juhei!\n", 7, 0);
+	char	buffer[BUFF_LEN] = {0};							// isn't it better to instead use a cpp-string?
 	recv(new_filedes, buffer, BUFF_LEN, 0);
-	std::cout << buffer << "\n";
-
+	std::cout << buffer;// << std::endl;
 	close(new_filedes);
 	freeaddrinfo(server_info);
 }
