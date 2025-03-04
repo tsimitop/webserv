@@ -24,7 +24,7 @@ private:
 	std::string										_bodyComplete;
 	std::string										_httpRequest;
 	std::string										_method;
-	std::string										_url;
+	std::string										_url; //target resource path
 	std::string										_version;
 	int												_port;
 public:

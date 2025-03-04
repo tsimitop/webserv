@@ -150,64 +150,62 @@ void	HttpRequest::fillBody(std::string& requestLine)
 	_bodyComplete = requestLine;
 	std::string	element;
 
-	while ((requestLine.size() > 0 && !requestLine.empty()) && !isOnlyWhitespace(requestLine))
+	while (!requestLine.empty())
 	{
-		if (requestLine.find("&") > 0 && requestLine.find("&") < requestLine.size()) // weird, fix it
+		size_t posFound = requestLine.find('&');
+		if (posFound != std::string::npos)
 		{
-			// std::cout << RED << "requestLine.find('&') = " << requestLine.find("&") << QUIT << std::endl;
-			element = requestLine.substr(0, requestLine.find("&"));
-			requestLine = requestLine.substr(requestLine.find("&") + 1);
+			// std::cout << RED << "requestLine.find('&') = " << posFound << QUIT << std::endl;
+			element = requestLine.substr(0, posFound);
+			requestLine = requestLine.substr(posFound + 1);
 		}
 		else
 		{
-			// std::cout << RED << "requestLine.find('\\r\\n') = " << requestLine.find("\r\n") << QUIT << std::endl;
-			element = requestLine.substr(0, requestLine.find("\r\n"));
-			requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
+			posFound = requestLine.find("\r\n");
+			if (posFound != std::string::npos)
+			{
+					// std::cout << RED << "requestLine.find('\\r\\n') = " << requestLine.find("\r\n") << QUIT << std::endl;
+					element = requestLine.substr(0, requestLine.find("\r\n"));
+					requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
+			}
+			else
+			{
+				element = requestLine;
+				requestLine.clear();
+			}
 		}
 		_bodyVector.push_back(element);
-		if (requestLine == element) // weird, fix it
-			break;
 	}
 }
+// std::cout << requestLine << " is request\n";
+// std::cout << element << " is element\n";
 
 void	HttpRequest::readRequest(std::string& requestLine)
 {
 	int post = 0;
-	try
-	{
-		std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
-		if (!line.empty() && line.size() > 0)
-			parseRequestLine(line);
+	std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
+	if (!line.empty() && line.size() > 0)
+		parseRequestLine(line);
 
-		requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-	// std::cout << "requestLine: " << requestLine << std::endl;
-		line = requestLine.substr(0, requestLine.find("\r\n"));
-	// std::cout << "line: " << line << std::endl;
-		while ((!line.empty() && line.size() > 0) || post == 0)
-		{
-				parseLine(line);
-				requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-		// std::cout << "requestLine: " << requestLine << std::endl;
-				line = requestLine.substr(0, requestLine.find("\r\n"));
-		// std::cout << "line: " << line << std::endl;
-			if (line.empty() || line.size() == 0)
-			{
-				post = 1;
-				if (_method == "POST")
-				{
-					requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-					std::cout << "POST requestLine: " << requestLine << std::endl;
-						fillBody(requestLine);
-					break;
-				}
-			}
-		}
-		std::cout << "READ REQUEST" << std::endl;
-	}
-	catch (const std::out_of_range& e)
+	requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
+	line = requestLine.substr(0, requestLine.find("\r\n"));
+	while ((!line.empty() && line.size() > 0) || post == 0)
 	{
-		std::cout << "Caught exception\n";
-		return ;
+		parseLine(line);
+		requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
+		line = requestLine.substr(0, requestLine.find("\r\n"));
+		if (line.empty() || line.size() == 0)
+		{
+			post = 1;
+			if (_method == "POST")
+			{
+				requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
+					fillBody(requestLine);
+				break;
+			}
+			std::cout << RED << "check out readRequest function, removed try catch\n" << QUIT;
+			break;
+		}
 	}
 }
 

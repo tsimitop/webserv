@@ -6,7 +6,7 @@ CFLAGS = -Wall -Werror -Wextra -std=c++17 -fsanitize=address
 
 DEBUG = -g
 
-SRCS = main.cpp HttpRequest.cpp
+SRCS = main.cpp HttpRequest.cpp HttpResponse.cpp
 
 OBJ_DIR = objects
 OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))

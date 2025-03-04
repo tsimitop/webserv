@@ -12,7 +12,8 @@ OBJ_DIR	= ./obj
 
 SRCS =	main.cpp \
 		sockets/sockets.cpp \
-		http_requests/HttpRequest.cpp
+		http_requests/HttpRequest.cpp \
+		http_requests/HttpResponse.cpp
 
 SRC:=		$(addprefix $(SOURCE)/,$(SRCS))
 OBJS:=		$(SRC:$(SOURCE)/%.cpp=$(OBJ_DIR)/%.o)

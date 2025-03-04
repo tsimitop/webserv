@@ -1,8 +1,12 @@
 #include "../../inc/http_requests/HttpRequest.hpp"
+#include "../../inc/http_requests/HttpResponse.hpp"
 
 int main(int argc, char **argv)
 {
 	HttpRequest		request;
+	HttpResponse	response(208);
+
+	std::cout<< "\nStatus Code: " << response.getStatusCode() << ", Reason Phrase: " << response.getReasonPhrase() << std::endl << std::endl;
 
 	(void)argc;
 	(void)argv;
