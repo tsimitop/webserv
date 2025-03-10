@@ -39,7 +39,7 @@ HttpResponse::HttpResponse() : _statusCode(0), _reasonPhrase("Empty")
 		{415, "Unsupported Media Type"},
 		{416, "Range Not Satisfiable"},
 		{417, "Expectation Failed"},
-		{418, "I'm a teapot // not applicable but fun to keep"},
+		{418, "I'm a teapot"}, // not applicable but fun to keep
 		{422, "Unprocessable Content"},
 		{426, "Upgrade Required"},
 		{428, "Precondition Required"},
@@ -64,8 +64,7 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& other)
 {
 	if (this != &other)
 	{
-		this->_statusReason = other._statusReason;
-		this->_statusReason = other._statusReason;
+		this->_statusCode = other._statusCode;
 		this->_statusReason = other._statusReason;
 	}
 	return (*this);
@@ -145,5 +144,15 @@ int			HttpResponse::getStatusCode(void) const {return (_statusCode);}
 std::string	HttpResponse::getReasonPhrase(void) const {return (_reasonPhrase);}
 
 // Setters
-void	HttpResponse::setStatusCode(int sc) {_statusCode = sc;}
-void	HttpResponse::setReasonPhrase(std::string rp) {_reasonPhrase = rp;}
+void	HttpResponse::setStatusCode(int sc)
+{
+	_statusCode = sc;
+	auto it = _statusReason.begin();
+	for (it = _statusReason.begin(); it != _statusReason.end(); it++)
+		if (it->first == _statusCode)
+			break;
+	if (it != _statusReason.end())
+		_reasonPhrase = it->second;
+	else
+		_reasonPhrase = "Uknown Reason Phrase";
+}
