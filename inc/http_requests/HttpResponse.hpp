@@ -34,4 +34,5 @@ public:
 
 	// Setters
 	void	setStatusCode(int sc);
+	void	setReasonPhrase(std::string rp);
 };
