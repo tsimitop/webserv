@@ -19,14 +19,14 @@
 class HttpRequest
 {
 private:
-	std::unordered_map<std::string, std::string>	_headers;
-	std::vector<std::string>						_bodyVector; //for POST key1=value1&key2=value2&key3=value3 
-	std::string										_bodyComplete;
-	std::string										_httpRequest;
-	std::string										_method;
-	std::string										_url; //target resource path
-	std::string										_version;
-	int												_port;
+	std::unordered_map<std::string, std::string>	headers_;
+	std::vector<std::string>						bodyVector_; //for POST key1=value1&key2=value2&key3=value3 
+	std::string										bodyComplete_;
+	std::string										httpRequest_;
+	std::string										method_;
+	std::string										url_; //target resource path
+	std::string										version_;
+	int												port_;
 public:
 	// Orthodox Canonical Class Form
 	HttpRequest();
@@ -52,7 +52,7 @@ public:
 	void	setVersion(std::string ver);
 
 	// Parse
-	void	readRequest(std::string& requestLine);
+	void	readRequest(const std::string& req); //throws exception
 	void	parseRequestLine(std::string& line);
 	void	parseLine(std::string line);
 	void	extractPortFromHost();
@@ -68,4 +68,9 @@ public:
 	void	printHeaders(void) const;
 	void	printRequest(void) const;
 	void	printBody(void) const;
+
+	class httpParserException : public std::exception {
+		public:
+			virtual const char *what() const throw();
+	};
 };

@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <unordered_map>
 #include <string>
+#include "../../inc/http_requests/HttpRequest.hpp"
+#include <ctime>
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -15,9 +17,9 @@
 class HttpResponse
 {
 private:
-	std::unordered_map<int, std::string>	_statusReason; // Status Code and Reason Phrase
-	int										_statusCode;
-	std::string								_reasonPhrase;
+	std::unordered_map<int, std::string>	statusReason_; // Status Code and Reason Phrase
+	int										statusCode_;
+	std::string								reasonPhrase_;
 public:
 	// Orthodox Canonical Class Form
 	HttpResponse();
@@ -34,5 +36,7 @@ public:
 
 	// Setters
 	void	setStatusCode(int sc);
-	void	setReasonPhrase(std::string rp);
+	void	setReasonPhrase(int sc);
+
+	const std::string respond(const HttpRequest& req);
 };
