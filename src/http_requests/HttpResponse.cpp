@@ -1,8 +1,8 @@
 #include "../../inc/http_requests/HttpResponse.hpp"
 
-HttpResponse::HttpResponse() : _statusCode(0), _reasonPhrase("Empty")
+HttpResponse::HttpResponse() : statusCode_(0), reasonPhrase_("Empty")
 {
-	_statusReason = {
+	statusReason_ = {
 		{100, "Continue"},
 		{101, "Switching Protocols"},
 		{103, "Early Hints"}, // for preloading resources,
@@ -58,15 +58,15 @@ HttpResponse::HttpResponse() : _statusCode(0), _reasonPhrase("Empty")
 }
 
 HttpResponse::HttpResponse(const HttpResponse& other)
-: _statusReason(other._statusReason), _statusCode(other._statusCode), _reasonPhrase(other._reasonPhrase) {}
+: statusReason_(other.statusReason_), statusCode_(other.statusCode_), reasonPhrase_(other.reasonPhrase_) {}
 
 HttpResponse& HttpResponse::operator=(const HttpResponse& other)
 {
 	if (this != &other)
 	{
-		this->_statusReason = other._statusReason;
-		this->_statusReason = other._statusReason;
-		this->_statusReason = other._statusReason;
+		this->statusReason_ = other.statusReason_;
+		this->statusReason_ = other.statusReason_;
+		this->statusReason_ = other.statusReason_;
 	}
 	return (*this);
 }
@@ -76,7 +76,7 @@ HttpResponse::~HttpResponse() {}
 // Parameterized constructor
 HttpResponse::HttpResponse(int sc)
 {
-	_statusReason = {
+	statusReason_ = {
 		{100, "Continue"},
 		{101, "Switching Protocols"},
 		{103, "Early Hints"}, // for preloading resources,
@@ -129,21 +129,65 @@ HttpResponse::HttpResponse(int sc)
 		{507, "Insufficient Storage"},
 		{511, "Network Authentication Required"}
 	};
-	_statusCode = sc;
-	auto it = _statusReason.begin();
-	for (it = _statusReason.begin(); it != _statusReason.end(); it++)
-		if (it->first == _statusCode)
+	statusCode_ = sc;
+	auto it = statusReason_.begin();
+	for (it = statusReason_.begin(); it != statusReason_.end(); it++)
+		if (it->first == statusCode_)
 			break;
-	if (it != _statusReason.end())
-		_reasonPhrase = it->second;
+	if (it != statusReason_.end())
+		reasonPhrase_ = it->second;
 	else
-		_reasonPhrase = "Uknown Reason Phrase";
+		reasonPhrase_ = "Uknown Reason Phrase";
 }
 
 // Getters
-int			HttpResponse::getStatusCode(void) const {return (_statusCode);}
-std::string	HttpResponse::getReasonPhrase(void) const {return (_reasonPhrase);}
+int			HttpResponse::getStatusCode(void) const {return (statusCode_);}
+std::string	HttpResponse::getReasonPhrase(void) const {return (reasonPhrase_);}
 
 // Setters
-void	HttpResponse::setStatusCode(int sc) {_statusCode = sc;}
-void	HttpResponse::setReasonPhrase(std::string rp) {_reasonPhrase = rp;}
+void	HttpResponse::setStatusCode(int sc) {statusCode_ = sc;}
+
+void	HttpResponse::setReasonPhrase(int sc)
+{
+	auto it = statusReason_.begin();
+	for (it = statusReason_.begin(); it != statusReason_.end(); it++)
+	{
+		if (sc == it->first)
+			break;
+	}
+	reasonPhrase_ = it->second;
+}
+
+const std::string HttpResponse::respond(const HttpRequest& req)
+{
+	std::string	request = req.getHttpRequest(); // check out the request and figure out response
+	std::string	version = req.getVersion(); // check out the request and figure out response
+	time_t		timestamp;
+	
+	// FIGURE OUT RESPONSE!
+
+	// assuming response is 200
+	setStatusCode(200);
+	setReasonPhrase(200);
+	time(&timestamp);
+
+	std::cout << RED << "Responding...\n";
+	std::string response;
+	response += version;
+	response += " ";
+	response += std::to_string(this->getStatusCode());
+	response += " ";
+	response += this->getReasonPhrase();
+	response += "\n";
+	response += "Server: Webserv\n";
+	response += "Date: "; // figure it out
+	response += ctime(&timestamp); // figure it out
+	response += "\n";
+	response += "Content-Type: text/html\n"; // figure it out
+	response += "Content-Length: !number!\n"; // figure it out
+	response += "Last-Modified: !date!\n"; // figure it out
+
+	std::cout << response << std::endl;
+	std::cout << RED << "Send entire file or error\n" << QUIT;
+	return (response);
+}

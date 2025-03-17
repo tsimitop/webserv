@@ -1,7 +1,7 @@
 #include "../../inc/http_requests/HttpRequest.hpp"
 
 // Orthodox Canonical Class Form
-HttpRequest::HttpRequest() : _httpRequest(""), _method(""), _url(""), _version("") {}
+HttpRequest::HttpRequest() : bodyComplete_(""), httpRequest_(""), method_(""), url_(""), version_(""), port_(80) {}
 
 HttpRequest::HttpRequest(const HttpRequest& other) {*this = other;}
 
@@ -9,11 +9,14 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 {
 	if (this != &other)
 	{
-		this->_headers = other._headers;
-		this->_httpRequest = other._httpRequest;
-		this->_method = other._method;
-		this->_url = other._url;
-		this->_version = other._version;
+		this->headers_ = other.headers_;
+		this->bodyVector_ = other.bodyVector_;
+		this->bodyComplete_ = other.bodyComplete_;
+		this->httpRequest_ = other.httpRequest_;
+		this->method_ = other.method_;
+		this->url_ = other.url_;
+		this->version_ = other.version_;
+		this->port_ = other.port_;
 	}
 	return (*this);
 }
@@ -21,39 +24,39 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 HttpRequest::~HttpRequest() {}
 
 // Parameterized constructor
-HttpRequest::HttpRequest(std::string& request) : _headers(0), _httpRequest(request), _method(nullptr), _url(nullptr), _version(nullptr) {}
+HttpRequest::HttpRequest(std::string& request) : headers_(0), httpRequest_(request), method_(nullptr), url_(nullptr), version_(nullptr) {}
 
 // Getters
 std::unordered_map<std::string, std::string> HttpRequest::getHeaders(void) const
-{return (_headers);}
+{return (headers_);}
 
 std::string HttpRequest::getHttpRequest(void) const
-{return (_httpRequest);}
+{return (httpRequest_);}
 
 std::string HttpRequest::getMethod(void) const
-{return (_method);}
+{return (method_);}
 
 std::string HttpRequest::getUrl(void) const
-{return (_url);}
+{return (url_);}
 
 std::string HttpRequest::getVersion(void) const
-{return (_version);}
+{return (version_);}
 
 int HttpRequest::getPort(void) const
-{return (_port);}
+{return (port_);}
 
 // Setters
 void HttpRequest::setHttpRequest(std::string req)
-{_httpRequest = req;}
+{httpRequest_ = req;}
 
 void HttpRequest::setMethod(std::string meth)
-{_method = meth;}
+{method_ = meth;}
 
 void HttpRequest::setUrl(std::string url)
-{_url = url;}
+{url_ = url;}
 
 void HttpRequest::setVersion(std::string ver)
-{_version = ver;}
+{version_ = ver;}
 
 static bool isOnlyWhitespace(const std::string& str)
 {
@@ -85,13 +88,13 @@ void	HttpRequest::parseMethod(std::string& line)
 	std::string::size_type	firstSpace;
 	std::string				method;
 
-	_httpRequest = line;
+	httpRequest_ = line;
 	firstSpace = line.find(' ');
 	method = line.substr(0, firstSpace);
 	if (isValidMethod(method))
-		_method = method;
+		method_ = method;
 	else
-		_method = "UKNOWN";
+		method_ = "UKNOWN";
 }
 
 void	HttpRequest::parseUrl(std::string& line)
@@ -104,10 +107,10 @@ void	HttpRequest::parseUrl(std::string& line)
 	if (firstSpace == std::string::npos)
 	{
 		std::cout << "no url provided\n";
-		_url = "";
+		url_ = "";
 	}
 	else
-		_url = line.substr(0, firstSpace);
+		url_ = line.substr(0, firstSpace);
 }
 
 void	HttpRequest::parseHttpVersion(std::string& line)
@@ -116,9 +119,9 @@ void	HttpRequest::parseHttpVersion(std::string& line)
 
 	version = removeFirstWord(line);
 	if (version.size() == 0)
-		std::cout << "no version provided";
+		std::cout << "no version provided\n";
 	else
-		_version = version;
+		version_ = version;
 }
 
 void	HttpRequest::parseRequestLine(std::string& line)
@@ -136,18 +139,18 @@ void	HttpRequest::parseLine(std::string line)
 	{
 		std::string key = line.substr(0, colonPos);
 		std::string value = line.substr(colonPos + 1, std::string::npos);
-		_headers.insert(std::pair<std::string, std::string>(key, value));
+		headers_.insert(std::pair<std::string, std::string>(key, value));
 	}
-	else
-	{
-		std::cout << RED << "No colon after key, no idea what to do" << QUIT << std::endl;
-		return ;
-	}
+	// else
+	// {
+	// 	std::cout << RED << "No colon after key, no idea what to do" << QUIT << std::endl;
+	// 	return ;
+	// }
 }
 
 void	HttpRequest::fillBody(std::string& requestLine)
 {
-	_bodyComplete = requestLine;
+	bodyComplete_ = requestLine;
 	std::string	element;
 
 	while (!requestLine.empty())
@@ -155,7 +158,6 @@ void	HttpRequest::fillBody(std::string& requestLine)
 		size_t posFound = requestLine.find('&');
 		if (posFound != std::string::npos)
 		{
-			// std::cout << RED << "requestLine.find('&') = " << posFound << QUIT << std::endl;
 			element = requestLine.substr(0, posFound);
 			requestLine = requestLine.substr(posFound + 1);
 		}
@@ -164,7 +166,6 @@ void	HttpRequest::fillBody(std::string& requestLine)
 			posFound = requestLine.find("\r\n");
 			if (posFound != std::string::npos)
 			{
-					// std::cout << RED << "requestLine.find('\\r\\n') = " << requestLine.find("\r\n") << QUIT << std::endl;
 					element = requestLine.substr(0, requestLine.find("\r\n"));
 					requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 			}
@@ -174,38 +175,33 @@ void	HttpRequest::fillBody(std::string& requestLine)
 				requestLine.clear();
 			}
 		}
-		_bodyVector.push_back(element);
+		bodyVector_.push_back(element);
 	}
 }
-// std::cout << requestLine << " is request\n";
-// std::cout << element << " is element\n";
 
-void	HttpRequest::readRequest(std::string& requestLine)
+void	HttpRequest::readRequest(const std::string& req)
 {
-	int post = 0;
+	std::string requestLine = req;
+	int body = 0;
 	std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
+
 	if (!line.empty() && line.size() > 0)
 		parseRequestLine(line);
-
 	requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 	line = requestLine.substr(0, requestLine.find("\r\n"));
-	while ((!line.empty() && line.size() > 0) || post == 0)
+	while ((!line.empty() && line.size() > 0) || body == 0)
 	{
 		parseLine(line);
 		requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 		line = requestLine.substr(0, requestLine.find("\r\n"));
 		if (line.empty() || line.size() == 0)
 		{
-			post = 1;
-			if (_method == "POST")
-			{
-				requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-					fillBody(requestLine);
-				break;
-			}
-			std::cout << RED << "check out readRequest function, removed try catch\n" << QUIT;
-			break;
+			requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
+			fillBody(requestLine);
+				body = 1;
 		}
+		else if (requestLine.find("\r\n") == std::string::npos)
+			throw HttpRequest::httpParserException();
 	}
 }
 
@@ -236,11 +232,11 @@ static bool isOnlyDigit(const std::string& str)
 // https://httpwg.org/specs/rfc9110.html#field.content-length
 bool	HttpRequest::validatePost(void) // what about Connection → Optional; defaults to keep-alive in HTTP/1.1.
 {
-	auto it = _headers.begin();
+	auto it = headers_.begin();
 	int	contType = 0;
 	int	contLength = 0;
 
-	for (it = _headers.begin(); it != _headers.end(); it++)
+	for (it = headers_.begin(); it != headers_.end(); it++)
 	{
 		if (it->second.empty() || isOnlyWhitespace(it->second))
 		{
@@ -279,49 +275,50 @@ bool	HttpRequest::validatePost(void) // what about Connection → Optional; defa
 
 bool	HttpRequest::isValid()
 {
-	if (_method == "UKNOWN" || _url.empty() || _version.empty())
+	if (method_ == "UKNOWN" || url_.empty() || version_.empty())
 	{
-		if (_method == "UKNOWN")
+		if (method_ == "UKNOWN")
 			std::cout << RED << "Can't handle uknown method->400 Bad Request" << QUIT << std::endl;
-		if (_url.empty())
+		if (url_.empty())
 			std::cout << RED << "No url->server should be closed by foreign host" << QUIT << std::endl;
-		if (_version.empty())
+		if (version_.empty())
 			std::cout << RED << "No HTTP version->server should be closed by foreign host" << QUIT << std::endl;
+		std::cout << RED << "Remove the above after debugging" << QUIT << std::endl;
 		return (false);
 	}
-	auto it = _headers.begin();
-	for (it = _headers.begin(); it != _headers.end(); it++)
+	auto it = headers_.begin();
+	for (it = headers_.begin(); it != headers_.end(); it++)
 		if (it->first == "Host")
 			break;
-	if (it == _headers.end())
+	if (it == headers_.end() || (it->second).empty() || isOnlyWhitespace(it->second))
 	{
 		std::cout << RED << "Didn't find Host" << QUIT << std::endl;
 		return (false);
 	}
-	if (_method == "POST" && !validatePost())
+	if (method_ == "POST" && !validatePost())
 	{
 		std::cout << RED << "Post could not be validated" << QUIT << std::endl;
 		return (false);
 	}
-	// if (_method == "DELETE") //NOT YET I THINK
+	// if (method_ == "DELETE") //NOT YET I THINK
 	// 	if (!validateDelete())
 	return (true);
 }
 
 void	HttpRequest::extractPortFromHost()
 {
-	auto	it = _headers.begin();
-	for (it = _headers.begin(); it != _headers.end(); it++)
+	auto	it = headers_.begin();
+	for (it = headers_.begin(); it != headers_.end(); it++)
 		if (it->first == "Host")
 			break;
 
-	if (it == _headers.end())
+	if (it == headers_.end())
 		return ;
 	std::string	host = it->second;
 	auto		pos = host.find(':');
 	if (pos == std::string::npos)
 	{
-		_port = 80;
+		port_ = 80;
 		return ;
 	}
 	std::string	port = it->second.substr(pos + 1, std::string::npos);
@@ -335,7 +332,7 @@ void	HttpRequest::extractPortFromHost()
 	}
 
 	if (portNbr > 0 && portNbr < 65536) // NOT SURE ABOUT THIS CHECK!!!
-		_port = portNbr;
+		port_ = portNbr;
 	else
 		std::cout << RED << "Consider choosing another port instead of PORT:" << portNbr << QUIT << std::endl;
 }
@@ -343,32 +340,38 @@ void	HttpRequest::extractPortFromHost()
 // Debug
 void	HttpRequest::printRequest(void) const
 {
-	std::cout << MAGENTA << "Printing request: " << std::endl;
-	std::cout << _httpRequest << std::endl;
-	std::cout << "method:\t\t"<< _method << std::endl;
-	std::cout << "url:\t\t"<< _url << std::endl;
-	std::cout << "version:\t"<< _version << std::endl;
-	std::cout << "PORT:\t\t"<< _port << QUIT << std::endl;
+	std::cout << MAGENTA << "Printing request: {" << std::endl;
+	std::cout << httpRequest_ << std::endl;
+	std::cout << "method:\t\t"<< method_ << std::endl;
+	std::cout << "url:\t\t"<< url_ << std::endl;
+	std::cout << "version:\t"<< version_ << std::endl;
+	std::cout << "PORT:\t\t"<< port_ << "}" << QUIT << std::endl;
 	std::cout << std::endl;
 }
 
 void	HttpRequest::printHeaders(void) const
 {
-	std::cout << CYAN << "Printing headers: " << std::endl;
-	for (const auto& pair : _headers)
-		std::cout << pair.first << ":\t" << pair.second << std::endl;;
+	std::cout << CYAN << "Printing headers: {" << std::endl;
+	for (const auto& pair : headers_)
+		std::cout << pair.first << ":\t" << pair.second << "}" << std::endl;;
 	std::cout << QUIT << std::endl;
 }
 
 void	HttpRequest::printBody(void) const
 {
-	std::cout << BLUE << "Printing whole body: " << std::endl;
-	std::cout << _bodyComplete << std::endl;
+	std::cout << BLUE << "Printing whole body: {" << std::endl;
+	std::cout << bodyComplete_ << std::endl;
 	std::cout << "Printing body elements: " << std::endl;
-	for (auto it = _bodyVector.begin(); it != _bodyVector.end(); it++)
+	for (auto it = bodyVector_.begin(); it != bodyVector_.end(); it++)
 		std::cout << "'" << *it << "' ";
-	std::cout << QUIT << std::endl << std::endl;
+	std::cout << "}" << QUIT << std::endl << std::endl;
 }
+
+const char *HttpRequest::httpParserException::what() const throw()
+{
+	return ("Exception thrown: error while parsing http request.");
+}
+
 /*
 Mandatory Headers
 GET
