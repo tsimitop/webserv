@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   sockets.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: daspring <daspring@student.42heilbronn.de  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/03/29 20:21:21 by daspring          #+#    #+#             */
+/*   Updated: 2025/03/30 18:45:42 by daspring         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../inc/sockets/sockets.hpp"
 
 void	start_server()
@@ -46,18 +58,18 @@ void	start_server()
 
 	while(true)
 	{
-		int						new_connectin_fd		= accept(server_filedes, (struct sockaddr* )&their_addr, &their_addr_size);		// ERROR HANDLING
-		if (new_connectin_fd < 0)
+		int						new_connection_fd		= accept(server_filedes, (struct sockaddr* )&their_addr, &their_addr_size);		// ERROR HANDLING
+		if (new_connection_fd < 0)
 		{
 			std::cout << "accept failed\n";
 		}
 
 		char	msg[] = "Juhei! A new friend!\n";
-		send(new_connectin_fd, msg, sizeof(msg), 0);
+		send(new_connection_fd, msg, sizeof(msg), 0);
 		while(true)
 		{
 			char	buffer[BUFF_LEN] = {0};							// isn't it better to instead use a cpp-string?
-			recv(new_connectin_fd, buffer, BUFF_LEN, 0);
+			recv(new_connection_fd, buffer, BUFF_LEN, 0);
 			std::cout << buffer;// << std::endl;
 			if (buffer[0] == '\n' || buffer[0] == '\r')
 			{
@@ -65,7 +77,7 @@ void	start_server()
 				break ;
 			}
 		}
-		close(new_connectin_fd);
+		close(new_connection_fd);
 	}
 	freeaddrinfo(server_info);
 }
