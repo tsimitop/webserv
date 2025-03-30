@@ -6,12 +6,13 @@
 /*   By: tsimitop <tsimitop@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/12 12:51:41 by daspring          #+#    #+#             */
-/*   Updated: 2025/02/14 21:10:23 by tsimitop         ###   ########.fr       */
+/*   Updated: 2025/03/30 19:45:31 by daspring         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstdlib>
-#include "../inc/sockets/sockets.hpp"
+// #include "../inc/sockets/sockets.hpp"
+#include "../inc/sockets/Server.hpp"
 #include "../inc/http_requests/HttpRequest.hpp"
 
 int	main(int argc, char** argv)
@@ -20,8 +21,12 @@ int	main(int argc, char** argv)
 
 	(void)argc;
 	(void)argv;
+
+	Server	server;
+	server.run();
+
 	// std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
-	start_server(); //start_server(request); write request in _HTTPRequest with setHttpRequest(std::string req);
+	// start_server(); //start_server(request); write request in _HTTPRequest with setHttpRequest(std::string req);
 	// request.readRequest(req);
 	// if (!request.isValid())
 	// {
