@@ -6,7 +6,7 @@
 /*   By: daspring <daspring@student.42heilbronn.de  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/29 18:43:37 by daspring          #+#    #+#             */
-/*   Updated: 2025/03/30 19:45:51 by daspring         ###   ########.fr       */
+/*   Updated: 2025/03/30 20:04:09 by daspring         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,21 +30,21 @@ Server::Server() {
 	}
 
 
-	server_socket_ = socket(server_info_->ai_family, server_info_->ai_socktype, server_info_->ai_protocol);		// ERROR HANDLING
+	server_socket_ = socket(server_info_->ai_family, server_info_->ai_socktype, server_info_->ai_protocol);
 	if (server_socket_ < 0)
 	{
 		std::cout << "socket failed\n";
 	}
 
-	status = bind(server_socket_, server_info_->ai_addr, server_info_->ai_addrlen);								// ERROR HANDLING - reusing status??
-	if (status == -1)
-	{
-		std::cerr << "bind failed: " << strerror(errno) << "\n";
-	}
-	int	reuse = 1;																						// does not work yet ...
+	int	reuse = 1;
 	if (setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof (reuse)))
 	{
 		std::cerr << "setsockopt failed: " << strerror(errno) << "\n";
+	}
+	status = bind(server_socket_, server_info_->ai_addr, server_info_->ai_addrlen);
+	if (status == -1)
+	{
+		std::cerr << "bind failed: " << strerror(errno) << "\n";
 	}
 
 	if (listen(server_socket_, 5) == -1)
@@ -54,8 +54,6 @@ Server::Server() {
 }
 
 Server::~Server() {
-// close socket
-// free add_struct
 	close(server_socket_);
 	freeaddrinfo(server_info_);
 
@@ -70,26 +68,31 @@ void	Server::run() {
 	socklen_t				their_addr_size	= sizeof (their_addr);
 	while(true)
 	{
-		int						new_connection_fd		= accept(server_socket_, (struct sockaddr* )&their_addr, &their_addr_size);		// ERROR HANDLING
-		if (new_connection_fd < 0)
+		int						client_socket		= accept(server_socket_, (struct sockaddr* )&their_addr, &their_addr_size);
+		if (client_socket < 0)
 		{
 			std::cout << "accept failed\n";
 		}
-
-		char	msg[] = "Juhei! A new friend!\n";
-		send(new_connection_fd, msg, sizeof(msg), 0);
-		while(true)
-		{
-			char	buffer[BUFF_LEN] = {0};
-			recv(new_connection_fd, buffer, BUFF_LEN, 0);
-			std::cout << buffer;// << std::endl;
-			if (buffer[0] == '\n' || buffer[0] == '\r')
-			{
-				std::cout << "end of connection\n";
-				break ;
-			}
-		}
-		close(new_connection_fd);
+		handleClient(client_socket);
+		close(client_socket);
 	}
 }
 
+
+//	example function, could also be 'imported' from a different class (right?)
+//	this function only takes the input from the client and echoes it.
+void	Server::handleClient(int client_socket) {
+	char	msg[] = "Juhei! A new friend!\n";
+	send(client_socket, msg, sizeof(msg), 0);
+	while(true)
+	{
+		char	buffer[BUFF_LEN] = {0};
+		recv(client_socket, buffer, BUFF_LEN, 0);
+		std::cout << buffer;
+		if (buffer[0] == '\n' || buffer[0] == '\r')
+		{
+			std::cout << "end of connection\n";
+			break ;
+		}
+	}
+}
