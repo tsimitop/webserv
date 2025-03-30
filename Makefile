@@ -12,6 +12,7 @@ OBJ_DIR	= ./obj
 
 SRCS =	main.cpp \
 		sockets/sockets.cpp \
+		sockets/Server.cpp \
 		http_requests/HttpRequest.cpp
 
 SRC:=		$(addprefix $(SOURCE)/,$(SRCS))
