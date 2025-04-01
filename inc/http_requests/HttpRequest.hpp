@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <sstream>
 #include <fstream>
 // #include <stoi>
 // #include <getline>
@@ -27,6 +28,8 @@ private:
 	std::string										url_; //target resource path
 	std::string										version_;
 	int												port_;
+	std::string										basePath_;
+	std::string										filename_;
 public:
 	// Orthodox Canonical Class Form
 	HttpRequest();
@@ -35,7 +38,7 @@ public:
 	~HttpRequest();
 
 	// Parameterized constructor
-	HttpRequest(std::string& request);
+	HttpRequest(const std::string& request);
 	
 	// Getters
 	std::unordered_map<std::string, std::string>	getHeaders(void) const;
@@ -43,6 +46,8 @@ public:
 	std::string										getMethod(void) const;
 	std::string										getUrl(void) const;
 	std::string										getVersion(void) const;
+	std::string										getBasePath(void) const;
+	std::string										getFilename(void) const;
 	int												getPort(void) const;
 
 	// Setters
@@ -63,6 +68,8 @@ public:
 	void	parseUrl(std::string& line);
 	void	parseHttpVersion(std::string& line);
 	void	fillBody(std::string& requestLine);
+	// int		uploadFile(std::string basePath, std::string filename);
+	void	updateFilename();
 
 	// Debug
 	void	printHeaders(void) const;

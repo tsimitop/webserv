@@ -1,7 +1,7 @@
 #include "../../inc/http_requests/HttpRequest.hpp"
 
 // Orthodox Canonical Class Form
-HttpRequest::HttpRequest() : bodyComplete_(""), httpRequest_(""), method_(""), url_(""), version_(""), port_(80) {}
+HttpRequest::HttpRequest() : bodyComplete_(""), httpRequest_(""), method_(""), url_(""), version_(""), port_(80), basePath_(""), filename_("") {}
 
 HttpRequest::HttpRequest(const HttpRequest& other) {*this = other;}
 
@@ -17,6 +17,8 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 		this->url_ = other.url_;
 		this->version_ = other.version_;
 		this->port_ = other.port_;
+		this->basePath_ = other.basePath_;
+		this->filename_ = other.filename_;
 	}
 	return (*this);
 }
@@ -24,7 +26,10 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 HttpRequest::~HttpRequest() {}
 
 // Parameterized constructor
-HttpRequest::HttpRequest(std::string& request) : headers_(0), httpRequest_(request), method_(nullptr), url_(nullptr), version_(nullptr) {}
+HttpRequest::HttpRequest(const std::string& request)
+{
+	httpRequest_ = request;
+}
 
 // Getters
 std::unordered_map<std::string, std::string> HttpRequest::getHeaders(void) const
@@ -41,6 +46,12 @@ std::string HttpRequest::getUrl(void) const
 
 std::string HttpRequest::getVersion(void) const
 {return (version_);}
+
+std::string HttpRequest::getBasePath(void) const
+{return (basePath_);}
+
+std::string HttpRequest::getFilename(void) const
+{return (filename_);}
 
 int HttpRequest::getPort(void) const
 {return (port_);}
@@ -179,6 +190,28 @@ void	HttpRequest::fillBody(std::string& requestLine)
 	}
 }
 
+void	HttpRequest::updateFilename()
+{
+	auto it = headers_.begin();
+	for (it = headers_.begin(); it != headers_.end(); it++)
+	{
+		if (it->first == "Content-Disposition")
+		{
+			std::string line;
+			std::istringstream ss(it->second);
+			ss >> line;
+			getline(ss, line, '=');
+			getline(ss, line);
+			if ((line[0] == '\'' || line[0] == '\"') && line.length() > 3)
+				line = line.substr(1, line.length() - 2);
+			if (!line.empty())
+				filename_ = line;
+			basePath_ = "./uploads"; // By default, change per config
+			break;
+		}
+	}
+}
+
 void	HttpRequest::readRequest(const std::string& req)
 {
 	std::string requestLine = req;
@@ -189,7 +222,7 @@ void	HttpRequest::readRequest(const std::string& req)
 		parseRequestLine(line);
 	requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 	line = requestLine.substr(0, requestLine.find("\r\n"));
-	while ((!line.empty() && line.size() > 0) || body == 0)
+	while ((!line.empty() && line.size() > 0) || (body == 0 && method_ == "POST"))
 	{
 		parseLine(line);
 		requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
@@ -203,6 +236,8 @@ void	HttpRequest::readRequest(const std::string& req)
 		else if (requestLine.find("\r\n") == std::string::npos)
 			throw HttpRequest::httpParserException();
 	}
+	if (method_ == "POST")
+		updateFilename();
 }
 
 static bool isOnlyDigit(const std::string& str)
@@ -337,6 +372,12 @@ void	HttpRequest::extractPortFromHost()
 		std::cout << RED << "Consider choosing another port instead of PORT:" << portNbr << QUIT << std::endl;
 }
 
+// int	HttpRequest::uploadFile(std::string basePath, std::string filename)
+// {
+
+// }
+
+
 // Debug
 void	HttpRequest::printRequest(void) const
 {
@@ -354,6 +395,10 @@ void	HttpRequest::printHeaders(void) const
 	std::cout << CYAN << "Printing headers: {" << std::endl;
 	for (const auto& pair : headers_)
 		std::cout << pair.first << ":\t" << pair.second << "}" << std::endl;;
+	if (filename_.size())
+		std::cout << "\nFilename = " << filename_ << std::endl;
+	if (basePath_.size())
+		std::cout << "Base path = " << basePath_ << std::endl;
 	std::cout << QUIT << std::endl;
 }
 
