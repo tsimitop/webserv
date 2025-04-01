@@ -149,7 +149,7 @@ void	HttpRequest::parseLine(std::string line)
 	if (colonPos != std::string::npos)
 	{
 		std::string key = line.substr(0, colonPos);
-		std::string value = line.substr(colonPos + 1, std::string::npos);
+		std::string value = line.substr(colonPos + 2, std::string::npos);
 		headers_.insert(std::pair<std::string, std::string>(key, value));
 	}
 	// else
@@ -433,9 +433,70 @@ also request body if needed ie
   "email": "john@example.com"
 }
 
-
 DELETE
 Host: example.com
 Authorization: Bearer <token>  (if required)
 Accept: application/json  (if required)
 */
+
+
+const HttpResponse	HttpRequest::performMethod()
+{
+	HttpResponse resp;
+
+	if (this->getMethod() == "POST")
+	{
+		std::ostringstream os;
+		std::ifstream file(this->filename_);
+		if (!file)
+		{
+			std::cout << RED << "Response status 404?" << QUIT << std::endl;
+			resp.setStatusCode(404);
+			resp.setReasonPhrase(404);
+			return resp;
+		}
+		std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
+		std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/uploads/" + filename);
+		if (!fileStored.is_open())
+		{
+			std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
+			resp.setStatusCode(500);
+			resp.setReasonPhrase(500);
+			return resp;
+		}
+		fileStored << file.rdbuf();
+		resp.setStatusCode(200);
+		resp.setReasonPhrase(200);
+		auto it = this->headers_.begin();
+		for (it = this->headers_.begin(); it != this->headers_.end(); it++)
+		{
+			if (it->first == "Content-Type")
+				resp.setContentType(it->second);
+			else if (it->first == "Content-Length")
+			{
+				resp.setContentLength(stoi(it->second));
+			}
+		}
+		return resp;
+	}
+	return resp;
+}
+
+
+			// Proper HTTP response
+			// std::string response =
+			// 	"HTTP/1.1 200 OK\r\n"
+			// 	"Content-Type: text/html\r\n"
+			// 	"Content-Length: " + std::to_string(body.size()) + "\r\n"
+			// 	"Connection: close\r\n"
+			// 	"\r\n" + body;
+			// send(client_socket, response.c_str(), response.size(), 0);
+			// TO BE ADDED AFTER CONFIG PARSING IS DONE!
+			// int parse(std::void_t ServerConfig)
+			// {
+			// 	std::string uploadDir = ServerConfig->uploadDir || "./uploads";
+			// 	std::string filename = getFilename();
+			// if (!filename.empty())
+			// 	uploadFile(uploadDir, filename);
+			// }
+			// request.uploadFile(request.getBasePath(), request.getFilename());

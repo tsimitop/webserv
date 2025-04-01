@@ -58,15 +58,19 @@ HttpResponse::HttpResponse() : statusCode_(0), reasonPhrase_("Empty")
 }
 
 HttpResponse::HttpResponse(const HttpResponse& other)
-: statusReason_(other.statusReason_), statusCode_(other.statusCode_), reasonPhrase_(other.reasonPhrase_) {}
+{
+	*this = other;
+}
 
 HttpResponse& HttpResponse::operator=(const HttpResponse& other)
 {
 	if (this != &other)
 	{
 		this->statusReason_ = other.statusReason_;
-		this->statusReason_ = other.statusReason_;
-		this->statusReason_ = other.statusReason_;
+		this->statusCode_ = other.statusCode_;
+		this->reasonPhrase_ = other.reasonPhrase_;
+		this->contentType_ = other.contentType_;
+		this->contentLength_ = other.contentLength_;
 	}
 	return (*this);
 }
@@ -143,9 +147,17 @@ HttpResponse::HttpResponse(int sc)
 // Getters
 int			HttpResponse::getStatusCode(void) const {return (statusCode_);}
 std::string	HttpResponse::getReasonPhrase(void) const {return (reasonPhrase_);}
-
+std::string	HttpResponse::getContentType(void) const {return (contentType_);}
+int			HttpResponse::getContentLength(void) const {return (contentLength_);}
 // Setters
 void	HttpResponse::setStatusCode(int sc) {statusCode_ = sc;}
+void	HttpResponse::setContentLength(int len)
+{
+	// std::cout << RED << "LEN = " << len << std::endl;
+	contentLength_ = len;
+	// std::cout << RED << "LEN = " << contentLength_ << std::endl;
+}
+void	HttpResponse::setContentType(std::string ctype) {contentType_ = ctype;}
 
 void	HttpResponse::setReasonPhrase(int sc)
 {
@@ -163,16 +175,12 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 	std::string	request = req.getHttpRequest(); // check out the request and figure out response
 	std::string	version = req.getVersion(); // check out the request and figure out response
 	time_t		timestamp;
-	
+	std::stringstream temp;
+	std::string response;
+
 	// FIGURE OUT RESPONSE!
 
-	// assuming response is 200
-	setStatusCode(200);
-	setReasonPhrase(200);
 	time(&timestamp);
-
-	std::cout << RED << "Responding...\n";
-	std::string response;
 	response += version;
 	response += " ";
 	response += std::to_string(this->getStatusCode());
@@ -180,14 +188,21 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 	response += this->getReasonPhrase();
 	response += "\n";
 	response += "Server: Webserv\n";
-	response += "Date: "; // figure it out
-	response += ctime(&timestamp); // figure it out
+	response += "Date: ";
+	response += ctime(&timestamp);
 	response += "\n";
-	response += "Content-Type: text/html\n"; // figure it out
-	response += "Content-Length: !number!\n"; // figure it out
-	response += "Last-Modified: !date!\n"; // figure it out
+	response += "Content-Type: ";
+	response += this->getContentType();
+	response += "\n";
+	response += "Content-Length: ";
+	temp << this->getContentLength();
+	std::string lengthString;
+	temp >> lengthString;
+	response += lengthString;
+	response += "\n";
+	// response += "Last-Modified: !date!\n"; // figure it out
 
-	std::cout << response << std::endl;
-	std::cout << RED << "Send entire file or error\n" << QUIT;
+	// std::cout << response << std::endl;
+	// std::cout << RED << "Send entire file or error\n" << QUIT;
 	return (response);
 }

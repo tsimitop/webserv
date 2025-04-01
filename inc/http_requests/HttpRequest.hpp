@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include "HttpResponse.hpp"
 // #include <stoi>
 // #include <getline>
 
@@ -16,6 +17,8 @@
 #define MAGENTA "\033[35m"
 #define CYAN "\033[36m"
 #define QUIT "\033[0m"
+
+class HttpResponse;
 
 class HttpRequest
 {
@@ -75,6 +78,9 @@ public:
 	void	printHeaders(void) const;
 	void	printRequest(void) const;
 	void	printBody(void) const;
+
+	// Execute
+	const HttpResponse	performMethod();
 
 	class httpParserException : public std::exception {
 		public:
