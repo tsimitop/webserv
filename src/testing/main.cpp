@@ -21,6 +21,9 @@ int main(void)
 	post3.testRequest();
 	HttpRequestTester post4("POST /api/user HTTP/1.1\r\nHost: www.example.com\r\nContent-Type: application/json\r\nContent-Length: 33\r\nAuthorization: Bearer <your_token>\r\n\r\n", "Test post with ok Host, ok Content-Length and ok Content-Type", "\033[32mShould pass.\033[0m");
 	post4.testRequest();
+	// Make sure the binary content is sent as raw bytes without adding \r\n at the end.
+	HttpRequestTester post5("POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/octet-stream\r\nContent-Length: 12345\r\nContent-Disposition: attachment; filename='example.txt'\r\nConnection: keep-alive\r\n\r\n", "Test post with file upload", "\033[32mShould pass for now.\033[0m");
+	post5.testRequest();
 
 	std::cout << "Tests with DELETE\n";
 	HttpRequestTester delete1("DELETE /index.html HTTP/1.1\r\n\r\n", "Test delete without Host.", "\033[31mShould fail.\033[0m");
