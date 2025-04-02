@@ -71,6 +71,7 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& other)
 		this->reasonPhrase_ = other.reasonPhrase_;
 		this->contentType_ = other.contentType_;
 		this->contentLength_ = other.contentLength_;
+		this->body_ = other.body_;
 	}
 	return (*this);
 }
@@ -148,6 +149,7 @@ HttpResponse::HttpResponse(int sc)
 int			HttpResponse::getStatusCode(void) const {return (statusCode_);}
 std::string	HttpResponse::getReasonPhrase(void) const {return (reasonPhrase_);}
 std::string	HttpResponse::getContentType(void) const {return (contentType_);}
+std::string	HttpResponse::getBody(void) const {return (body_);}
 int			HttpResponse::getContentLength(void) const {return (contentLength_);}
 // Setters
 void	HttpResponse::setStatusCode(int sc) {statusCode_ = sc;}
@@ -158,6 +160,7 @@ void	HttpResponse::setContentLength(int len)
 	// std::cout << RED << "LEN = " << contentLength_ << std::endl;
 }
 void	HttpResponse::setContentType(std::string ctype) {contentType_ = ctype;}
+void	HttpResponse::setBody(const std::string& body) {body_ = body;}
 
 void	HttpResponse::setReasonPhrase(int sc)
 {
@@ -186,20 +189,24 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 	response += std::to_string(this->getStatusCode());
 	response += " ";
 	response += this->getReasonPhrase();
-	response += "\n";
+	response += "\r\n";
 	response += "Server: Webserv\n";
 	response += "Date: ";
 	response += ctime(&timestamp);
-	response += "\n";
+	response += "\r\n";
 	response += "Content-Type: ";
 	response += this->getContentType();
-	response += "\n";
+	response += "\r\n";
 	response += "Content-Length: ";
 	temp << this->getContentLength();
 	std::string lengthString;
 	temp >> lengthString;
 	response += lengthString;
-	response += "\n";
+	response += "\r\n";
+	response += "Connection: keep-alive\r\n";
+	response += "\r\n";
+	response += this->getBody();
+	response += "\r\n";
 	// response += "Last-Modified: !date!\n"; // figure it out
 
 	// std::cout << response << std::endl;

@@ -439,46 +439,106 @@ Authorization: Bearer <token>  (if required)
 Accept: application/json  (if required)
 */
 
+const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
+{
+	std::ostringstream os;
+	std::ifstream file(this->filename_);
+	if (!file)
+	{
+		std::cout << RED << "Response status 404?" << QUIT << std::endl;
+		resp.setStatusCode(404);
+		resp.setReasonPhrase(404);
+		return resp;
+	}
+	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
+	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/uploads/" + filename);
+	if (!fileStored.is_open())
+	{
+		std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
+		resp.setStatusCode(500);
+		resp.setReasonPhrase(500);
+		return resp;
+	}
+	fileStored << file.rdbuf();
+	resp.setStatusCode(200);
+	resp.setReasonPhrase(200);
+	auto it = this->headers_.begin();
+	for (it = this->headers_.begin(); it != this->headers_.end(); it++)
+	{
+		if (it->first == "Content-Type")
+			resp.setContentType(it->second);
+		else if (it->first == "Content-Length")
+		{
+			resp.setContentLength(stoi(it->second));
+		}
+	}
+	return resp;
+}
+
+const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
+{
+	if (this->url_ == "/" || this->url_ == "index.html" || this->url_ == "/index.html")
+	{
+		std::string url = "/index.html";
+		// Go back two directories from current file, enter www directory, try to open index.html
+		std::filesystem::path basePath = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
+		std::filesystem::path target_file = basePath += url;
+		// std::cout << "basePath: " << basePath << std::endl;
+		// std::cout << "target_file: " << target_file << std::endl;
+		std::ifstream input_file(target_file.string());
+		if (!input_file.is_open())
+		{
+			std::cout << RED << "Failed to open index file\n" << QUIT;
+			resp.setStatusCode(404);
+			resp.setReasonPhrase(404);
+			return resp;
+		}
+		else
+		{
+			resp.setStatusCode(200);
+			resp.setReasonPhrase(200);
+			resp.setContentType("text/html"); // figure it out properly using filePath.extension()
+			std::stringstream ss;
+			ss << input_file.rdbuf();
+			std::string temp;
+			temp = ss.str();
+			resp.setContentLength(temp.length()); // figure it out properly using filePath.extension()
+			// std::cout << temp << std::endl;
+			resp.setBody(temp);
+			// std::cout << resp.getBody() << std::endl;
+		}
+		// std::string root_directory = "www";
+		// std::filesystem::path filePath = std::filesystem::absolute("index.html");
+		// std::cout << "Directory of getCase: " << filePath.filename() << std::endl;
+		// std::cout << "Directory of getCase: " << filePath.c_str() << std::endl;
+		// std::cout << "Directory of getCase: " << filePath.extension() << std::endl;
+		// std::cout << "Directory of getCase: " << filePath.has_parent_path() << std::endl;
+		// std::cout << "Directory of getCase: " << filePath.has_root_path() << std::endl;
+	}
+	return resp;
+}
+
 
 const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
-	if (this->getMethod() == "POST")
+	if (this->getMethod() == "GET")
 	{
-		std::ostringstream os;
-		std::ifstream file(this->filename_);
-		if (!file)
-		{
-			std::cout << RED << "Response status 404?" << QUIT << std::endl;
-			resp.setStatusCode(404);
-			resp.setReasonPhrase(404);
-			return resp;
-		}
-		std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
-		std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/uploads/" + filename);
-		if (!fileStored.is_open())
-		{
-			std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
-			resp.setStatusCode(500);
-			resp.setReasonPhrase(500);
-			return resp;
-		}
-		fileStored << file.rdbuf();
-		resp.setStatusCode(200);
-		resp.setReasonPhrase(200);
-		auto it = this->headers_.begin();
-		for (it = this->headers_.begin(); it != this->headers_.end(); it++)
-		{
-			if (it->first == "Content-Type")
-				resp.setContentType(it->second);
-			else if (it->first == "Content-Length")
-			{
-				resp.setContentLength(stoi(it->second));
-			}
-		}
-		return resp;
+		resp = getCase(resp);
 	}
+	else if (this->getMethod() == "POST")
+	{
+		resp = postCase(resp);
+	}
+	// else if (this->getMethod() == "DELETE")
+	// {
+	// 	resp = postCase(resp);
+	// }
+	// else
+	// {
+
+	// }
 	return resp;
 }
 

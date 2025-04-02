@@ -14,9 +14,9 @@ int main(void)
 	
 	some text to be stored in a file->(hello.txt) // body is stored in
 	*/
-	// std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
+	std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
 	// std::string	req = "POST /submit-form HTTP/1.1\r\nHost: example.com\r\nContent-Length: 27\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John+Doe&email=john@example.com\r\n";
-	std::string	req = "POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/octet-stream\r\nContent-Length: 41\r\nContent-Disposition: attachment; filename='/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/attempt'\r\nConnection: keep-alive\r\n\r\n";
+	// std::string	req = "POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/octet-stream\r\nContent-Length: 41\r\nContent-Disposition: attachment; filename='/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/attempt'\r\nConnection: keep-alive\r\n\r\n";
 	// std::string	req = "DELETE /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
 
 
@@ -54,13 +54,13 @@ int main(void)
 }
 //_________________
 // What Real Web Servers Do (p. 113, squirrel book)
-// 1. Set up connection—accept a client connection, or close if the client is unwanted.
-// 2. Receive request—read an HTTP request message from the network.
-// 3. Process request—interpret the request message and take action.
-// 4. Access resource—access the resource specified in the message.
+// 1. Set up connection	—accept a client connection, or close if the client is unwanted.
+// 2. Receive request	—read an HTTP request message from the network.
+// 3. Process request	—interpret the request message and take action.
+// 4. Access resource	—access the resource specified in the message.
 // 5. Construct response—create the HTTP response message with the right headers.
-// 6. Send response—send the response back to the client.
-// 7. Log transaction—place notes about the completed transaction in a log file.
+// 6. Send response		—send the response back to the client.
+// 7. Log transaction	—place notes about the completed transaction in a log file.
 
 //____________________________________________________________________
 
