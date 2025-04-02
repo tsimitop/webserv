@@ -81,6 +81,8 @@ public:
 
 	// Execute
 	const HttpResponse	performMethod();
+	const HttpResponse	postCase(HttpResponse& resp);
+	const HttpResponse	getCase(HttpResponse& resp);
 
 	class httpParserException : public std::exception {
 		public:

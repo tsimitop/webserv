@@ -25,6 +25,7 @@ private:
 	std::string								reasonPhrase_;
 	std::string								contentType_;
 	int										contentLength_;
+	std::string								body_;
 public:
 	// Orthodox Canonical Class Form
 	HttpResponse();
@@ -39,12 +40,14 @@ public:
 	int			getStatusCode(void) const;
 	std::string	getReasonPhrase(void) const;
 	std::string	getContentType(void) const;
+	std::string	getBody(void) const;
 	int			getContentLength(void) const;
 
 	// Setters
 	void	setStatusCode(int sc);
 	void	setReasonPhrase(int sc);
 	void	setContentType(std::string ctype);
+	void	setBody(const std::string& body);
 	void	setContentLength(int len);
 
 	const std::string respond(const HttpRequest& req);
