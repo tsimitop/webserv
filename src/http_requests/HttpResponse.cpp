@@ -151,14 +151,10 @@ std::string	HttpResponse::getReasonPhrase(void) const {return (reasonPhrase_);}
 std::string	HttpResponse::getContentType(void) const {return (contentType_);}
 std::string	HttpResponse::getBody(void) const {return (body_);}
 int			HttpResponse::getContentLength(void) const {return (contentLength_);}
+
 // Setters
 void	HttpResponse::setStatusCode(int sc) {statusCode_ = sc;}
-void	HttpResponse::setContentLength(int len)
-{
-	// std::cout << RED << "LEN = " << len << std::endl;
-	contentLength_ = len;
-	// std::cout << RED << "LEN = " << contentLength_ << std::endl;
-}
+void	HttpResponse::setContentLength(int len) {contentLength_ = len;}
 void	HttpResponse::setContentType(std::string ctype) {contentType_ = ctype;}
 void	HttpResponse::setBody(const std::string& body) {body_ = body;}
 
@@ -175,16 +171,12 @@ void	HttpResponse::setReasonPhrase(int sc)
 
 const std::string HttpResponse::respond(const HttpRequest& req)
 {
-	std::string	request = req.getHttpRequest(); // check out the request and figure out response
-	std::string	version = req.getVersion(); // check out the request and figure out response
 	time_t		timestamp;
 	std::stringstream temp;
 	std::string response;
 
-	// FIGURE OUT RESPONSE!
-
 	time(&timestamp);
-	response += version;
+	response += req.getVersion();
 	response += " ";
 	response += std::to_string(this->getStatusCode());
 	response += " ";
@@ -193,7 +185,6 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 	response += "Server: Webserv\n";
 	response += "Date: ";
 	response += ctime(&timestamp);
-	response += "\r\n";
 	response += "Content-Type: ";
 	response += this->getContentType();
 	response += "\r\n";
@@ -207,9 +198,6 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 	response += "\r\n";
 	response += this->getBody();
 	response += "\r\n";
-	// response += "Last-Modified: !date!\n"; // figure it out
-
-	// std::cout << response << std::endl;
-	// std::cout << RED << "Send entire file or error\n" << QUIT;
+	response += "\r\n";
 	return (response);
 }

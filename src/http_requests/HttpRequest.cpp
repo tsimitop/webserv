@@ -372,12 +372,6 @@ void	HttpRequest::extractPortFromHost()
 		std::cout << RED << "Consider choosing another port instead of PORT:" << portNbr << QUIT << std::endl;
 }
 
-// int	HttpRequest::uploadFile(std::string basePath, std::string filename)
-// {
-
-// }
-
-
 // Debug
 void	HttpRequest::printRequest(void) const
 {
@@ -417,28 +411,7 @@ const char *HttpRequest::httpParserException::what() const throw()
 	return ("Exception thrown: error while parsing http request.");
 }
 
-/*
-Mandatory Headers
-GET
-Host: example.com
-
-POST
-Host: example.com
-Content-Type: /text/plain
-Content-Length: 15
-
-also request body if needed ie
-{
-  "name": "John Doe",
-  "email": "john@example.com"
-}
-
-DELETE
-Host: example.com
-Authorization: Bearer <token>  (if required)
-Accept: application/json  (if required)
-*/
-
+// Execute methodes
 const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
 	std::ostringstream os;
@@ -468,9 +441,7 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 		if (it->first == "Content-Type")
 			resp.setContentType(it->second);
 		else if (it->first == "Content-Length")
-		{
 			resp.setContentLength(stoi(it->second));
-		}
 	}
 	return resp;
 }
@@ -480,18 +451,23 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 	if (this->url_ == "/" || this->url_ == "index.html" || this->url_ == "/index.html")
 	{
 		std::string url = "/index.html";
-		// Go back two directories from current file, enter www directory, try to open index.html
+		// Go back two directories from current file, enter www directory, try to open index.html (should gegt directories form config file)
 		std::filesystem::path basePath = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
 		std::filesystem::path target_file = basePath += url;
-		// std::cout << "basePath: " << basePath << std::endl;
-		// std::cout << "target_file: " << target_file << std::endl;
 		std::ifstream input_file(target_file.string());
 		if (!input_file.is_open())
 		{
-			std::cout << RED << "Failed to open index file\n" << QUIT;
+			target_file = std::filesystem::absolute(__FILE__).parent_path().parent_path().parent_path() += "/errors/files/404";
+			std::ifstream input_file(target_file.string());
 			resp.setStatusCode(404);
 			resp.setReasonPhrase(404);
-			return resp;
+			resp.setContentType("text/html");
+			std::stringstream ss;
+			ss << input_file.rdbuf();
+			std::string temp;
+			temp = ss.str();
+			resp.setContentLength(temp.length());
+			resp.setBody(temp);
 		}
 		else
 		{
@@ -502,18 +478,9 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 			ss << input_file.rdbuf();
 			std::string temp;
 			temp = ss.str();
-			resp.setContentLength(temp.length()); // figure it out properly using filePath.extension()
-			// std::cout << temp << std::endl;
+			resp.setContentLength(temp.length());
 			resp.setBody(temp);
-			// std::cout << resp.getBody() << std::endl;
 		}
-		// std::string root_directory = "www";
-		// std::filesystem::path filePath = std::filesystem::absolute("index.html");
-		// std::cout << "Directory of getCase: " << filePath.filename() << std::endl;
-		// std::cout << "Directory of getCase: " << filePath.c_str() << std::endl;
-		// std::cout << "Directory of getCase: " << filePath.extension() << std::endl;
-		// std::cout << "Directory of getCase: " << filePath.has_parent_path() << std::endl;
-		// std::cout << "Directory of getCase: " << filePath.has_root_path() << std::endl;
 	}
 	return resp;
 }
@@ -537,26 +504,17 @@ const HttpResponse	HttpRequest::performMethod()
 	// }
 	// else
 	// {
-
 	// }
 	return resp;
 }
 
-
-			// Proper HTTP response
-			// std::string response =
-			// 	"HTTP/1.1 200 OK\r\n"
-			// 	"Content-Type: text/html\r\n"
-			// 	"Content-Length: " + std::to_string(body.size()) + "\r\n"
-			// 	"Connection: close\r\n"
-			// 	"\r\n" + body;
-			// send(client_socket, response.c_str(), response.size(), 0);
-			// TO BE ADDED AFTER CONFIG PARSING IS DONE!
-			// int parse(std::void_t ServerConfig)
-			// {
-			// 	std::string uploadDir = ServerConfig->uploadDir || "./uploads";
-			// 	std::string filename = getFilename();
-			// if (!filename.empty())
-			// 	uploadFile(uploadDir, filename);
-			// }
-			// request.uploadFile(request.getBasePath(), request.getFilename());
+// Proper HTTP response
+// TO BE ADDED AFTER CONFIG PARSING IS DONE!
+// int parse(std::void_t ServerConfig)
+// {
+// 	std::string uploadDir = ServerConfig->uploadDir || "./uploads";
+// 	std::string filename = getFilename();
+// if (!filename.empty())
+// 	uploadFile(uploadDir, filename);
+// }
+// request.uploadFile(request.getBasePath(), request.getFilename());

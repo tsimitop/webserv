@@ -7,8 +7,6 @@
 #include <sstream>
 #include <fstream>
 #include "HttpResponse.hpp"
-// #include <stoi>
-// #include <getline>
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -79,7 +77,7 @@ public:
 	void	printRequest(void) const;
 	void	printBody(void) const;
 
-	// Execute
+	// Execute methodes
 	const HttpResponse	performMethod();
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);

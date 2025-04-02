@@ -1,5 +1,7 @@
 #include "../../inc/sockets/sockets.hpp"
 #include "../../inc/sockets/Server.hpp"
+#include "../../inc/http_requests/HttpRequest.hpp"
+#include "../../inc/http_requests/HttpResponse.hpp"
 
 //	TODO:	reusing the server address does not quite work yet.
 
@@ -70,17 +72,35 @@ void	Server::run() {
 //	example function, could also be 'imported' from a different class (right?)
 //	this function only takes the input from the client and echoes it.
 void	Server::handleClient(int client_socket) {
-	char	msg[] = "Juhei! A new friend!\n";
-	send(client_socket, msg, sizeof(msg), 0);
+	int server_error = 0;
 	while(true)
 	{
 		char	buffer[BUFF_LEN] = {0};
+		HttpRequest		request;
+		HttpResponse	response;
+
 		recv(client_socket, buffer, BUFF_LEN, 0);
-		std::cout << buffer;
-		if (buffer[0] == '\n' || buffer[0] == '\r')
+		// std::cout << CYAN << "Request: " << buffer << QUIT << std::endl;
+		std::string req = buffer;
+		try
 		{
-			std::cout << "end of connection\n";
-			break ;
+			request.readRequest(req);
+			if (!request.isValid())
+				throw HttpRequest::httpParserException();
 		}
+		catch(...)
+		{
+			server_error = 1;
+			std::cerr << RED << "Exception thrown: error while parsing http request.\n";
+		}
+		if (server_error == 0)
+		{
+			request.extractPortFromHost();
+			response = request.performMethod();
+			std::string res = response.respond(request);
+			// std::cout << YELLOW << "'" << res << "'" << QUIT << std::endl;
+			send(client_socket, res.c_str(), res.size(), 0);
+		}
+		break ;
 	}
 }
