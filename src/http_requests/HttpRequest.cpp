@@ -38,6 +38,9 @@ std::unordered_map<std::string, std::string> HttpRequest::getHeaders(void) const
 std::string HttpRequest::getHttpRequest(void) const
 {return (httpRequest_);}
 
+std::string HttpRequest::getBody(void) const
+{return (bodyComplete_);}
+
 std::string HttpRequest::getMethod(void) const
 {return (method_);}
 
@@ -152,42 +155,6 @@ void	HttpRequest::parseLine(std::string line)
 		std::string value = line.substr(colonPos + 2, std::string::npos);
 		headers_.insert(std::pair<std::string, std::string>(key, value));
 	}
-	// else
-	// {
-	// 	std::cout << RED << "No colon after key, no idea what to do" << QUIT << std::endl;
-	// 	return ;
-	// }
-}
-
-void	HttpRequest::fillBody(std::string& requestLine)
-{
-	bodyComplete_ = requestLine;
-	std::string	element;
-
-	while (!requestLine.empty())
-	{
-		size_t posFound = requestLine.find('&');
-		if (posFound != std::string::npos)
-		{
-			element = requestLine.substr(0, posFound);
-			requestLine = requestLine.substr(posFound + 1);
-		}
-		else
-		{
-			posFound = requestLine.find("\r\n");
-			if (posFound != std::string::npos)
-			{
-					element = requestLine.substr(0, requestLine.find("\r\n"));
-					requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-			}
-			else
-			{
-				element = requestLine;
-				requestLine.clear();
-			}
-		}
-		bodyVector_.push_back(element);
-	}
 }
 
 void	HttpRequest::updateFilename()
@@ -230,7 +197,7 @@ void	HttpRequest::readRequest(const std::string& req)
 		if (line.empty() || line.size() == 0)
 		{
 			requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-			fillBody(requestLine);
+			bodyComplete_ = requestLine;
 				body = 1;
 		}
 		else if (requestLine.find("\r\n") == std::string::npos)
@@ -415,14 +382,14 @@ const char *HttpRequest::httpParserException::what() const throw()
 const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
 	std::ostringstream os;
-	std::ifstream file(this->filename_);
-	if (!file)
-	{
-		std::cout << RED << "Response status 404?" << QUIT << std::endl;
-		resp.setStatusCode(404);
-		resp.setReasonPhrase(404);
-		return resp;
-	}
+	// std::ofstream file(this->filename_);
+	// if (!file)
+	// {
+	// 	std::cout << RED << "Response status 404?" << QUIT << std::endl;
+	// 	resp.setStatusCode(404);
+	// 	resp.setReasonPhrase(404);
+	// 	return resp;
+	// }
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
 	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename);
 	if (!fileStored.is_open())
@@ -432,7 +399,8 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 		resp.setReasonPhrase(500);
 		return resp;
 	}
-	fileStored << file.rdbuf();
+	fileStored << this->getBody();
+	// fileStored << file.rdbuf();
 	resp.setStatusCode(200);
 	resp.setReasonPhrase(200);
 	auto it = this->headers_.begin();

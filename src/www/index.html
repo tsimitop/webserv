@@ -5,5 +5,40 @@
 <h1>The simplest index ever</h1>
 <p>Is this a simple index or what?</p>
 
+<input type="file" id="myFile">
+<button onclick="uploadFile()">Upload</button>
+
+<script>
+	function uploadFile() {
+		const fileInput = document.getElementById("myFile");
+		const file = fileInput.files[0];
+
+		if (!file) {
+			alert("Please select a file");
+			return;
+		}
+
+		const filename = file.name;
+
+		fetch('/uploads', {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/octet-stream",
+				"Content-Disposition": 'attachment; filename="' + filename + '"',
+			},
+			body: file // Send the raw file
+		}).then(response => console.log("Upload complete"))
+		  .catch(error => console.error("Error:", error));
+	}
+</script>
+
 </body>
 </html>
+
+
+
+<!-- <form action="/uploads/" method="post" enctype="multipart/form-data">
+	<label for="fileUpload">Choose a file:</label>
+	<input type="file" id="fileUpload" name="file" required>
+	<input type="submit" value="Upload File">
+</form> -->
