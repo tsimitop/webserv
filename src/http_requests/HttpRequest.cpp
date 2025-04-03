@@ -97,6 +97,7 @@ static bool	isValidMethod(std::string method)
 		return (true);
 	return (false);
 }
+
 void	HttpRequest::parseMethod(std::string& line)
 {
 	std::string::size_type	firstSpace;
@@ -382,25 +383,25 @@ const char *HttpRequest::httpParserException::what() const throw()
 const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
 	std::ostringstream os;
-	// std::ofstream file(this->filename_);
-	// if (!file)
-	// {
-	// 	std::cout << RED << "Response status 404?" << QUIT << std::endl;
-	// 	resp.setStatusCode(404);
-	// 	resp.setReasonPhrase(404);
-	// 	return resp;
-	// }
-	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
-	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename);
-	if (!fileStored.is_open())
+	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1); //recheck this
+	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploadds/" + filename);
+	if (!fileStored.is_open()) // probably needs to be handled by html and/or config
 	{
-		std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
+		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
+		std::ifstream input_file(error_file.string());
+		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
 		resp.setStatusCode(500);
 		resp.setReasonPhrase(500);
+		resp.setContentType("text/html");
+		std::stringstream ss;
+		ss << input_file.rdbuf();
+		std::string temp;
+		temp = ss.str();
+		resp.setContentLength(temp.length());
+		resp.setBody(temp);
 		return resp;
 	}
 	fileStored << this->getBody();
-	// fileStored << file.rdbuf();
 	resp.setStatusCode(200);
 	resp.setReasonPhrase(200);
 	auto it = this->headers_.begin();
