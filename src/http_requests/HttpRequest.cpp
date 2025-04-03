@@ -424,7 +424,7 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 		return resp;
 	}
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
-	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/uploads/" + filename);
+	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename);
 	if (!fileStored.is_open())
 	{
 		std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
@@ -457,7 +457,7 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 		std::ifstream input_file(target_file.string());
 		if (!input_file.is_open())
 		{
-			target_file = std::filesystem::absolute(__FILE__).parent_path().parent_path().parent_path() += "/errors/files/404";
+			target_file = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www/errors/404";
 			std::ifstream input_file(target_file.string());
 			resp.setStatusCode(404);
 			resp.setReasonPhrase(404);
