@@ -384,7 +384,9 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
 	std::ostringstream os;
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1); //recheck this
-	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploadds/" + filename);
+	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename);
+	// std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename, std::ios::binary);
+
 	if (!fileStored.is_open()) // probably needs to be handled by html and/or config
 	{
 		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
@@ -402,6 +404,9 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 		return resp;
 	}
 	fileStored << this->getBody();
+	// std::string body = this->getBody();
+	// fileStored.write(body.c_str(), body.size());
+
 	resp.setStatusCode(200);
 	resp.setReasonPhrase(200);
 	auto it = this->headers_.begin();
