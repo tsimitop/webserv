@@ -1,4 +1,4 @@
-#include "Config.hpp"
+#include "Http.hpp"
 //=======================Default Http===============================
 
 Http::Http() : servers()
@@ -30,7 +30,6 @@ size_t Http::calcBodySizeInBites(size_t body_size)
 };
 int		Http::hasCurlyBrackets(std::vector<std::string> lines)
 {
-	//{ = +1, } = -1
 	for (std::string l : lines)
 	{
 
