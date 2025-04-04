@@ -5,7 +5,7 @@
 #include <map>
 #include <sstream>
 #include <vector>
-#include "./Server/Server.hpp"
+#include "../Server/Server.hpp"
 
 enum print{YES = 1, NO = 0};
 
