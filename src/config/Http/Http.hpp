@@ -13,6 +13,7 @@ class Http
 {
 	public:
 		std::vector <ServerInfo> servers;
+		std::filesystem::path executable_path;
 		//Default
 		Http();
 		Http(const Http& other);

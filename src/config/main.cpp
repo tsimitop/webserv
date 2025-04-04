@@ -9,12 +9,12 @@ int main(int argc, char *argv[])
 	ServerInfo s;
 	std::vector<size_t> server_lines;
 	std::vector<std::string> lines;
-	std::filesystem::path executable_path = 
+	c.executable_path = 
 			std::filesystem::canonical
 			(
 				std::filesystem::absolute(argv[0])
 			).parent_path();
-	std::filesystem::path config_path = executable_path / argv[1];
+	std::filesystem::path config_path = c.executable_path / argv[1];
 	lines = c.configLines(config_path);
 	server_lines = c.serverLines(lines);
 	int valid_servers = c.validServersFormat(lines, server_lines);
