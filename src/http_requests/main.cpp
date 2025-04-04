@@ -19,8 +19,6 @@ int main(void)
 	// std::string	req = "POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/octet-stream\r\nContent-Length: 41\r\nContent-Disposition: attachment; filename='/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/attempt'\r\nConnection: keep-alive\r\n\r\n";
 	// std::string	req = "DELETE /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
 
-
-
 	//----------------Request has come in from client----------------//
 	try
 	{
@@ -29,7 +27,6 @@ int main(void)
 		{
 			std::cout << RED << "Error: Invalid Request" << QUIT << std::endl;
 			throw HttpRequest::httpParserException();
-			// return (1); // replace with exception maybe
 		}
 	}
 	catch(...)

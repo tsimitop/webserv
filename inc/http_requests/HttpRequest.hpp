@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <cstdio>
+#include <filesystem>
 #include "HttpResponse.hpp"
 
 #define RED "\033[31m"
@@ -49,6 +51,7 @@ public:
 	std::string										getVersion(void) const;
 	std::string										getBasePath(void) const;
 	std::string										getFilename(void) const;
+	std::string										getBody(void) const;
 	int												getPort(void) const;
 
 	// Setters
@@ -68,8 +71,6 @@ public:
 	void	parseMethod(std::string& line);
 	void	parseUrl(std::string& line);
 	void	parseHttpVersion(std::string& line);
-	void	fillBody(std::string& requestLine);
-	// int		uploadFile(std::string basePath, std::string filename);
 	void	updateFilename();
 
 	// Debug
@@ -81,6 +82,7 @@ public:
 	const HttpResponse	performMethod();
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);
+	const HttpResponse	deleteCase(HttpResponse& resp);
 
 	class httpParserException : public std::exception {
 		public:
