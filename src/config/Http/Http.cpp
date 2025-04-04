@@ -23,8 +23,7 @@ Http& Http::operator=(const Http& other)
 Http::~Http()
 {
 
-};
-
+};;
 //parsers
 std::vector<std::string> Http::configLines(std::filesystem::path config_path)
 {
