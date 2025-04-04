@@ -38,6 +38,9 @@ std::unordered_map<std::string, std::string> HttpRequest::getHeaders(void) const
 std::string HttpRequest::getHttpRequest(void) const
 {return (httpRequest_);}
 
+std::string HttpRequest::getBody(void) const
+{return (bodyComplete_);}
+
 std::string HttpRequest::getMethod(void) const
 {return (method_);}
 
@@ -94,6 +97,7 @@ static bool	isValidMethod(std::string method)
 		return (true);
 	return (false);
 }
+
 void	HttpRequest::parseMethod(std::string& line)
 {
 	std::string::size_type	firstSpace;
@@ -152,42 +156,6 @@ void	HttpRequest::parseLine(std::string line)
 		std::string value = line.substr(colonPos + 2, std::string::npos);
 		headers_.insert(std::pair<std::string, std::string>(key, value));
 	}
-	// else
-	// {
-	// 	std::cout << RED << "No colon after key, no idea what to do" << QUIT << std::endl;
-	// 	return ;
-	// }
-}
-
-void	HttpRequest::fillBody(std::string& requestLine)
-{
-	bodyComplete_ = requestLine;
-	std::string	element;
-
-	while (!requestLine.empty())
-	{
-		size_t posFound = requestLine.find('&');
-		if (posFound != std::string::npos)
-		{
-			element = requestLine.substr(0, posFound);
-			requestLine = requestLine.substr(posFound + 1);
-		}
-		else
-		{
-			posFound = requestLine.find("\r\n");
-			if (posFound != std::string::npos)
-			{
-					element = requestLine.substr(0, requestLine.find("\r\n"));
-					requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-			}
-			else
-			{
-				element = requestLine;
-				requestLine.clear();
-			}
-		}
-		bodyVector_.push_back(element);
-	}
 }
 
 void	HttpRequest::updateFilename()
@@ -230,7 +198,7 @@ void	HttpRequest::readRequest(const std::string& req)
 		if (line.empty() || line.size() == 0)
 		{
 			requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
-			fillBody(requestLine);
+			bodyComplete_ = requestLine;
 				body = 1;
 		}
 		else if (requestLine.find("\r\n") == std::string::npos)
@@ -415,24 +383,30 @@ const char *HttpRequest::httpParserException::what() const throw()
 const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
 	std::ostringstream os;
-	std::ifstream file(this->filename_);
-	if (!file)
-	{
-		std::cout << RED << "Response status 404?" << QUIT << std::endl;
-		resp.setStatusCode(404);
-		resp.setReasonPhrase(404);
-		return resp;
-	}
-	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
+	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1); //recheck this
 	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename);
-	if (!fileStored.is_open())
+	// std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename, std::ios::binary);
+
+	if (!fileStored.is_open()) // probably needs to be handled by html and/or config
 	{
-		std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
+		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
+		std::ifstream input_file(error_file.string());
+		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
 		resp.setStatusCode(500);
 		resp.setReasonPhrase(500);
+		resp.setContentType("text/html");
+		std::stringstream ss;
+		ss << input_file.rdbuf();
+		std::string temp;
+		temp = ss.str();
+		resp.setContentLength(temp.length());
+		resp.setBody(temp);
 		return resp;
 	}
-	fileStored << file.rdbuf();
+	fileStored << this->getBody();
+	// std::string body = this->getBody();
+	// fileStored.write(body.c_str(), body.size());
+
 	resp.setStatusCode(200);
 	resp.setReasonPhrase(200);
 	auto it = this->headers_.begin();

@@ -49,6 +49,7 @@ public:
 	std::string										getVersion(void) const;
 	std::string										getBasePath(void) const;
 	std::string										getFilename(void) const;
+	std::string										getBody(void) const;
 	int												getPort(void) const;
 
 	// Setters
@@ -68,8 +69,6 @@ public:
 	void	parseMethod(std::string& line);
 	void	parseUrl(std::string& line);
 	void	parseHttpVersion(std::string& line);
-	void	fillBody(std::string& requestLine);
-	// int		uploadFile(std::string basePath, std::string filename);
 	void	updateFilename();
 
 	// Debug
