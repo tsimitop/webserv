@@ -498,7 +498,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 	}
 	file.close();
 	int removed = remove(path_of_file_to_delete.c_str());
-	std::cout << removed << std::endl;
+	// std::cout << removed << std::endl;
 	// removed = remove(path_of_file_to_delete);
 	// std::cout << removed << std::endl;
 	if (removed == 0)
@@ -524,8 +524,8 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 		resp.setBody(temp);
 		return resp;
 	}
-	printRequest();
-	printHeaders();
+	// printRequest();
+	// printHeaders();
 	return (resp);
 }
 
