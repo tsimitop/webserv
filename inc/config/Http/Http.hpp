@@ -11,8 +11,8 @@ enum print{YES = 1, NO = 0};
 
 class Http
 {
-	std::vector <Server> servers;
 	public:
+		std::vector <Server> servers;
 		//Default
 		Http();
 		Http(const Http& other);
@@ -24,6 +24,4 @@ class Http
 		int			hasSemicolon(std::string str);
 		std::string fastTrimmer(std::string str);
 		//getters -setters
-		const std::vector<Server>& getServers() const;
-		void setServers(std::vector<Server> servers);
 };
