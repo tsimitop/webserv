@@ -161,6 +161,12 @@ void	HttpRequest::parseLine(std::string line)
 void	HttpRequest::updateFilename()
 {
 	auto it = headers_.begin();
+	if (method_ == "DELETE")
+	{
+		filename_ = url_.substr(1);
+		// filename_ = url_.substr(url_.find_last_of("/") + 1);
+		// std::cout << filename_ << "= FILENAME\n";
+	}
 	for (it = headers_.begin(); it != headers_.end(); it++)
 	{
 		if (it->first == "Content-Disposition")
@@ -204,7 +210,7 @@ void	HttpRequest::readRequest(const std::string& req)
 		else if (requestLine.find("\r\n") == std::string::npos)
 			throw HttpRequest::httpParserException();
 	}
-	if (method_ == "POST")
+	if (method_ == "POST" || method_ == "DELETE")
 		updateFilename();
 }
 
@@ -384,10 +390,10 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
 	std::ostringstream os;
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1); //recheck this
-	std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename);
-	// std::ofstream fileStored("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename, std::ios::binary);
+	std::ofstream file("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename);
+	// std::ofstream file("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename, std::ios::binary);
 
-	if (!fileStored.is_open()) // probably needs to be handled by html and/or config
+	if (!file.is_open()) // probably needs to be handled by html and/or config
 	{
 		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
 		std::ifstream input_file(error_file.string());
@@ -397,13 +403,15 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 		resp.setContentType("text/html");
 		std::stringstream ss;
 		ss << input_file.rdbuf();
+		input_file.close();
 		std::string temp;
 		temp = ss.str();
 		resp.setContentLength(temp.length());
 		resp.setBody(temp);
 		return resp;
 	}
-	fileStored << this->getBody();
+	file << this->getBody();
+	file.close();
 	// std::string body = this->getBody();
 	// fileStored.write(body.c_str(), body.size());
 
@@ -438,6 +446,7 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 			resp.setContentType("text/html");
 			std::stringstream ss;
 			ss << input_file.rdbuf();
+			input_file.close();
 			std::string temp;
 			temp = ss.str();
 			resp.setContentLength(temp.length());
@@ -450,6 +459,7 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 			resp.setContentType("text/html"); // figure it out properly using filePath.extension()
 			std::stringstream ss;
 			ss << input_file.rdbuf();
+			input_file.close();
 			std::string temp;
 			temp = ss.str();
 			resp.setContentLength(temp.length());
@@ -459,6 +469,65 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 	return resp;
 }
 
+const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
+{
+	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www/";
+	std::filesystem::path	path_of_file_to_delete = www_path += this->filename_;
+	// std::cout << root_path << std::endl;
+	// root_path += this->filename_;
+	// std::cout << root_path << std::endl;
+	// std::cout << "FILENAME: " << this->filename_ << std::endl;
+	// std::cout << remove(path_of_file_to_delete) << std::endl;
+	std::ifstream file(path_of_file_to_delete);
+	if (!file.is_open())
+	{
+		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
+		std::ifstream input_file(error_file.string());
+		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
+		resp.setStatusCode(500);
+		resp.setReasonPhrase(500);
+		resp.setContentType("text/htmlffff");
+		std::stringstream ss;
+		ss << input_file.rdbuf();
+		input_file.close();
+		std::string temp;
+		temp = ss.str();
+		resp.setContentLength(temp.length());
+		resp.setBody(temp);
+		return resp;
+	}
+	file.close();
+	int removed = remove(path_of_file_to_delete.c_str());
+	std::cout << removed << std::endl;
+	// removed = remove(path_of_file_to_delete);
+	// std::cout << removed << std::endl;
+	if (removed == 0)
+	{
+		resp.setStatusCode(200);
+		resp.setReasonPhrase(200);
+	}
+	else if (removed != 0)
+	{
+		std::cout << "Remove failed. errno: " << errno << " (" << std::strerror(errno) << ")" << std::endl;
+		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
+		std::ifstream input_file(error_file.string());
+		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
+		resp.setStatusCode(500);
+		resp.setReasonPhrase(500);
+		resp.setContentType("text/htmlggggg");
+		std::stringstream ss;
+		ss << input_file.rdbuf();
+		std::string temp;
+		temp = ss.str();
+		input_file.close();
+		resp.setContentLength(temp.length());
+		resp.setBody(temp);
+		return resp;
+	}
+	printRequest();
+	printHeaders();
+	return (resp);
+}
 
 const HttpResponse	HttpRequest::performMethod()
 {
@@ -472,10 +541,10 @@ const HttpResponse	HttpRequest::performMethod()
 	{
 		resp = postCase(resp);
 	}
-	// else if (this->getMethod() == "DELETE")
-	// {
-	// 	resp = postCase(resp);
-	// }
+	else if (this->getMethod() == "DELETE")
+	{
+		resp = deleteCase(resp);
+	}
 	// else
 	// {
 	// }

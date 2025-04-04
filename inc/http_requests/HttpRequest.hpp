@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <cstdio>
+#include <filesystem>
 #include "HttpResponse.hpp"
 
 #define RED "\033[31m"
@@ -80,6 +82,7 @@ public:
 	const HttpResponse	performMethod();
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);
+	const HttpResponse	deleteCase(HttpResponse& resp);
 
 	class httpParserException : public std::exception {
 		public:
