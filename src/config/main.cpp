@@ -9,13 +9,13 @@ int main(int argc, char *argv[])
 	ServerInfo s;
 	std::vector<size_t> server_lines;
 	std::vector<std::string> lines;
-	c.executable_path = 
+	c.executable_folder_http = 
 			std::filesystem::canonical
 			(
 				std::filesystem::absolute(argv[0])
 			).parent_path();
-	std::filesystem::path config_path = c.executable_path / argv[1];
-	s = ServerInfo(c.executable_path);// calling the copy constructor for the executable path and by calling the assiment constructor
+	std::filesystem::path config_path = c.executable_folder_http / argv[1];
+	s = ServerInfo(c.executable_folder_http);// calling the copy constructor for the executable path and by calling the assiment constructor
 
 	c.servers.push_back(s);
 	c.servers[0].validErrorType("./www/errors/503.html");
