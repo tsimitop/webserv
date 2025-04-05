@@ -17,6 +17,9 @@ struct Location
 	~Location();
 
 	int	allowed_methods; // 1 is GET only, 3 is GET POST, 7 is GET POST DELETE
-	std::string dir_path;
-	std::string page_path;
+	std::string location_html;
+	std::string uploads_dir;
+	std::string uploads_html;
+	std::string redir;
+	std::map <std::string, std::string> cgi_map;
 };

@@ -15,12 +15,14 @@ int main(int argc, char *argv[])
 				std::filesystem::absolute(argv[0])
 			).parent_path();
 	std::filesystem::path config_path = c.executable_path / argv[1];
+	s = ServerInfo(c.executable_path);// calling the copy constructor for the executable path and by calling the assiment constructor
+
+	c.servers.push_back(s);
+	c.servers[0].validErrorType("./www/errors/503.html");
 	lines = c.configLines(config_path);
 	server_lines = c.serverLines(lines);
 	int valid_servers = c.validServersFormat(lines, server_lines);
-	// int is_valid = s.validFormatForOneServer(lines, 0, 20); //from the first server until the next server - 1 || end 
 	std::cout << "is_valid == " << (valid_servers == 1 ? "YES" : "NO") << std::endl;
-	// std::cout << "words : " << s.countWords("            server_timeout     =       10000;   ") << std::endl;
 
 	return 0;
 }
