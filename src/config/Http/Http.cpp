@@ -1,7 +1,7 @@
 #include "Http.hpp"
 //=======================Default Http===============================
 
-Http::Http() : servers()
+Http::Http() : servers(), executable_folder_http("")
 {
 };
 Http::Http(const Http& other)
@@ -9,6 +9,7 @@ Http::Http(const Http& other)
 	if (other.servers.empty() != 1)
 		for (ServerInfo s : other.servers)
 			servers.push_back(s);
+	executable_folder_http = other.executable_folder_http;
 };
 Http& Http::operator=(const Http& other)
 {
@@ -17,12 +18,12 @@ Http& Http::operator=(const Http& other)
 		if (other.servers.empty() != 1)
 		for (ServerInfo s : other.servers)
 			servers.push_back(s);
+		executable_folder_http = other.executable_folder_http;
 	}
 	return *this;
 };
 Http::~Http()
 {
-
 };;
 //parsers
 std::vector<std::string> Http::configLines(std::filesystem::path config_path)

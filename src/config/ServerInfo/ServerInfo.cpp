@@ -8,7 +8,7 @@ ServerInfo::ServerInfo() :
 	client_max_body_size(-1), 
 	errors(),
 	locations(),
-	executable_path(""),
+	executable_folder_server(""),
 	www_path(""),
 	errors_path(""),
 	uploads_dir(""),
@@ -20,7 +20,7 @@ ServerInfo::ServerInfo() :
 };
 ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 {
-	executable_path = absolute_path;
+	executable_folder_server = absolute_path;
 	// www_path = absolute_path / "src" / "www";
 	www_path = absolute_path / "www";
 	errors_path = www_path / "errors";
@@ -39,7 +39,7 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 	if (other.locations.empty() != 1)
 		for (Location l : other.locations)
 			locations.push_back(l);
-	executable_path = other.executable_path;
+	executable_folder_server = other.executable_folder_server;
 	www_path = other.www_path;
 	errors_path = other.www_path;
 	uploads_dir = other.uploads_dir;
@@ -62,7 +62,7 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 		if (other.locations.empty() != 1)
 			for (Location l : other.locations)
 				locations.push_back(l);
-		executable_path = other.executable_path;
+		executable_folder_server = other.executable_folder_server;
 		www_path = other.www_path;
 		errors_path = other.www_path;
 		uploads_dir = other.uploads_dir;
@@ -168,7 +168,7 @@ void						ServerInfo::validErrorPath(std::string value)
 {
 	std::filesystem::path checking_path;
 	if (value[0] == '.')
-		checking_path = executable_path / value.substr(2);
+		checking_path = executable_folder_server / value.substr(2);
 	else
 		checking_path = value;
 	std::ifstream check(checking_path);

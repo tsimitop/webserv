@@ -33,3 +33,12 @@ Location& Location::operator=(const Location& other)
 Location::~Location()
 {
 };
+//===================Methods======================================================
+// void						Location::validPath(std::string value)
+// {
+
+// };
+// void						Location::validLocation(std::string value)
+// {
+
+// };

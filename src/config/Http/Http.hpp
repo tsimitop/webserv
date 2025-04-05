@@ -1,10 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <map>
-#include <sstream>
-#include <vector>
 #include "../ServerInfo/ServerInfo.hpp"
 
 // enum print{YES = 1, NO = 0};
@@ -13,7 +8,7 @@ class Http
 {
 	public:
 		std::vector <ServerInfo> servers;
-		std::filesystem::path executable_path;
+		std::filesystem::path executable_folder_http;
 		//Default
 		Http();
 		Http(const Http& other);
