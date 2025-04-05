@@ -93,22 +93,6 @@ std::string 				ServerInfo::spaceTrimmer(std::string str)
 	res = str.substr(i, j-i + 1);
 	return res;
 };
-//=========================Helper For Validators==============================
-int								strIsNumber(std::string str)
-{
-	for(char s : str)
-		if (!isdigit(s))
-			return NO;
-	return YES;
-};
-
-int								strIsAlphaOr(std::string str, char extraChar)
-{
-	for(char s : str)
-		if (!isalpha(s) && s != extraChar)
-			return NO;
-	return YES;
-};
 //============================Validators======================================
 void						ServerInfo::validServerTimeOut(std::string value)
 {

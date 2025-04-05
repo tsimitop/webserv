@@ -77,14 +77,19 @@ struct Location
 	//-------flags---------------------------------------------
 	int		valid_inputs = YES;
 	//-------attributes----------------------------------------
-	int	allowed_methods; // 1 is GET only, 3 is GET POST, 7 is GET POST DELETE
-	std::string location_html;
-	std::string uploads_dir;
-	std::string uploads_html;
-	std::string redir;
+	int									allowed_methods; // 1 is GET only, 3 is GET POST, 7 is GET POST DELETE
+	std::string 						location_html;
+	std::string 						uploads_dir;
+	std::string 						uploads_html;
+	std::string 						redir;
 	std::map <std::string, std::string> cgi_map;
 	//--------methods------------------------------------------
-	void						validPath(std::string value);
-	void						validLocation(std::string value);
-
+	void								validPath(std::string value);
+	void								validMethods(std::string value);
+	int									validLocation();
 };
+
+std::string 							spaceTrimmer(std::string str);
+int										countWords(std::string line);
+int										strIsNumber(std::string str);
+int										strIsAlphaOr(std::string str, char extraChar);

@@ -46,5 +46,3 @@ struct ServerInfo
 	void						allServerInputsValid(std::string value);
 };
 
-int								strIsNumber(std::string str);
-int								strIsAlphaOr(std::string str, char extraChar);

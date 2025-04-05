@@ -20,5 +20,3 @@ class Http
 		int							validFormatForOneServer(std::vector<std::string> lines, size_t start, size_t end);
 		int							validServersFormat(std::vector<std::string> lines, std::vector<size_t> server_indexes);
 };
-std::string 				spaceTrimmer(std::string str);
-int							countWords(std::string line);

@@ -73,30 +73,6 @@ std::vector<size_t>			Http::serverLines(std::vector<std::string> lines)
 	server_lines.push_back(i);
 	return server_lines;
 };
-std::string 				spaceTrimmer(std::string str)
-{
-	std::string res;
-	size_t i;
-	for (i = 0; i != str.size() ; i++)
-		if (!isspace(str[i]))
-			break;
-	int j;
-	for (j = (int)str.size() - 1; j != -1; j--)
-		if (!isspace(str[j]))
-			break;
-	res = str.substr(i, j-i + 1);
-	return res;
-};
-
-int countWords(std::string line)
-{
-	std::stringstream ss(line);
-	std::string str;
-	int words = 0;
-	while (ss >> str)
-		words++;
-	return words;
-}
 
 int		Http::validFormatForOneServer(std::vector<std::string> lines, size_t start, size_t end)
 {
