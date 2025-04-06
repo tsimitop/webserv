@@ -73,16 +73,16 @@ struct Location
 	Location& operator=(const Location& other);
 	~Location();
 	//------------------Executable path------------------------
-	std::filesystem::path 		executable_folder_location;
+	std::filesystem::path 		executable_folder_location_;
 	//-------flags---------------------------------------------
-	int		valid_inputs = YES;
+	int		valid_inputs_ = YES;
 	//-------attributes----------------------------------------
-	int									allowed_methods; // 1 is GET only, 3 is GET POST, 7 is GET POST DELETE
-	std::string 						location_html;
-	std::string 						uploads_dir;
-	std::string 						uploads_html;
-	std::string 						redir;
-	std::map <std::string, std::string> cgi_map;
+	int									allowed_methods_; // 1 is GET only, 3 is GET POST, 7 is GET POST DELETE
+	std::string 						location_html_;
+	std::string 						uploads_dir_;
+	std::string 						uploads_html_;
+	std::string 						redir_;
+	std::map <std::string, std::string> cgi_map_;
 	//--------methods------------------------------------------
 	void								validPath(std::string value);
 	void								validMethods(std::string value);

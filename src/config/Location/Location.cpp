@@ -1,36 +1,36 @@
 #include "Location.hpp"
 
-Location::Location() : allowed_methods(-1), location_html(""), uploads_dir(""), uploads_html(""), redir("")
+Location::Location() : allowed_methods_(-1), location_html_(""), uploads_dir_(""), uploads_html_(""), redir_("")
 {
-	cgi_map["cgi_one"] = "";
-	cgi_map["cgi_two"] = "";
-	cgi_map["cgi_three"] = "";
+	cgi_map_["cgi_one"] = "";
+	cgi_map_["cgi_two"] = "";
+	cgi_map_["cgi_three"] = "";
 };
 Location::Location(std::filesystem::path absolute_path)
 {
-	executable_folder_location = absolute_path;
+	executable_folder_location_ = absolute_path;
 };
 Location::Location(const Location& other)
 {
-	uploads_dir = other.uploads_dir;
-	location_html = other.location_html;
-	uploads_html = other.uploads_html;
-	allowed_methods = other.allowed_methods;
-	redir = other.redir;
+	uploads_dir_ = other.uploads_dir_;
+	location_html_ = other.location_html_;
+	uploads_html_ = other.uploads_html_;
+	allowed_methods_ = other.allowed_methods_;
+	redir_ = other.redir_;
 	//-----map of cgis-----------------------
-	cgi_map = other.cgi_map;
+	cgi_map_ = other.cgi_map_;
 
 };
 Location& Location::operator=(const Location& other)
 {
 	if (this != &other)
 	{
-		uploads_dir = other.uploads_dir;
-		uploads_html = other.uploads_html;
-		allowed_methods = other.allowed_methods;
-		redir = other.redir;
+		uploads_dir_ = other.uploads_dir_;
+		uploads_html_ = other.uploads_html_;
+		allowed_methods_ = other.allowed_methods_;
+		redir_ = other.redir_;
 		//-----map of cgis-----------------------
-		cgi_map = other.cgi_map;
+		cgi_map_ = other.cgi_map_;
 	}
 	return *this;
 };
@@ -42,12 +42,12 @@ void						Location::validPath(std::string value)
 {
 	std::filesystem::path checking_path;
 	if (value[0] == '.')
-		checking_path = executable_folder_location / value.substr(2);
+		checking_path = executable_folder_location_ / value.substr(2);
 	else
 		checking_path = value;
 	std::ifstream check(checking_path);
 	if (!check)
-		valid_inputs = NO;
+		valid_inputs_ = NO;
 };
 
 void					Location::validMethods(std::string value)
@@ -60,7 +60,7 @@ void					Location::validMethods(std::string value)
 		{
 			if(temp != "POST" && temp != "GET" && temp != "DELETE")
 			{
-				valid_inputs = NO;
+				valid_inputs_ = NO;
 				break;
 			}
 		}
@@ -68,7 +68,7 @@ void					Location::validMethods(std::string value)
 };
 int						Location::validLocation()
 {
-	return (valid_inputs);
+	return (valid_inputs_);
 };
 //=========================Helper For Validators==============================
 std::string 				spaceTrimmer(std::string str)

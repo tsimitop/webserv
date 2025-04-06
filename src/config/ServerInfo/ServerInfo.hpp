@@ -11,23 +11,23 @@ struct ServerInfo
 	ServerInfo& operator=(const ServerInfo& other);
 	~ServerInfo();
 	//------------------------simple inputs-------------------------------
-	int							server_timeout;
-	int							listen;
-	std::string					server_name;
+	int							server_timeout_;
+	int							listen_;
+	std::string					server_name_;
 	std::string					index;
-	long long					client_max_body_size;
+	long long					client_max_body_size_; // * 1024 value
 	//------------------------vector inputs-------------------------------
-	std::vector <int>			errors;
-	std::vector<Location>		locations;
+	std::map <int, std::filesystem::path>			errors; // error type  and error path
+	std::vector<Location>		locations_;
 	//--------------------------paths-------------------------------------
-	std::filesystem::path 		executable_folder_server;
-	std::filesystem::path		www_path;
-	std::filesystem::path		errors_path;
-	std::filesystem::path		uploads_dir;
+	std::filesystem::path 		executable_folder_server_;
+	std::filesystem::path		www_path_;
+	std::filesystem::path		errors_path_;
+	std::filesystem::path		uploads_dir_;
 	//--------------------------flags-------------------------------------
-	int 						valid_inputs;
-	int							valid_errors;
-	int							valid_locations;
+	int 						valid_inputs_;
+	int							valid_errors_;
+	int							valid_locations_;
 	//methods
 	//helpers
 	std::string 				spaceTrimmer(std::string str);
@@ -44,5 +44,13 @@ struct ServerInfo
 	int							allErrorsValid();
 	void						allLocationValid(std::string value);
 	void						allServerInputsValid(std::string value);
+	//setting the values
+	void						setServerTimeOut(std::string line);
+	void						setListen(std::string line);
+	void						setServerName(std::string line);
+	void						setIndex(std::string line);
+	void						setClientMaxBodySize(std::string line);
+	void						pushToErrors(std::string line);
+	void						pushToLocations(std::vector<std::string> line);
 };
 

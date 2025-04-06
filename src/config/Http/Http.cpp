@@ -1,24 +1,38 @@
 #include "Http.hpp"
 //=======================Default Http===============================
 
-Http::Http() : servers(), executable_folder_http("")
+Http::Http() : 
+	servers_(), 
+	executable_folder_http_(""), 
+	lines(), 
+	lines_without_semicolons_(), 
+	server_indexes_(), 
+	valid_config(YES)
 {
 };
 Http::Http(const Http& other)
 {
-	if (other.servers.empty() != 1)
-		for (ServerInfo s : other.servers)
-			servers.push_back(s);
-	executable_folder_http = other.executable_folder_http;
+	if (other.servers_.empty() != 1)
+		for (ServerInfo s : other.servers_)
+			servers_.push_back(s);
+	executable_folder_http_ = other.executable_folder_http_;
+	lines = other.lines;
+	lines_without_semicolons_ = other.lines_without_semicolons_;
+	server_indexes_ = other.server_indexes_;
+	valid_config = other.valid_config;
 };
 Http& Http::operator=(const Http& other)
 {
 	if (this != &other)
 	{
-		if (other.servers.empty() != 1)
-		for (ServerInfo s : other.servers)
-			servers.push_back(s);
-		executable_folder_http = other.executable_folder_http;
+		if (other.servers_.empty() != 1)
+		for (ServerInfo s : other.servers_)
+			servers_.push_back(s);
+		executable_folder_http_ = other.executable_folder_http_;
+		lines = other.lines;
+		lines_without_semicolons_ = other.lines_without_semicolons_;
+		server_indexes_ = other.server_indexes_;
+		valid_config = other.valid_config;
 	}
 	return *this;
 };
@@ -26,7 +40,7 @@ Http::~Http()
 {
 };;
 //parsers
-std::vector<std::string> Http::configLines(std::filesystem::path config_path)
+void Http::configLines(std::filesystem::path config_path)
 {
 	std::vector<std::string> res;
 	std::vector<std::string> clean_res;
@@ -35,7 +49,7 @@ std::vector<std::string> Http::configLines(std::filesystem::path config_path)
 	if (!config)
 	{
 		std::cerr << "Error: File" << config_path << "is not opening\n";
-		return res;
+		return ;
 	}
 	while (std::getline(config, temp))
 	{
@@ -53,13 +67,29 @@ std::vector<std::string> Http::configLines(std::filesystem::path config_path)
 			clean_res.push_back(l);
 		
 	}
-	return clean_res;
+	for (std::string l : clean_res)
+		lines.push_back(l);
+};
+void	Http::configLinesWithoutSemicolons()
+{
+	std::vector<std::string> lines_w_semicolons;
+	for (std::string l : lines)
+	{
+		if (l.find(';') == l.size() - 1)
+		{
+			std::string l_without_semicolon = l.substr(0, l.size() - 1);
+			lines_w_semicolons.push_back(l_without_semicolon);
+		}
+		else
+			lines_w_semicolons.push_back(l);
+
+	}
+	for (std::string l : lines_w_semicolons)
+		lines_without_semicolons_.push_back(l);
 };
 
-
-std::vector<size_t>			Http::serverLines(std::vector<std::string> lines)
+void	Http::serverLines()
 {
-	std::vector<size_t> server_lines;
 	size_t i = 0;
 	for (std::string l : lines)
 	{
@@ -67,14 +97,13 @@ std::vector<size_t>			Http::serverLines(std::vector<std::string> lines)
 		std::string word;
 		ss >> word;
 		if (word == "server")
-			server_lines.push_back(i);
+			server_indexes_.push_back(i);
 		i++;
 	}
-	server_lines.push_back(i);
-	return server_lines;
+	server_indexes_.push_back(i);
 };
 
-int		Http::validFormatForOneServer(std::vector<std::string> lines, size_t start, size_t end)
+int		Http::validFormatForOneServer(size_t start, size_t end)
 {
 	size_t index = 0;
 	int open_curly_from_location = NO;
@@ -102,14 +131,17 @@ int		Http::validFormatForOneServer(std::vector<std::string> lines, size_t start,
 		   else
 			   return NO;
 		}
-		if (key == "location")
+		if ((key == "location" || key == "location/"))
 		{
+			if (countWords(l) > 3)
+				return NO;
+			std::cout << countWords(l) << std::endl;
 			location_found = index;
 			ss >> equals;
-			if (spaceTrimmer(equals) != "/" && key[key.size() - 1] != '/')
+			if (key[key.size() - 1] != '/' && spaceTrimmer(equals) != "" && spaceTrimmer(equals) != "/" )
 				return NO;
 		}
-		if (index != current_lines.size() - 1 && 
+		if ( index != current_lines.size() - 1 && 
 			key != "server" && 
 			key != "location" && 
 			key != "{" && 
@@ -118,7 +150,15 @@ int		Http::validFormatForOneServer(std::vector<std::string> lines, size_t start,
 			if (countWords(l) == 3)
 			{
 				ss >> equals >> value;
-				if (equals == "=" && value[value.size() - 1] != ';')
+				if (equals == "=" && 
+						(
+							value[value.size() - 1] != ';' || 
+							(	
+								value.find(';')!= std::string::npos && 
+								value.find_first_of(';') !=value.find_last_of(';')
+							)
+						)
+					)
 					return NO;
 				index++;
 				continue;
@@ -147,14 +187,14 @@ int		Http::validFormatForOneServer(std::vector<std::string> lines, size_t start,
 	return NO;
 };
 
-int	Http::validServersFormat(std::vector<std::string> lines, std::vector<size_t> server_indexes)
+int	Http::validServersFormat()
 {
-	for (size_t i = 0; i + 1!= server_indexes.size(); i++)
+	for (size_t i = 0; i + 1!= server_indexes_.size(); i++)
 	{
 		std::vector<std::string> current_lines;
-		for (size_t j = server_indexes[i]; j != server_indexes[i + 1]; j++)
+		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
 			current_lines.push_back(lines[j]);
-		if (validFormatForOneServer(current_lines, 0, current_lines.size() - 1) == NO)
+		if (validFormatForOneServer(server_indexes_[i], server_indexes_[i + 1] - 1) == NO)
 			return NO;
 	}
 	return YES;
