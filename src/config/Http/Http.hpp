@@ -7,16 +7,21 @@ struct ServerInfo;
 class Http
 {
 	public:
-		std::vector <ServerInfo> servers;
-		std::filesystem::path executable_folder_http;
+		std::vector <ServerInfo>	servers_;
+		std::filesystem::path		executable_folder_http_;
+		std::vector<std::string>	lines;
+		std::vector<std::string>	lines_without_semicolons_;
+		std::vector<size_t>			server_indexes_;
+		int valid_config;
 		//Default
 		Http();
 		Http(const Http& other);
 		Http& operator=(const Http& other);
 		~Http();
 		//parsers
-		std::vector<std::string>	configLines(std::filesystem::path config_path);
-		std::vector<size_t>			serverLines(std::vector<std::string> lines);
-		int							validFormatForOneServer(std::vector<std::string> lines, size_t start, size_t end);
-		int							validServersFormat(std::vector<std::string> lines, std::vector<size_t> server_indexes);
+		void						configLines(std::filesystem::path config_path);
+		void						configLinesWithoutSemicolons();
+		void						serverLines();
+		int							validFormatForOneServer(size_t start, size_t end);
+		int							validServersFormat();
 };

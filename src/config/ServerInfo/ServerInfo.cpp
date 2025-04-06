@@ -1,74 +1,70 @@
 #include "ServerInfo.hpp"
 
 ServerInfo::ServerInfo() : 
-	server_timeout(-1), 
-	listen(-1), 
-	server_name(""), 
+	server_timeout_(-1), 
+	listen_(-1), 
+	server_name_(""), 
 	index(""), 
-	client_max_body_size(-1), 
+	client_max_body_size_(-1), 
 	errors(),
-	locations(),
-	executable_folder_server(""),
-	www_path(""),
-	errors_path(""),
-	uploads_dir(""),
-	valid_inputs(YES),
-	valid_errors(YES),
-	valid_locations(YES)
+	locations_(),
+	executable_folder_server_(""),
+	www_path_(""),
+	errors_path_(""),
+	uploads_dir_(""),
+	valid_inputs_(YES),
+	valid_errors_(YES),
+	valid_locations_(YES)
 {
 
 };
 ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 {
-	executable_folder_server = absolute_path;
-	// www_path = absolute_path / "src" / "www";
-	www_path = absolute_path / "www";
-	errors_path = www_path / "errors";
-	uploads_dir = www_path / "uploads";
+	executable_folder_server_ = absolute_path;
+	// www_path_ = absolute_path / "src" / "www";
+	www_path_ = absolute_path / "www";
+	errors_path_ = www_path_ / "errors";
+	uploads_dir_ = www_path_ / "uploads";
 };
 ServerInfo::ServerInfo(const ServerInfo& other)
 {
-	server_timeout = other.server_timeout; 
-	listen = other.listen ; 
-	server_name = other.server_name; 
+	server_timeout_ = other.server_timeout_; 
+	listen_ = other.listen_ ; 
+	server_name_ = other.server_name_; 
 	index = other.index; 
-	client_max_body_size = other.client_max_body_size;
-	if (other.errors.empty() != 1)
-		for (int e : other.errors)
-			errors.push_back(e);
-	if (other.locations.empty() != 1)
-		for (Location l : other.locations)
-			locations.push_back(l);
-	executable_folder_server = other.executable_folder_server;
-	www_path = other.www_path;
-	errors_path = other.www_path;
-	uploads_dir = other.uploads_dir;
-	valid_inputs = other.valid_inputs;
-	valid_errors = other.valid_errors;
-	valid_locations = other.valid_locations;
+	client_max_body_size_ = other.client_max_body_size_;
+	errors = other.errors;
+	if (other.locations_.empty() != 1)
+		for (Location l : other.locations_)
+			locations_.push_back(l);
+	executable_folder_server_ = other.executable_folder_server_;
+	www_path_ = other.www_path_;
+	errors_path_ = other.www_path_;
+	uploads_dir_ = other.uploads_dir_;
+	valid_inputs_ = other.valid_inputs_;
+	valid_errors_ = other.valid_errors_;
+	valid_locations_ = other.valid_locations_;
 };
 ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 {
 	if (this != &other)
 	{
-		server_timeout = other.server_timeout; 
-		listen = other.listen ; 
-		server_name = other.server_name; 
+		server_timeout_ = other.server_timeout_; 
+		listen_ = other.listen_ ; 
+		server_name_ = other.server_name_; 
 		index = other.index; 
-		client_max_body_size = other.client_max_body_size;
-		if (other.errors.empty() != 1)
-			for (int e : other.errors)
-				errors.push_back(e);
-		if (other.locations.empty() != 1)
-			for (Location l : other.locations)
-				locations.push_back(l);
-		executable_folder_server = other.executable_folder_server;
-		www_path = other.www_path;
-		errors_path = other.www_path;
-		uploads_dir = other.uploads_dir;
-		valid_inputs = other.valid_inputs;
-		valid_errors = other.valid_errors;
-		valid_locations = other.valid_locations;
+		client_max_body_size_ = other.client_max_body_size_;
+		errors = other.errors;
+		if (other.locations_.empty() != 1)
+			for (Location l : other.locations_)
+				locations_.push_back(l);
+		executable_folder_server_ = other.executable_folder_server_;
+		www_path_ = other.www_path_;
+		errors_path_ = other.www_path_;
+		uploads_dir_ = other.uploads_dir_;
+		valid_inputs_ = other.valid_inputs_;
+		valid_errors_ = other.valid_errors_;
+		valid_locations_ = other.valid_locations_;
 	}
 	return *this;
 };
@@ -98,17 +94,17 @@ void						ServerInfo::validServerTimeOut(std::string value)
 {
 	// string has only digits
 		if (strIsNumber(value) == NO || (strIsNumber(value) == YES && std::stol(value) > 100000))
-			valid_inputs = NO;
+			valid_inputs_ = NO;
 };
 void						ServerInfo::validListen(std::string value)
 {
 	if(strIsNumber(value) == NO || (strIsNumber(value) == YES && std::stol(value) > 9999))
-		valid_inputs = NO;
+		valid_inputs_ = NO;
 };
 void						ServerInfo::validServerName(std::string value)
 {
 	if (strIsAlphaOr(value, '_') == NO)
-		valid_inputs = NO;
+		valid_inputs_ = NO;
 };
 void						ServerInfo::validIndex(std::string value)
 {
@@ -123,14 +119,14 @@ void						ServerInfo::validIndex(std::string value)
 			)
 		)
 		{
-			valid_inputs = NO;
+			valid_inputs_ = NO;
 			return ;
 		}
-		std::ifstream path(www_path / value);
+		std::ifstream path(www_path_ / value);
 		if (!path)
 		{
-			std::cerr << www_path / value << "didn't open\n";
-			valid_inputs = NO;
+			std::cerr << www_path_ / value << "didn't open\n";
+			valid_inputs_ = NO;
 		}
 };
 void						ServerInfo::validClientMaxBodySize(std::string value)
@@ -142,22 +138,22 @@ void						ServerInfo::validClientMaxBodySize(std::string value)
 			(strIsNumber(sub) &&  last_char_value == 'm' && stol(sub) <=10)
 		)
 			return ;
-	valid_inputs = NO;
+	valid_inputs_ = NO;
 };
 int						ServerInfo::allSimpleInputsValid()
 {
-	return (valid_inputs);
+	return (valid_inputs_);
 };
 void						ServerInfo::validErrorPath(std::string value)
 {
 	std::filesystem::path checking_path;
 	if (value[0] == '.')
-		checking_path = executable_folder_server / value.substr(2);
+		checking_path = executable_folder_server_ / value.substr(2);
 	else
 		checking_path = value;
 	std::ifstream check(checking_path);
 	if (!check)
-		valid_errors = NO;
+		valid_errors_ = NO;
 };
 
 void						ServerInfo::validErrorType(std::string value)
@@ -167,12 +163,12 @@ void						ServerInfo::validErrorType(std::string value)
 	if (strIsNumber(error_type) && 
 	all_posible_errors.find(std::stol(error_type)) != all_posible_errors.end())
 		return ;
-	valid_errors = NO; 
+	valid_errors_ = NO; 
 };
 
 int						ServerInfo::allErrorsValid()
 {
-	return (valid_errors);
+	return (valid_errors_);
 };
 // void						ServerInfo::validLocation(std::string value)
 // {
@@ -187,16 +183,90 @@ int						ServerInfo::allErrorsValid()
 
 // };
 
-//let's have a plan for the servers that they will work simultaneously
-// I need to create a folder with the servers name with error pages the required one // or the 404 if no error page is not given
-// and an upload folder that I ll send the errors and the upoads
-// all they will live under the www folder 
-// example 
-// gigi_one
-//   uploads
-//		<all the uplaods they will be here>
-//   errors
-//		404.html
-//      405.html
-//		409.html
-//		505.html
+void						ServerInfo::setServerTimeOut(std::string line)
+{
+	std::stringstream current_line(line);
+	if (countWords(line) == 3)
+	{
+		std::string key, eq, value;
+		current_line >>key >> eq >> value;
+		validServerTimeOut(value);
+		if (valid_inputs_ != NO)
+			server_timeout_ = std::stoi(value);
+	}
+};
+void						ServerInfo::setListen(std::string line)
+{
+	std::stringstream current_line(line);
+	if (countWords(line) == 3)
+	{
+		std::string key, eq, value;
+		current_line >>key >> eq >> value;
+		validListen(value);
+		if (valid_inputs_ != NO)
+			line = std::stoi(value);
+	}
+};
+void						ServerInfo::setServerName(std::string line)
+{
+	std::stringstream current_line(line);
+	if (countWords(line) == 3)
+	{
+		std::string key, eq, value;
+		current_line >>key >> eq >> value;
+		validServerName(value);
+		if (valid_inputs_ != NO)
+			server_name_ = value;
+	}
+};
+void						ServerInfo::setIndex(std::string line)
+{
+	std::stringstream current_line(line);
+	if (countWords(line) == 3)
+	{
+		std::string key, eq, value;
+		current_line >>key >> eq >> value;
+		validIndex(value);
+		if (valid_inputs_ != NO)
+			index = value;
+	}
+};
+void						ServerInfo::setClientMaxBodySize(std::string line)
+{
+	std::stringstream current_line(line);
+	if (countWords(line) == 3)
+	{
+		std::string key, eq, value;
+		current_line >>key >> eq >> value;
+		validClientMaxBodySize(value);
+		if (valid_inputs_ != NO)
+			client_max_body_size_ = std::stol(value) * 1024;
+	}
+};
+void						ServerInfo::pushToErrors(std::string line)
+{
+	std::stringstream current_line(line);
+	if (countWords(line) == 3)
+	{
+		std::string key, eq, value;
+		current_line >>key >> eq >> value;
+		validErrorPath(value);
+		validErrorType(value);
+		size_t the_last_backslash = value.find_last_of('/');
+		std::string error_type = value.substr(the_last_backslash + 1, 3);
+		if (valid_inputs_ != NO)
+		{
+			if (errors.find(std::stoi(error_type)) != errors.end()) // checking for duplicates
+						errors[std::stoi(error_type)] = value[0] == '.' ? 
+														executable_folder_server_ / value.substr(2) : 
+														(std::filesystem::path)value;
+			else
+				valid_inputs_ = NO;
+		}
+			
+	}
+};
+// void						ServerInfo::pushToLocations(std::vector<std::string> line)
+// {
+
+// };
