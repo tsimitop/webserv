@@ -72,24 +72,53 @@ struct Location
 	Location(const Location& other);
 	Location& operator=(const Location& other);
 	~Location();
+	//------------------lines of location----------------------
+	std::vector<std::string>			location_lines_;
 	//------------------Executable path------------------------
-	std::filesystem::path 		executable_folder_location_;
+	std::filesystem::path 				executable_folder_location_;
 	//-------flags---------------------------------------------
-	int		valid_inputs_ = YES;
+	int									valid_inputs_;
 	//-------attributes----------------------------------------
-	int									allowed_methods_; // 1 is GET only, 3 is GET POST, 7 is GET POST DELETE
-	std::string 						location_html_;
-	std::string 						uploads_dir_;
-	std::string 						uploads_html_;
-	std::string 						redir_;
-	std::map <std::string, std::string> cgi_map_;
+	long long							client_max_body_size_;
+	std::vector<std::string>			allowed_methods_; // 1 is GET only, 3 is GET POST, 7 is GET POST DELETE
+	std::filesystem::path 				location_html_;
+	std::filesystem::path 				uploads_dir_;
+	std::filesystem::path 				uploads_html_;
+	std::filesystem::path 				redir_;
+	std::map <std::string, std::filesystem::path> cgi_map_;
 	//--------methods------------------------------------------
-	void								validPath(std::string value);
-	void								validMethods(std::string value);
+	//--------validators---------------------------------------
+	void								validPath(std::string line);
+	void								validClientMaxBodySize(std::string& value);
+	void								validMethods(std::string line);
 	int									validLocation();
+	//--------setters------------------------------------------
+	void								settingTheRightPath(std::string value, std::filesystem::path& p);
+	void								setClientMaxBodySize(std::string line);
+	void								setAllowedMethods(std::string line);
+	void								setPath (std::string line, std::filesystem::path& attribute);
+	void								pushCgiMap(std::string line);
 };
 
 std::string 							spaceTrimmer(std::string str);
 int										countWords(std::string line);
 int										strIsNumber(std::string str);
 int										strIsAlphaOr(std::string str, char extraChar);
+
+// template <typename T>
+// 	std::ostream& operator<<(std::ostream& os, std::vector<T>& vec)
+// 	{
+// 		for (size_t i = 0; i != vec.size(); i++)
+// 			os << vec[i] << " ";
+// 		return os;
+// 	};
+
+template <typename T>
+	std::ostream& operator<<(std::ostream& os, std::vector<T>& vec)
+	{
+		os << "[\n";
+		for (T t : vec)
+			os << t << std::endl;
+		os << "]\n";
+		return os;
+	}

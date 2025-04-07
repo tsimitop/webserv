@@ -1,6 +1,10 @@
 #include "ServerInfo.hpp"
 
 ServerInfo::ServerInfo() : 
+	lines_of_server_(),
+	location_indexes_(),
+	keep_alive_timeout_(-1),
+	send_timeout_(-1),
 	server_timeout_(-1), 
 	listen_(-1), 
 	server_name_(""), 
@@ -28,6 +32,8 @@ ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 };
 ServerInfo::ServerInfo(const ServerInfo& other)
 {
+	keep_alive_timeout_= other.keep_alive_timeout_;
+	send_timeout_ = other.send_timeout_;
 	server_timeout_ = other.server_timeout_; 
 	listen_ = other.listen_ ; 
 	server_name_ = other.server_name_; 
@@ -37,6 +43,8 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 	if (other.locations_.empty() != 1)
 		for (Location l : other.locations_)
 			locations_.push_back(l);
+	lines_of_server_ = other.lines_of_server_;
+	location_indexes_ = other.location_indexes_;
 	executable_folder_server_ = other.executable_folder_server_;
 	www_path_ = other.www_path_;
 	errors_path_ = other.www_path_;
@@ -49,6 +57,8 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 {
 	if (this != &other)
 	{
+		keep_alive_timeout_= other.keep_alive_timeout_;
+		send_timeout_ = other.send_timeout_;
 		server_timeout_ = other.server_timeout_; 
 		listen_ = other.listen_ ; 
 		server_name_ = other.server_name_; 
@@ -58,6 +68,8 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 		if (other.locations_.empty() != 1)
 			for (Location l : other.locations_)
 				locations_.push_back(l);
+		lines_of_server_ = other.lines_of_server_;
+		location_indexes_ = other.location_indexes_;
 		executable_folder_server_ = other.executable_folder_server_;
 		www_path_ = other.www_path_;
 		errors_path_ = other.www_path_;
@@ -129,15 +141,17 @@ void						ServerInfo::validIndex(std::string value)
 			valid_inputs_ = NO;
 		}
 };
-void						ServerInfo::validClientMaxBodySize(std::string value)
+void						ServerInfo::validClientMaxBodySize(std::string& value)
 {
 	std::string sub = value.substr(0, value.size() - 1);
 	char last_char_value = value[value.size() - 1];
-	if 	(
-			(strIsNumber(value) && std::stol(value) <= 10000000) || 
-			(strIsNumber(sub) &&  last_char_value == 'm' && stol(sub) <=10)
-		)
+	if 	((strIsNumber(value) && std::stol(value) <= 10000000))
 			return ;
+	if 	((strIsNumber(sub) &&  last_char_value == 'm' && stol(sub) <=10))
+	{
+		value = sub + "000000";
+		return ;
+	}
 	valid_inputs_ = NO;
 };
 int						ServerInfo::allSimpleInputsValid()
@@ -153,7 +167,10 @@ void						ServerInfo::validErrorPath(std::string value)
 		checking_path = value;
 	std::ifstream check(checking_path);
 	if (!check)
+	{
 		valid_errors_ = NO;
+		return ;
+	}
 };
 
 void						ServerInfo::validErrorType(std::string value)
@@ -170,20 +187,8 @@ int						ServerInfo::allErrorsValid()
 {
 	return (valid_errors_);
 };
-// void						ServerInfo::validLocation(std::string value)
-// {
 
-// };
-// void						ServerInfo::allLocationValid(std::string value)
-// {
-
-// };
-// void						ServerInfo::allServerInputsValid(std::string value)
-// {
-
-// };
-
-void						ServerInfo::setServerTimeOut(std::string line)
+void						ServerInfo::setServerTimeOut(std::string line, int& attribute)
 {
 	std::stringstream current_line(line);
 	if (countWords(line) == 3)
@@ -192,7 +197,7 @@ void						ServerInfo::setServerTimeOut(std::string line)
 		current_line >>key >> eq >> value;
 		validServerTimeOut(value);
 		if (valid_inputs_ != NO)
-			server_timeout_ = std::stoi(value);
+			attribute = std::stoi(value);
 	}
 };
 void						ServerInfo::setListen(std::string line)
@@ -204,7 +209,7 @@ void						ServerInfo::setListen(std::string line)
 		current_line >>key >> eq >> value;
 		validListen(value);
 		if (valid_inputs_ != NO)
-			line = std::stoi(value);
+			listen_ = std::stoi(value);
 	}
 };
 void						ServerInfo::setServerName(std::string line)
@@ -256,7 +261,7 @@ void						ServerInfo::pushToErrors(std::string line)
 		std::string error_type = value.substr(the_last_backslash + 1, 3);
 		if (valid_inputs_ != NO)
 		{
-			if (errors.find(std::stoi(error_type)) != errors.end()) // checking for duplicates
+			if (errors.find(std::stoi(error_type)) == errors.end()) // checking for duplicates
 						errors[std::stoi(error_type)] = value[0] == '.' ? 
 														executable_folder_server_ / value.substr(2) : 
 														(std::filesystem::path)value;
@@ -266,7 +271,76 @@ void						ServerInfo::pushToErrors(std::string line)
 			
 	}
 };
-// void						ServerInfo::pushToLocations(std::vector<std::string> line)
+void			ServerInfo::locationIndexes()
+{
+	int inside_location = NO;
+	for (size_t index = 0; index != lines_of_server_.size(); index++)
+	{
+		std::stringstream	line(lines_of_server_[index]);
+		std::string k;
+		line >> k;
+		if (k == "location" || k == "location/")
+		{
+			location_indexes_.push_back(index);
+			inside_location = YES;
+		}
+		if (k == "}" && inside_location == YES)
+		{
+			location_indexes_.push_back(index);
+			inside_location = NO;
+		}
+	}
+};
+
+void						ServerInfo::pushLocationsLines()
+{
+	for (size_t i = 0; i + 1 < location_indexes_.size(); i+=2)
+	{
+		Location location(executable_folder_server_);
+		location.valid_inputs_ = 1;
+		for (size_t j = location_indexes_[i]; j != location_indexes_[i + 1] + 1; j++)
+			location.location_lines_.push_back(lines_of_server_[j]);
+		locations_.push_back(location);
+	}
+};
+
+void	ServerInfo::parsingLocations()
+{
+	for (Location location : locations_)
+	{
+		for (std::string line : location.location_lines_)
+		{
+			std::stringstream l(line);
+			std::string key, eq, value;
+			l >> key >> eq;
+			if (key == "client_max_body_size")
+				location.setClientMaxBodySize(line);
+			else if (key == "allow_methods")
+				location.setAllowedMethods(line);
+			else if(key == "location_html")
+				location.setPath(line, location.location_html_);
+			else if(key == "uploads_dir")
+				location.setPath(line, location.uploads_dir_);
+			else if(key == "uploads_html")
+				location.setPath(line, location.uploads_html_);
+			else if(key == "redir")
+				location.setPath(line, location.redir_);
+			else if(key == "cgi_extension")
+				location.pushCgiMap(line);
+			else
+				;
+		}
+	}
+};
+// void						ServerInfo::validLocation(std::string value)
+// {
+
+// };
+// void						ServerInfo::allLocationValid(std::string value)
+// {
+
+// };
+// void						ServerInfo::allServerInputsValid(std::string value)
 // {
 
 // };
