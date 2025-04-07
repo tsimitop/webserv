@@ -12,7 +12,7 @@ ServerInfo::ServerInfo() :
 	client_max_body_size_(-1), 
 	errors(),
 	locations_(),
-	executable_folder_server_(""),
+	executable_root_server_(""),
 	www_path_(""),
 	errors_path_(""),
 	uploads_dir_(""),
@@ -24,7 +24,7 @@ ServerInfo::ServerInfo() :
 };
 ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 {
-	executable_folder_server_ = absolute_path;
+	executable_root_server_ = absolute_path;
 	// www_path_ = absolute_path / "src" / "www";
 	www_path_ = absolute_path / "www";
 	errors_path_ = www_path_ / "errors";
@@ -45,7 +45,7 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 			locations_.push_back(l);
 	lines_of_server_ = other.lines_of_server_;
 	location_indexes_ = other.location_indexes_;
-	executable_folder_server_ = other.executable_folder_server_;
+	executable_root_server_ = other.executable_root_server_;
 	www_path_ = other.www_path_;
 	errors_path_ = other.www_path_;
 	uploads_dir_ = other.uploads_dir_;
@@ -70,7 +70,7 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 				locations_.push_back(l);
 		lines_of_server_ = other.lines_of_server_;
 		location_indexes_ = other.location_indexes_;
-		executable_folder_server_ = other.executable_folder_server_;
+		executable_root_server_ = other.executable_root_server_;
 		www_path_ = other.www_path_;
 		errors_path_ = other.www_path_;
 		uploads_dir_ = other.uploads_dir_;
@@ -162,7 +162,7 @@ void						ServerInfo::validErrorPath(std::string value)
 {
 	std::filesystem::path checking_path;
 	if (value[0] == '.')
-		checking_path = executable_folder_server_ / value.substr(2);
+		checking_path = executable_root_server_ / value.substr(2);
 	else
 		checking_path = value;
 	std::ifstream check(checking_path);
@@ -263,7 +263,7 @@ void						ServerInfo::pushToErrors(std::string line)
 		{
 			if (errors.find(std::stoi(error_type)) == errors.end()) // checking for duplicates
 						errors[std::stoi(error_type)] = value[0] == '.' ? 
-														executable_folder_server_ / value.substr(2) : 
+														executable_root_server_ / value.substr(2) : 
 														(std::filesystem::path)value;
 			else
 				valid_inputs_ = NO;
@@ -296,7 +296,7 @@ void						ServerInfo::pushLocationsLines()
 {
 	for (size_t i = 0; i + 1 < location_indexes_.size(); i+=2)
 	{
-		Location location(executable_folder_server_);
+		Location location(executable_root_server_);
 		location.valid_inputs_ = 1;
 		for (size_t j = location_indexes_[i]; j != location_indexes_[i + 1] + 1; j++)
 			location.location_lines_.push_back(lines_of_server_[j]);

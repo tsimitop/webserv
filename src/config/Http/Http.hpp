@@ -8,10 +8,12 @@ class Http
 {
 	public:
 		std::vector <ServerInfo>	servers_;
-		std::filesystem::path		executable_folder_http_;
+		std::filesystem::path		executable_root_http_;
+		//-------------Parsing Attributes Start--------------------
 		std::vector<std::string>	lines;
 		std::vector<std::string>	lines_without_semicolons_;
 		std::vector<size_t>			server_indexes_;
+		//-------------Parsing Attributes End----------------------
 		int valid_config_;
 		//Default
 		Http();
