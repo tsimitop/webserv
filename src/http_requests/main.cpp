@@ -1,19 +1,28 @@
 #include "../../inc/http_requests/HttpRequest.hpp"
 #include "../../inc/http_requests/HttpResponse.hpp"
+#include "../../inc/config/Http.hpp"
 
-int main(void)
+int main(int argc, char **argv)
 {
 	HttpRequest		request;
 	HttpResponse	response;
 
-	//store request body in the file that was mentioned in the disposition header
-	/*
-	POST /api/user HTTP/1.1
-	Host: example.com
-	Content-Disposition: attachment; filename="hello.txt"
-	
-	some text to be stored in a file->(hello.txt) // body is stored in
-	*/
+	//---------------------------Config parsing---------------------------
+	Http c;
+	if (argc > 2)
+	{
+		std::cerr << "Error: " <<  argv[0] << ": more than two arguments!\n";
+		return 1;
+	}
+	c.preparingAndValidatingConfig(argc , argv);
+	if(c.valid_config_ == NO)
+	{
+		std::cerr << "Error: Non valid config!\n";
+		return (1);
+	}
+	c.parsingServers();
+	//----------------------End of config parsing--------------------------
+
 	std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
 	// std::string	req = "POST /submit-form HTTP/1.1\r\nHost: example.com\r\nContent-Length: 27\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John+Doe&email=john@example.com\r\n";
 	// std::string	req = "POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/octet-stream\r\nContent-Length: 41\r\nContent-Disposition: attachment; filename='/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/attempt'\r\nConnection: keep-alive\r\n\r\n";
@@ -23,6 +32,7 @@ int main(void)
 	try
 	{
 		request.readRequest(req);
+		std::cout << CYAN << "Request: " << req << QUIT << std::endl;
 		if (!request.isValid())
 		{
 			std::cout << RED << "Error: Invalid Request" << QUIT << std::endl;
