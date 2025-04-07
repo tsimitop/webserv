@@ -12,7 +12,7 @@ class Http
 		std::vector<std::string>	lines;
 		std::vector<std::string>	lines_without_semicolons_;
 		std::vector<size_t>			server_indexes_;
-		int valid_config;
+		int valid_config_;
 		//Default
 		Http();
 		Http(const Http& other);
@@ -23,7 +23,8 @@ class Http
 		void						configLinesWithoutSemicolons();
 		void						serverIndexes();
 		int							validFormatForOneServer(size_t start, size_t end);
-		int							validServersFormat();
+		void						validServersFormat();
+		void						preparingAndValidatingConfig(char* argv[]);
 		void						parsingServers();
 		//-------------------------create a function that is pushing to the server_lines_
 };

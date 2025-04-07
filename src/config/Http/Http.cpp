@@ -7,7 +7,7 @@ Http::Http() :
 	lines(), 
 	lines_without_semicolons_(), 
 	server_indexes_(), 
-	valid_config(YES)
+	valid_config_(YES)
 {
 };
 Http::Http(const Http& other)
@@ -19,7 +19,7 @@ Http::Http(const Http& other)
 	lines = other.lines;
 	lines_without_semicolons_ = other.lines_without_semicolons_;
 	server_indexes_ = other.server_indexes_;
-	valid_config = other.valid_config;
+	valid_config_ = other.valid_config_;
 };
 Http& Http::operator=(const Http& other)
 {
@@ -32,7 +32,7 @@ Http& Http::operator=(const Http& other)
 		lines = other.lines;
 		lines_without_semicolons_ = other.lines_without_semicolons_;
 		server_indexes_ = other.server_indexes_;
-		valid_config = other.valid_config;
+		valid_config_ = other.valid_config_;
 	}
 	return *this;
 };
@@ -191,7 +191,7 @@ int		Http::validFormatForOneServer(size_t start, size_t end)
 	return NO;
 };
 
-int	Http::validServersFormat()
+void	Http::validServersFormat()
 {
 	for (size_t i = 0; i + 1!= server_indexes_.size(); i++) // 0 , 28, 42, 57 | , 69
 	{
@@ -199,9 +199,12 @@ int	Http::validServersFormat()
 		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
 			current_lines.push_back(lines[j]);
 		if (validFormatForOneServer(server_indexes_[i], server_indexes_[i + 1] - 1) == NO)
-			return NO;
+		{
+			valid_config_ = NO;
+			return ;
+		}
 	}
-	return YES;
+	valid_config_ = YES;
 };
 
 void Http::parsingServers()
@@ -244,3 +247,17 @@ void Http::parsingServers()
 		servers_.push_back(s);
 	}
 };
+
+void Http::preparingAndValidatingConfig(char* argv[])
+{
+	executable_folder_http_ = 
+	std::filesystem::canonical
+	(
+		std::filesystem::absolute(argv[0])
+	).parent_path();
+	std::filesystem::path config_path = executable_folder_http_ / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
+	configLines(config_path);
+	serverIndexes();
+	validServersFormat();
+	configLinesWithoutSemicolons();
+}
