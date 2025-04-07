@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Location/Location.hpp"
+#include "Location.hpp"
 
 struct ServerInfo 
 {

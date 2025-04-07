@@ -1,4 +1,4 @@
-#include "Http.hpp"
+#include "../../inc/config/Http.hpp"
 //=======================Default Http===============================
 
 Http::Http() : 
@@ -248,16 +248,24 @@ void Http::parsingServers()
 	}
 };
 
-void Http::preparingAndValidatingConfig(char* argv[])
+void Http::preparingAndValidatingConfig(int argc, char* argv[])
 {
 	executable_root_http_ = 
 	std::filesystem::canonical
 	(
 		std::filesystem::absolute(argv[0])
 	).parent_path();
-	std::filesystem::path config_path = executable_root_http_ / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
+	std::filesystem::path config_path;
+	if (argc == 1)
+		config_path = executable_root_http_ / "src/config/default.conf";
+	else if (argc == 2)
+		config_path = executable_root_http_ / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
 	configLines(config_path);
-	serverIndexes();
-	validServersFormat();
-	configLinesWithoutSemicolons();
+	if (valid_config_ == YES)
+	{
+		serverIndexes();
+		validServersFormat();
+		if (valid_config_ == YES)
+			configLinesWithoutSemicolons();
+	}
 }

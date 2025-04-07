@@ -45,11 +45,6 @@
 			return;
 		}
 
-		// fetch('/uploads/' + filename.name, {
-		// 	method: "DELETE"
-		// 	// headers: {}
-		// })
-
 		const filename = filenameInput.value;
 
 		fetch('/uploads/' + encodeURIComponent(filename), {
@@ -57,12 +52,10 @@
 		})
 		.then(response => {
 			if(response.ok) {
-				console.log ("Deleted");
-				console.log (filename);
+				console.log ("Deleted: " + filename);
 				alert("File deleted successfully");
 			} else {
-				console.error("Failed to delete");
-				console.error(filename);
+				console.error("Failed to delete: " + filename);
 				alert("Failed to delete file.");
 			}
 		})

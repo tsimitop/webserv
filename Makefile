@@ -14,7 +14,10 @@ SRCS =	main.cpp \
 		sockets/sockets.cpp \
 		sockets/Server.cpp \
 		http_requests/HttpRequest.cpp \
-		http_requests/HttpResponse.cpp
+		http_requests/HttpResponse.cpp \
+		config_parser/Http.cpp \
+		config_parser/ServerInfo.cpp \
+		config_parser/Location.cpp
 
 SRC:=		$(addprefix $(SOURCE)/,$(SRCS))
 OBJS:=		$(SRC:$(SOURCE)/%.cpp=$(OBJ_DIR)/%.o)

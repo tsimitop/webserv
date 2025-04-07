@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../ServerInfo/ServerInfo.hpp"
+#include "ServerInfo.hpp"
 
 // enum print{YES = 1, NO = 0};
 struct ServerInfo;
@@ -26,7 +26,7 @@ class Http
 		void						serverIndexes();
 		int							validFormatForOneServer(size_t start, size_t end);
 		void						validServersFormat();
-		void						preparingAndValidatingConfig(char* argv[]);
+		void						preparingAndValidatingConfig(int argc, char* argv[]);
 		void						parsingServers();
 		//-------------------------create a function that is pushing to the server_lines_
 };

@@ -1,4 +1,4 @@
-#include "ServerInfo.hpp"
+#include "../../inc/config/ServerInfo.hpp"
 
 ServerInfo::ServerInfo() : 
 	lines_of_server_(),
@@ -19,14 +19,13 @@ ServerInfo::ServerInfo() :
 	valid_inputs_(YES),
 	valid_errors_(YES),
 	valid_locations_(YES)
-{
-
-};
+{};
 ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 {
 	executable_root_server_ = absolute_path;
+	// std::cout << "absolute_path: " << executable_root_server_ << "\n"; 
 	// www_path_ = absolute_path / "src" / "www";
-	www_path_ = absolute_path / "www";
+	www_path_ = absolute_path / "src/www";
 	errors_path_ = www_path_ / "errors";
 	uploads_dir_ = www_path_ / "uploads";
 };

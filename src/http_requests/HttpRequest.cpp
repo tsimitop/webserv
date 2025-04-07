@@ -486,7 +486,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
 		resp.setStatusCode(500);
 		resp.setReasonPhrase(500);
-		resp.setContentType("text/htmlffff");
+		resp.setContentType("text/html");
 		std::stringstream ss;
 		ss << input_file.rdbuf();
 		input_file.close();
@@ -505,6 +505,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 	{
 		resp.setStatusCode(200);
 		resp.setReasonPhrase(200);
+		resp.setContentType("text/plain");
 	}
 	else if (removed != 0)
 	{
@@ -514,7 +515,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
 		resp.setStatusCode(500);
 		resp.setReasonPhrase(500);
-		resp.setContentType("text/htmlggggg");
+		resp.setContentType("text/html");
 		std::stringstream ss;
 		ss << input_file.rdbuf();
 		std::string temp;
