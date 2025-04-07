@@ -67,6 +67,11 @@ void Http::configLines(std::filesystem::path config_path)
 			clean_res.push_back(l);
 		
 	}
+	if (clean_res.empty() || (!clean_res.empty() &&clean_res[0].empty()))
+	{
+		std::cerr << "Error: File is empty\n";
+		return ;
+	}
 	for (std::string l : clean_res)
 		lines.push_back(l);
 };
@@ -88,7 +93,7 @@ void	Http::configLinesWithoutSemicolons()
 		lines_without_semicolons_.push_back(l);
 };
 
-void	Http::serverLines()
+void	Http::serverIndexes()
 {
 	size_t i = 0;
 	for (std::string l : lines)
@@ -135,7 +140,6 @@ int		Http::validFormatForOneServer(size_t start, size_t end)
 		{
 			if (countWords(l) > 3)
 				return NO;
-			std::cout << countWords(l) << std::endl;
 			location_found = index;
 			ss >> equals;
 			if (key[key.size() - 1] != '/' && spaceTrimmer(equals) != "" && spaceTrimmer(equals) != "/" )
@@ -189,7 +193,7 @@ int		Http::validFormatForOneServer(size_t start, size_t end)
 
 int	Http::validServersFormat()
 {
-	for (size_t i = 0; i + 1!= server_indexes_.size(); i++)
+	for (size_t i = 0; i + 1!= server_indexes_.size(); i++) // 0 , 28, 42, 57 | , 69
 	{
 		std::vector<std::string> current_lines;
 		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
@@ -198,4 +202,45 @@ int	Http::validServersFormat()
 			return NO;
 	}
 	return YES;
+};
+
+void Http::parsingServers()
+{
+	for (size_t i = 0; i != server_indexes_.size() - 1; i++)
+	{
+		std::vector<std::string> current_non_semi;
+		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
+			current_non_semi.push_back(lines_without_semicolons_[j]);
+		ServerInfo s(executable_folder_http_);
+		s.valid_inputs_ = YES;
+		s.lines_of_server_ = current_non_semi;
+		for (std::string l : s.lines_of_server_)
+		{
+			std::stringstream line(l);
+			std::string k;
+			line >> k;
+			if (k == "keepalive_timeout")
+				s.setServerTimeOut(l, s.keep_alive_timeout_);
+			else if (k == "send_timeout")
+				s.setServerTimeOut(l, s.send_timeout_);
+			else if (k == "server_timeout")
+				s.setServerTimeOut(l, s.server_timeout_);
+			else if(k == "listen")
+				s.setListen(l);
+			else if (k == "server_name")
+				s.setServerName(l);
+			else if (k == "index")
+				s.setIndex(l);
+			else if (k == "client_max_body_size")
+				s.setClientMaxBodySize(l);
+			else if (k == "error_pages")
+				s.pushToErrors(l);
+			else
+				;
+		}
+		s.locationIndexes();
+		s.pushLocationsLines();
+		s.parsingLocations();
+		servers_.push_back(s);
+	}
 };

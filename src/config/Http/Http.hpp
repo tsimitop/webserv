@@ -21,7 +21,9 @@ class Http
 		//parsers
 		void						configLines(std::filesystem::path config_path);
 		void						configLinesWithoutSemicolons();
-		void						serverLines();
+		void						serverIndexes();
 		int							validFormatForOneServer(size_t start, size_t end);
 		int							validServersFormat();
+		void						parsingServers();
+		//-------------------------create a function that is pushing to the server_lines_
 };
