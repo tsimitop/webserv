@@ -3,7 +3,7 @@
 
 Http::Http() : 
 	servers_(), 
-	executable_folder_http_(""), 
+	executable_root_http_(""), 
 	lines(), 
 	lines_without_semicolons_(), 
 	server_indexes_(), 
@@ -15,7 +15,7 @@ Http::Http(const Http& other)
 	if (other.servers_.empty() != 1)
 		for (ServerInfo s : other.servers_)
 			servers_.push_back(s);
-	executable_folder_http_ = other.executable_folder_http_;
+	executable_root_http_ = other.executable_root_http_;
 	lines = other.lines;
 	lines_without_semicolons_ = other.lines_without_semicolons_;
 	server_indexes_ = other.server_indexes_;
@@ -28,7 +28,7 @@ Http& Http::operator=(const Http& other)
 		if (other.servers_.empty() != 1)
 		for (ServerInfo s : other.servers_)
 			servers_.push_back(s);
-		executable_folder_http_ = other.executable_folder_http_;
+		executable_root_http_ = other.executable_root_http_;
 		lines = other.lines;
 		lines_without_semicolons_ = other.lines_without_semicolons_;
 		server_indexes_ = other.server_indexes_;
@@ -214,7 +214,7 @@ void Http::parsingServers()
 		std::vector<std::string> current_non_semi;
 		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
 			current_non_semi.push_back(lines_without_semicolons_[j]);
-		ServerInfo s(executable_folder_http_);
+		ServerInfo s(executable_root_http_);
 		s.valid_inputs_ = YES;
 		s.lines_of_server_ = current_non_semi;
 		for (std::string l : s.lines_of_server_)
@@ -250,12 +250,12 @@ void Http::parsingServers()
 
 void Http::preparingAndValidatingConfig(char* argv[])
 {
-	executable_folder_http_ = 
+	executable_root_http_ = 
 	std::filesystem::canonical
 	(
 		std::filesystem::absolute(argv[0])
 	).parent_path();
-	std::filesystem::path config_path = executable_folder_http_ / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
+	std::filesystem::path config_path = executable_root_http_ / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
 	configLines(config_path);
 	serverIndexes();
 	validServersFormat();

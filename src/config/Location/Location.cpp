@@ -2,7 +2,7 @@
 
 Location::Location() : 
 location_lines_(), 
-executable_folder_location_(),
+executable_root_location_(),
 valid_inputs_(YES),
 client_max_body_size_(),
 allowed_methods_(), 
@@ -15,12 +15,12 @@ cgi_map_()
 };
 Location::Location(std::filesystem::path absolute_path)
 {
-	executable_folder_location_ = absolute_path;
+	executable_root_location_ = absolute_path;
 };
 Location::Location(const Location& other)
 {
 	location_lines_ = other.location_lines_;
-	executable_folder_location_ = other.executable_folder_location_;
+	executable_root_location_ = other.executable_root_location_;
 	valid_inputs_ = other.valid_inputs_;
 	uploads_dir_ = other.uploads_dir_;
 	location_html_ = other.location_html_;
@@ -37,7 +37,7 @@ Location& Location::operator=(const Location& other)
 	if (this != &other)
 	{
 		location_lines_ = other.location_lines_;
-		executable_folder_location_ = other.executable_folder_location_;
+		executable_root_location_ = other.executable_root_location_;
 		valid_inputs_ = other.valid_inputs_;
 		uploads_dir_ = other.uploads_dir_;
 		uploads_html_ = other.uploads_html_;
@@ -140,7 +140,7 @@ void	Location::setAllowedMethods(std::string line)
 void	Location::settingTheRightPath(std::string value, std::filesystem::path& p)
 {
 	if (value[0] == '.')
-		p = executable_folder_location_ / value.substr(2);
+		p = executable_root_location_ / value.substr(2);
 	else
 		p = value;
 }

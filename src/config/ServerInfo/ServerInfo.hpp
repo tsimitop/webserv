@@ -25,7 +25,7 @@ struct ServerInfo
 	std::map <int, std::filesystem::path>	errors; // error type  and error path
 	std::vector<Location>					locations_;
 	//--------------------------paths-------------------------------------
-	std::filesystem::path 					executable_folder_server_;
+	std::filesystem::path 					executable_root_server_;
 	std::filesystem::path					www_path_;
 	std::filesystem::path					errors_path_;
 	std::filesystem::path					uploads_dir_;

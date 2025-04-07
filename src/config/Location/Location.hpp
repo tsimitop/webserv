@@ -75,7 +75,7 @@ struct Location
 	//------------------lines of location----------------------
 	std::vector<std::string>			location_lines_;
 	//------------------Executable path------------------------
-	std::filesystem::path 				executable_folder_location_;
+	std::filesystem::path 				executable_root_location_;
 	//-------flags---------------------------------------------
 	int									valid_inputs_;
 	//-------attributes----------------------------------------
