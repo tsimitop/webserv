@@ -16,10 +16,9 @@ ServerInfo::ServerInfo() :
 	www_path_(""),
 	errors_path_(""),
 	uploads_dir_(""),
-	valid_inputs_(YES),
-	valid_errors_(YES),
-	valid_locations_(YES)
-{};
+	valid_inputs_(YES)
+{
+};
 ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 {
 	executable_root_server_ = absolute_path;
@@ -28,6 +27,8 @@ ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 	www_path_ = absolute_path / "www";
 	errors_path_ = www_path_  / "errors";
 	uploads_dir_ = www_path_ / "uploads";
+	//----------default errors---------------------------
+	defaultErrorSetting();
 };
 ServerInfo::ServerInfo(const ServerInfo& other)
 {
@@ -46,11 +47,9 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 	location_indexes_ = other.location_indexes_;
 	executable_root_server_ = other.executable_root_server_;
 	www_path_ = other.www_path_;
-	errors_path_ = other.www_path_;
+	errors_path_ = other.errors_path_;
 	uploads_dir_ = other.uploads_dir_;
 	valid_inputs_ = other.valid_inputs_;
-	valid_errors_ = other.valid_errors_;
-	valid_locations_ = other.valid_locations_;
 };
 ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 {
@@ -71,11 +70,9 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 		location_indexes_ = other.location_indexes_;
 		executable_root_server_ = other.executable_root_server_;
 		www_path_ = other.www_path_;
-		errors_path_ = other.www_path_;
+		errors_path_ = other.errors_path_;
 		uploads_dir_ = other.uploads_dir_;
 		valid_inputs_ = other.valid_inputs_;
-		valid_errors_ = other.valid_errors_;
-		valid_locations_ = other.valid_locations_;
 	}
 	return *this;
 };
@@ -181,7 +178,16 @@ void						ServerInfo::validErrorType(std::string value)
 		return ;
 	valid_errors_ = NO; 
 };
-
+void 					ServerInfo::defaultErrorSetting()
+{
+	errors[300] = errors_path_ / "300.html";
+	errors[301] = errors_path_ / "301.html";
+	errors[400] = errors_path_ / "400.html";
+	errors[404] = errors_path_ / "404.html";
+	errors[405] = errors_path_ / "405.html";
+	errors[500] = errors_path_ / "500.html";
+	errors[500] = errors_path_ / "505.html";
+};
 int						ServerInfo::allErrorsValid()
 {
 	return (valid_errors_);

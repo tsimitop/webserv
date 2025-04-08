@@ -31,8 +31,6 @@ struct ServerInfo
 	std::filesystem::path					uploads_dir_;
 	//--------------------------flags-------------------------------------
 	int 									valid_inputs_;
-	int										valid_errors_;
-	int										valid_locations_;
 	//methods
 	//helpers
 	std::string 							spaceTrimmer(std::string str);
@@ -47,9 +45,8 @@ struct ServerInfo
 	int										allSimpleInputsValid();
 	void									validErrorPath(std::string value);
 	void									validErrorType(std::string value);
+	void									defaultErrorSetting();
 	int										allErrorsValid();
-	// void									allLocationValid(std::string value);
-	// void									allServerInputsValid(std::string value);
 	//setting the values
 	void									setServerTimeOut(std::string line, int& attribute);
 	void									setListen(std::string line);
