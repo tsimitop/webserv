@@ -4,9 +4,8 @@
 
 int main(int argc, char **argv)
 {
-	HttpRequest		request;
 	HttpResponse	response;
-
+	
 	//---------------------------Config parsing---------------------------
 	Http c;
 	if (argc > 2)
@@ -15,20 +14,41 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	c.preparingAndValidatingConfig(argc , argv);
+
+	// for (ServerInfo s : c.servers_)
+	// {
+	// 	if (s.valid_inputs_ == NO)
+	// 	{
+	// 		std::cerr << "Error: Non valid config!\n";
+	// 		return (1);
+	// 	}
+	// }
+	c.parsingServers();
+	for (ServerInfo s : c.servers_)
+	{
+		if (s.valid_inputs_ == NO)
+			c.valid_config_ = NO;
+	}
 	if(c.valid_config_ == NO)
 	{
 		std::cerr << "Error: Non valid config!\n";
 		return (1);
 	}
-	c.parsingServers();
 	//----------------------End of config parsing--------------------------
-
-	std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
+	
+	std::string	req = "GET /index.html HTTP/1.1\r\nHost: www.example.com:4242\r\nConnection: keep-alive\r\n\r\n";
 	// std::string	req = "POST /submit-form HTTP/1.1\r\nHost: example.com\r\nContent-Length: 27\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=John+Doe&email=john@example.com\r\n";
 	// std::string	req = "POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/octet-stream\r\nContent-Length: 41\r\nContent-Disposition: attachment; filename='/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/attempt'\r\nConnection: keep-alive\r\n\r\n";
 	// std::string	req = "DELETE /index.html HTTP/1.1\r\nHost: www.example.com:8080\r\nConnection: keep-alive\r\n\r\n";
-
+	std::stringstream line(req);
+	std::string		word;
+	line >> word;
+	ServerInfo current_server = c.servers_[0];
+	std::vector<std::string> allowed_methods = c.servers_[0].locations_[0].allowed_methods_;
+	if ( std::find(allowed_methods.begin(), allowed_methods.end(), word) != allowed_methods.end())
+	std::cout << word << " found!\n";
 	//----------------Request has come in from client----------------//
+	HttpRequest		request(req, current_server);
 	try
 	{
 		request.readRequest(req);
@@ -45,7 +65,8 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	request.extractPortFromHost();
-
+	if (current_server.listen_ == request.getPort())
+		std::cout << "Port validated!\n";
 	//----------------Request validated, will be executed----------------//
 
 	response = request.performMethod();

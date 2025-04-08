@@ -25,8 +25,8 @@ ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 	executable_root_server_ = absolute_path;
 	// std::cout << "absolute_path: " << executable_root_server_ << "\n"; 
 	// www_path_ = absolute_path / "src" / "www";
-	www_path_ = absolute_path / "src/www";
-	errors_path_ = www_path_ / "errors";
+	www_path_ = absolute_path / "www";
+	errors_path_ = www_path_  / "errors";
 	uploads_dir_ = www_path_ / "uploads";
 };
 ServerInfo::ServerInfo(const ServerInfo& other)
@@ -320,7 +320,7 @@ void	ServerInfo::parsingLocations()
 				location.setPath(line, location.location_html_);
 			else if(key == "uploads_dir")
 				location.setPath(line, location.uploads_dir_);
-			else if(key == "uploads_html")
+			else if(key == "upload_html")
 				location.setPath(line, location.uploads_html_);
 			else if(key == "redir")
 				location.setPath(line, location.redir_);

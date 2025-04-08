@@ -26,9 +26,11 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 HttpRequest::~HttpRequest() {}
 
 // Parameterized constructor
-HttpRequest::HttpRequest(const std::string& request)
+HttpRequest::HttpRequest(const std::string& request, const ServerInfo server_info)
 {
+	port_ = 80;
 	httpRequest_ = request;
+	current_server_ = server_info;
 }
 
 // Getters
@@ -141,9 +143,14 @@ void	HttpRequest::parseHttpVersion(std::string& line)
 
 void	HttpRequest::parseRequestLine(std::string& line)
 {
+	std::vector<std::string> allowed =  current_server_.locations_[0].allowed_methods_;
 	parseMethod(line);
 	parseUrl(line);
 	parseHttpVersion(line);
+	if (std::find(allowed.begin(), allowed.end(), method_) == allowed.end())
+		std::cout << RED << "Method not allowed\n" << QUIT;
+	else 
+		std::cout << GREEN << "Method is allowed\n" << QUIT;
 }
 
 void	HttpRequest::parseLine(std::string line)
@@ -430,17 +437,17 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 
 const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 {
-	if (this->url_ == "/" || this->url_ == "index.html" || this->url_ == "/index.html")
+	std::filesystem::path current_www_path = this->current_server_.www_path_;
+	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
+	std::filesystem::path four_zero_four = available_errors[404];
+	std::string current_index = this->current_server_.index;
+	if (this->url_ == "/" || this->url_ == current_index || this->url_ == "/" + current_index)
 	{
-		std::string url = "/index.html";
-		// Go back two directories from current file, enter www directory, try to open index.html (should gegt directories form config file)
-		std::filesystem::path basePath = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
-		std::filesystem::path target_file = basePath += url;
-		std::ifstream input_file(target_file.string());
+		std::filesystem::path target_path = current_www_path / current_index;
+		std::ifstream input_file(target_path.string());
 		if (!input_file.is_open())
 		{
-			target_file = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www/errors/404";
-			std::ifstream input_file(target_file.string());
+			std::ifstream input_file(four_zero_four.string());
 			resp.setStatusCode(404);
 			resp.setReasonPhrase(404);
 			resp.setContentType("text/html");
@@ -456,7 +463,7 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 		{
 			resp.setStatusCode(200);
 			resp.setReasonPhrase(200);
-			resp.setContentType("text/html"); // figure it out properly using filePath.extension()
+			resp.setContentType("text/html");
 			std::stringstream ss;
 			ss << input_file.rdbuf();
 			input_file.close();
@@ -465,6 +472,10 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 			resp.setContentLength(temp.length());
 			resp.setBody(temp);
 		}
+	}
+	else
+	{
+
 	}
 	return resp;
 }

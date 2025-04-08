@@ -215,6 +215,7 @@ void Http::parsingServers()
 		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
 			current_non_semi.push_back(lines_without_semicolons_[j]);
 		ServerInfo s(executable_root_http_);
+		std::cout << s.errors_path_ << std::endl;
 		s.valid_inputs_ = YES;
 		s.lines_of_server_ = current_non_semi;
 		for (std::string l : s.lines_of_server_)
@@ -254,13 +255,13 @@ void Http::preparingAndValidatingConfig(int argc, char* argv[])
 	std::filesystem::canonical
 	(
 		std::filesystem::absolute(argv[0])
-	).parent_path().parent_path().parent_path();
+	).parent_path().parent_path();
 	std::filesystem::path config_path;
 	// std::cout << executable_root_http_ <<std::endl;
 	if (argc == 1)
-		config_path = executable_root_http_ / "src/config/default.conf";
+		config_path = executable_root_http_ / "config/default.conf";
 	else if (argc == 2)
-		config_path = executable_root_http_ / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
+		config_path = executable_root_http_ / "config" / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
 	configLines(config_path);
 	if (valid_config_ == YES)
 	{

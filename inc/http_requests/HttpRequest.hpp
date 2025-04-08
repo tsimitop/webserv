@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <filesystem>
 #include "HttpResponse.hpp"
+#include "../config/Http.hpp"
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -19,6 +20,7 @@
 #define QUIT "\033[0m"
 
 class HttpResponse;
+// class ServerInfo;
 
 class HttpRequest
 {
@@ -33,6 +35,7 @@ private:
 	int												port_;
 	std::string										basePath_;
 	std::string										filename_;
+	ServerInfo										current_server_;
 public:
 	// Orthodox Canonical Class Form
 	HttpRequest();
@@ -41,7 +44,7 @@ public:
 	~HttpRequest();
 
 	// Parameterized constructor
-	HttpRequest(const std::string& request);
+	HttpRequest(const std::string& request, const ServerInfo server_info);
 	
 	// Getters
 	std::unordered_map<std::string, std::string>	getHeaders(void) const;
