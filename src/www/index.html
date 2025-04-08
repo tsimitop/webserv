@@ -9,8 +9,13 @@
 <button onclick="uploadFile()">Upload</button>
 
 <br><br>
+
 <input type="text" id="filenameToDelete" placeholder="Enter filename to delete">
 <button onclick="deleteFile()">Delete</button>
+
+<br><br>
+
+<button onclick="tryCGI('../cgi/hello.py')">Try CGI</button>
 
 <script>
 	function uploadFile() {
@@ -45,11 +50,6 @@
 			return;
 		}
 
-		// fetch('/uploads/' + filename.name, {
-		// 	method: "DELETE"
-		// 	// headers: {}
-		// })
-
 		const filename = filenameInput.value;
 
 		fetch('/uploads/' + encodeURIComponent(filename), {
@@ -57,16 +57,31 @@
 		})
 		.then(response => {
 			if(response.ok) {
-				console.log ("Deleted");
-				console.log (filename);
-				alert("File deleted successfully");
+				console.log ("Deleted: " + filename);
+				// alert("File deleted successfully: " + filename);
 			} else {
-				console.error("Failed to delete");
-				console.error(filename);
-				alert("Failed to delete file.");
+				console.error("Failed to delete: " + filename);
+				// alert("Failed to delete file: " + filename);
 			}
 		})
 		.catch(error => console.error("Error: ", error));
+	}
+</script>
+
+<script>
+	function tryCGI() {
+
+		const filename = file.name;
+
+		fetch('/cgi', {
+			method: "GET",
+			// headers: {
+			// 	"Content-Type": "application/octet-stream",
+			// 	"Content-Disposition": 'attachment; filename="' + filename + '"',
+			// },
+			// body: file // Send the raw file
+		}).then(response => console.log("CGI succesfully executed"))
+		  .catch(error => console.error("Error:", error));
 	}
 </script>
 

@@ -486,7 +486,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
 		resp.setStatusCode(500);
 		resp.setReasonPhrase(500);
-		resp.setContentType("text/htmlffff");
+		resp.setContentType("text/html");
 		std::stringstream ss;
 		ss << input_file.rdbuf();
 		input_file.close();
@@ -505,6 +505,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 	{
 		resp.setStatusCode(200);
 		resp.setReasonPhrase(200);
+		resp.setContentType("text/plain");
 	}
 	else if (removed != 0)
 	{
@@ -514,7 +515,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
 		resp.setStatusCode(500);
 		resp.setReasonPhrase(500);
-		resp.setContentType("text/htmlggggg");
+		resp.setContentType("text/html");
 		std::stringstream ss;
 		ss << input_file.rdbuf();
 		std::string temp;
@@ -529,11 +530,82 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 	return (resp);
 }
 
+bool	HttpRequest::isCgi()
+{
+	if (url_.find_last_of('.') != std::string::npos)
+	{
+		std::string temp = url_.substr(url_.find_last_of('.') + 1);
+		if (temp == "py")
+			return (true);
+	}
+	return (false);
+}
+
+const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
+{
+	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www/";
+	std::filesystem::path	path_of_program_to_execute = www_path += url_;
+	std::string executable = url_.substr(url_.find_last_of('/') + 1);
+	std::ifstream file(path_of_program_to_execute);
+	if (!file.is_open())
+	{
+		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
+		std::ifstream input_file(error_file.string());
+		resp.setStatusCode(500);
+		resp.setReasonPhrase(500);
+		resp.setContentType("text/html");
+		std::stringstream ss;
+		ss << input_file.rdbuf();
+		input_file.close();
+		std::string temp;
+		temp = ss.str();
+		resp.setContentLength(temp.length());
+		resp.setBody(temp);
+		return resp;
+	}
+	file.close();
+	int fd[2];
+	pipe(fd);
+	pid_t pid  = fork();
+	char *args[] = {const_cast<char *>(executable.c_str()), NULL};
+	if (pid == 0)
+	{
+		close(fd[0]);
+		dup2(fd[1], STDIN_FILENO);
+		close(fd[1]);
+		execve(path_of_program_to_execute.c_str(), args, NULL);
+		std::cout << "Remove failed. errno: " << errno << " (" << std::strerror(errno) << ")" << std::endl;
+		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
+		std::ifstream input_file(error_file.string());
+		resp.setStatusCode(500);
+		resp.setReasonPhrase(500);
+		resp.setContentType("text/html");
+		std::stringstream ss;
+		ss << input_file.rdbuf();
+		std::string temp;
+		temp = ss.str();
+		input_file.close();
+		resp.setContentLength(temp.length());
+		resp.setBody(temp);
+		return resp;
+	}
+	resp.setStatusCode(200);
+	resp.setReasonPhrase(200);
+	resp.setContentType("text/plain");
+	// printRequest();
+	// printHeaders();
+	return (resp);
+}
+
 const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
-	if (this->getMethod() == "GET")
+	if (isCgi())
+	{
+		resp = cgiCase(resp);
+	}
+	else if (this->getMethod() == "GET")
 	{
 		resp = getCase(resp);
 	}

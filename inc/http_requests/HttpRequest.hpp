@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <filesystem>
 #include "HttpResponse.hpp"
+#include <unistd.h>
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -67,6 +68,7 @@ public:
 	void	extractPortFromHost();
 	bool	isValid();
 	bool	validatePost();
+	bool	isCgi();
 	// bool	validateDelete();
 	void	parseMethod(std::string& line);
 	void	parseUrl(std::string& line);
@@ -83,6 +85,7 @@ public:
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);
 	const HttpResponse	deleteCase(HttpResponse& resp);
+	const HttpResponse	cgiCase(HttpResponse& resp);
 
 	class httpParserException : public std::exception {
 		public:

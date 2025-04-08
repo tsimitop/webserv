@@ -80,7 +80,7 @@ void	Server::handleClient(int client_socket) {
 		HttpResponse	response;
 
 		recv(client_socket, buffer, BUFF_LEN, 0);
-		// std::cout << CYAN << "Request: " << buffer << QUIT << std::endl;
+		std::cout << CYAN << "Request: " << buffer << QUIT << std::endl;
 		std::string req = buffer;
 		try
 		{
@@ -98,7 +98,7 @@ void	Server::handleClient(int client_socket) {
 			request.extractPortFromHost();
 			response = request.performMethod();
 			std::string res = response.respond(request);
-			// std::cout << YELLOW << "'" << res << "'" << QUIT << std::endl;
+			std::cout << YELLOW << "'" << res << "'" << QUIT << std::endl;
 			send(client_socket, res.c_str(), res.size(), 0);
 		}
 		break ;
