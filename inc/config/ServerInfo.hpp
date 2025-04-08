@@ -58,4 +58,9 @@ struct ServerInfo
 	void									pushLocationsLines();
 	void									parsingLocations();
 };
+//making the parcing for the config and have some basic undestanding about config
+
+// server{listen=4243;max_body_client_size=10m;location/updates{index=index.html;root=./updates};location/updates{index=index.html;root=./updates}location/updates{index=index.html;root=./updates}};
+// server{listen=4243;max_body_client_size=10m;location/updates{index=index.html;root=./updates};};
+// server{listen=4243;max_body_client_size=10m;location/updates{index=index.html;root=./updates}};
 
