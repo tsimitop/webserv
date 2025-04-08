@@ -164,7 +164,7 @@ void						ServerInfo::validErrorPath(std::string value)
 	std::ifstream check(checking_path);
 	if (!check)
 	{
-		valid_errors_ = NO;
+		valid_inputs_ = NO;
 		return ;
 	}
 };
@@ -176,7 +176,7 @@ void						ServerInfo::validErrorType(std::string value)
 	if (strIsNumber(error_type) && 
 	all_posible_errors.find(std::stol(error_type)) != all_posible_errors.end())
 		return ;
-	valid_errors_ = NO; 
+	valid_inputs_ = NO; 
 };
 void 					ServerInfo::defaultErrorSetting()
 {
@@ -187,10 +187,6 @@ void 					ServerInfo::defaultErrorSetting()
 	errors[405] = errors_path_ / "405.html";
 	errors[500] = errors_path_ / "500.html";
 	errors[500] = errors_path_ / "505.html";
-};
-int						ServerInfo::allErrorsValid()
-{
-	return (valid_errors_);
 };
 
 void						ServerInfo::setServerTimeOut(std::string line, int& attribute)
@@ -266,10 +262,14 @@ void						ServerInfo::pushToErrors(std::string line)
 		std::string error_type = value.substr(the_last_backslash + 1, 3);
 		if (valid_inputs_ != NO)
 		{
-			if (errors.find(std::stoi(error_type)) == errors.end()) // checking for duplicates
-						errors[std::stoi(error_type)] = value[0] == '.' ? 
-														executable_root_server_ / value.substr(2) : 
-														(std::filesystem::path)value;
+			if (all_posible_errors.find(std::stoi(error_type)) != all_posible_errors.end())
+			{
+				if (errors.find(std::stoi(error_type)) == errors.end())
+					errors[std::stoi(error_type)] = value[0] == '.' ? 
+													executable_root_server_ / value.substr(2) : 
+													(std::filesystem::path)value;
+				
+			}
 			else
 				valid_inputs_ = NO;
 		}
