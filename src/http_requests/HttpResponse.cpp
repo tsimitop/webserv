@@ -84,7 +84,7 @@ HttpResponse::HttpResponse(int sc)
 	statusReason_ = {
 		{100, "Continue"},
 		{101, "Switching Protocols"},
-		{103, "Early Hints"}, // for preloading resources,
+		{103, "Early Hints"},
 		{200, "OK"},
 		{201, "Created"},
 		{202, "Accepted"},

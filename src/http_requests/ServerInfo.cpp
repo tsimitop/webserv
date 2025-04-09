@@ -186,7 +186,7 @@ void 					ServerInfo::defaultErrorSetting()
 	errors[404] = errors_path_ / "404.html";
 	errors[405] = errors_path_ / "405.html";
 	errors[500] = errors_path_ / "500.html";
-	errors[500] = errors_path_ / "505.html";
+	errors[505] = errors_path_ / "505.html";
 };
 
 void						ServerInfo::setServerTimeOut(std::string line, int& attribute)
