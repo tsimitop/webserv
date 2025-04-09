@@ -133,7 +133,7 @@ void	Location::setAllowedMethods(std::string line)
 		std::string key, eq, value;
 		l >> key >> eq;
 		while (l >> value)
-			allowed_methods_.push_back(value);
+			allowed_methods_.insert(allowed_methods_.begin(), value);
 
 	}
 };

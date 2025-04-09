@@ -242,7 +242,7 @@ void Http::parsingServers()
 				;
 		}
 		s.locationIndexes();
-		s.pushLocationsLines();
+		s.pushLocationsLines();//creating the locations and pushing the corresponding location lines
 		s.parsingLocations();
 		servers_.push_back(s);
 	}
@@ -259,7 +259,7 @@ void Http::preparingAndValidatingConfig(int argc, char* argv[])
 	if (argc == 1)
 		config_path = executable_root_http_ / "src/config/default.conf";
 	else if (argc == 2)
-		config_path = executable_root_http_ / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
+		config_path = executable_root_http_ / "src/config" / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
 	configLines(config_path);
 	if (valid_config_ == YES)
 	{

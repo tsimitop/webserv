@@ -16,10 +16,9 @@ ServerInfo::ServerInfo() :
 	www_path_(""),
 	errors_path_(""),
 	uploads_dir_(""),
-	valid_inputs_(YES),
-	valid_errors_(YES),
-	valid_locations_(YES)
-{};
+	valid_inputs_(YES)
+{
+};
 ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 {
 	executable_root_server_ = absolute_path;
@@ -28,7 +27,20 @@ ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 	www_path_ = absolute_path / "src/www";
 	errors_path_ = www_path_ / "errors";
 	uploads_dir_ = www_path_ / "uploads";
+	defaultErrorSetting();
+
 };
+// ServerInfo::ServerInfo(std::filesystem::path absolute_path)
+// {
+// 	executable_root_server_ = absolute_path;
+// 	// std::cout << "absolute_path: " << executable_root_server_ << "\n"; 
+// 	// www_path_ = absolute_path / "src" / "www";
+// 	www_path_ = absolute_path / "www";
+// 	errors_path_ = www_path_  / "errors";
+// 	uploads_dir_ = www_path_ / "uploads";
+// 	//----------default errors---------------------------
+// 	defaultErrorSetting();
+// };
 ServerInfo::ServerInfo(const ServerInfo& other)
 {
 	keep_alive_timeout_= other.keep_alive_timeout_;
@@ -46,11 +58,9 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 	location_indexes_ = other.location_indexes_;
 	executable_root_server_ = other.executable_root_server_;
 	www_path_ = other.www_path_;
-	errors_path_ = other.www_path_;
+	errors_path_ = other.errors_path_;
 	uploads_dir_ = other.uploads_dir_;
 	valid_inputs_ = other.valid_inputs_;
-	valid_errors_ = other.valid_errors_;
-	valid_locations_ = other.valid_locations_;
 };
 ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 {
@@ -71,11 +81,9 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 		location_indexes_ = other.location_indexes_;
 		executable_root_server_ = other.executable_root_server_;
 		www_path_ = other.www_path_;
-		errors_path_ = other.www_path_;
+		errors_path_ = other.errors_path_;
 		uploads_dir_ = other.uploads_dir_;
 		valid_inputs_ = other.valid_inputs_;
-		valid_errors_ = other.valid_errors_;
-		valid_locations_ = other.valid_locations_;
 	}
 	return *this;
 };
@@ -161,13 +169,13 @@ void						ServerInfo::validErrorPath(std::string value)
 {
 	std::filesystem::path checking_path;
 	if (value[0] == '.')
-		checking_path = executable_root_server_ / value.substr(2);
+		checking_path = executable_root_server_ / "src" /value.substr(2);
 	else
 		checking_path = value;
 	std::ifstream check(checking_path);
 	if (!check)
 	{
-		valid_errors_ = NO;
+		valid_inputs_ = NO;
 		return ;
 	}
 };
@@ -179,12 +187,17 @@ void						ServerInfo::validErrorType(std::string value)
 	if (strIsNumber(error_type) && 
 	all_posible_errors.find(std::stol(error_type)) != all_posible_errors.end())
 		return ;
-	valid_errors_ = NO; 
+	valid_inputs_ = NO; 
 };
-
-int						ServerInfo::allErrorsValid()
+void 					ServerInfo::defaultErrorSetting()
 {
-	return (valid_errors_);
+	errors[300] = errors_path_ / "300.html";
+	errors[301] = errors_path_ / "301.html";
+	errors[400] = errors_path_ / "400.html";
+	errors[404] = errors_path_ / "404.html";
+	errors[405] = errors_path_ / "405.html";
+	errors[500] = errors_path_ / "500.html";
+	errors[505] = errors_path_ / "505.html";
 };
 
 void						ServerInfo::setServerTimeOut(std::string line, int& attribute)
@@ -260,10 +273,14 @@ void						ServerInfo::pushToErrors(std::string line)
 		std::string error_type = value.substr(the_last_backslash + 1, 3);
 		if (valid_inputs_ != NO)
 		{
-			if (errors.find(std::stoi(error_type)) == errors.end()) // checking for duplicates
-						errors[std::stoi(error_type)] = value[0] == '.' ? 
-														executable_root_server_ / value.substr(2) : 
-														(std::filesystem::path)value;
+			if (all_posible_errors.find(std::stoi(error_type)) != all_posible_errors.end())
+			{
+				if (errors.find(std::stoi(error_type)) == errors.end())
+					errors[std::stoi(error_type)] = value[0] == '.' ? 
+													executable_root_server_ / value.substr(2) : 
+													(std::filesystem::path)value;
+				
+			}
 			else
 				valid_inputs_ = NO;
 		}
@@ -305,7 +322,7 @@ void						ServerInfo::pushLocationsLines()
 
 void	ServerInfo::parsingLocations()
 {
-	for (Location location : locations_)
+	for (Location& location : locations_)
 	{
 		for (std::string line : location.location_lines_)
 		{
@@ -320,7 +337,7 @@ void	ServerInfo::parsingLocations()
 				location.setPath(line, location.location_html_);
 			else if(key == "uploads_dir")
 				location.setPath(line, location.uploads_dir_);
-			else if(key == "uploads_html")
+			else if(key == "upload_html")
 				location.setPath(line, location.uploads_html_);
 			else if(key == "redir")
 				location.setPath(line, location.redir_);
