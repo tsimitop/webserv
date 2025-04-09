@@ -72,23 +72,29 @@
 	function tryCGI() {
 	  fetch('../cgi/hello.py')
 		.then(response => {
-		  if (!response.ok) throw new Error("Network response was not ok");
+		  if (!response.ok)
+		  	throw new Error("Network response was not ok");
 		  return response.text();
 		})
 		.then(data => {
 		  console.log("CGI successfully executed");
-		//   console.log("Response:", data);
+		  console.log("Response:", data);
 		//   alert(data);
 		})
 		.catch(error => {
 		  console.error("Error:", error);
 		});
 	}
-  </script>
+</script>
 
 </body>
 </html>
-
+<!-- 
+fetch('../cgi/hello.py')
+.then(response => {if (!response.ok) throw new Error("Network response was not ok");return response.text();})
+.then(data => {console.log("CGI successfully executed");})
+.catch(error => {console.error("Error:", error);
+}); -->
 
 
 <!-- <form action="/uploads/" method="post" enctype="multipart/form-data">
