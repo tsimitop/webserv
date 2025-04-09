@@ -543,55 +543,47 @@ bool	HttpRequest::isCgi()
 
 const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
 {
-	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www/";
+	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
 	std::filesystem::path	path_of_program_to_execute = www_path += url_;
 	std::string executable = url_.substr(url_.find_last_of('/') + 1);
 	std::ifstream file(path_of_program_to_execute);
-	if (!file.is_open())
-	{
-		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
-		std::ifstream input_file(error_file.string());
-		resp.setStatusCode(500);
-		resp.setReasonPhrase(500);
-		resp.setContentType("text/html");
-		std::stringstream ss;
-		ss << input_file.rdbuf();
-		input_file.close();
-		std::string temp;
-		temp = ss.str();
-		resp.setContentLength(temp.length());
-		resp.setBody(temp);
-		return resp;
-	}
-	file.close();
+	//check if file exists?
 	int fd[2];
 	pipe(fd);
 	pid_t pid  = fork();
-	char *args[] = {const_cast<char *>(executable.c_str()), NULL};
+	// pip[0] - the read end of the pipe - is a file descriptor used to read from the pipe (input)
+	// pip[1] - the write end of the pipe - is a file descriptor used to write to the pipe (output)
+	// std::cout << "Remove failed. errno: " << errno << " (" << std::strerror(errno) << ")" << std::endl;
+	char *args[] = {const_cast<char *>("/usr/local/bin/python3"), const_cast<char *>(path_of_program_to_execute.c_str()), NULL};
 	if (pid == 0)
 	{
+		// dup2(fd[0], STDOUT_FILENO);
 		close(fd[0]);
-		dup2(fd[1], STDIN_FILENO);
+		dup2(fd[1], STDOUT_FILENO);
 		close(fd[1]);
-		execve(path_of_program_to_execute.c_str(), args, NULL);
-		std::cout << "Remove failed. errno: " << errno << " (" << std::strerror(errno) << ")" << std::endl;
-		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
-		std::ifstream input_file(error_file.string());
+		// std::cout << "PATH = " << path_of_program_to_execute << std::endl;
+		execve("/usr/local/bin/python3", args, NULL);
+		
+		//Handle error prperly
 		resp.setStatusCode(500);
 		resp.setReasonPhrase(500);
 		resp.setContentType("text/html");
-		std::stringstream ss;
-		ss << input_file.rdbuf();
-		std::string temp;
-		temp = ss.str();
-		input_file.close();
-		resp.setContentLength(temp.length());
-		resp.setBody(temp);
 		return resp;
 	}
+	char buffer[4096]; //BUFFLEN FROM SOCKETS
+	memset(buffer, 0, 4096);
+	close(fd[1]);
+	read(fd[0], buffer, 4096);
+	close(fd[0]);
 	resp.setStatusCode(200);
 	resp.setReasonPhrase(200);
 	resp.setContentType("text/plain");
+	std::string body;
+	// std::string body = "<!DOCTYPE html>\n<html>\n<body>\n<p>";
+	body += buffer;
+	// body += "</p>\n</body>\n</html>";
+	resp.setContentLength(body.size());
+	resp.setBody(body);
 	// printRequest();
 	// printHeaders();
 	return (resp);

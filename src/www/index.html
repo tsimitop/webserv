@@ -15,7 +15,7 @@
 
 <br><br>
 
-<button onclick="tryCGI('../cgi/hello.py')">Try CGI</button>
+<button onclick="tryCGI()">Try CGI</button>
 
 <script>
 	function uploadFile() {
@@ -70,20 +70,21 @@
 
 <script>
 	function tryCGI() {
-
-		const filename = file.name;
-
-		fetch('/cgi', {
-			method: "GET",
-			// headers: {
-			// 	"Content-Type": "application/octet-stream",
-			// 	"Content-Disposition": 'attachment; filename="' + filename + '"',
-			// },
-			// body: file // Send the raw file
-		}).then(response => console.log("CGI succesfully executed"))
-		  .catch(error => console.error("Error:", error));
+	  fetch('../cgi/hello.py')
+		.then(response => {
+		  if (!response.ok) throw new Error("Network response was not ok");
+		  return response.text();
+		})
+		.then(data => {
+		  console.log("CGI successfully executed");
+		//   console.log("Response:", data);
+		//   alert(data);
+		})
+		.catch(error => {
+		  console.error("Error:", error);
+		});
 	}
-</script>
+  </script>
 
 </body>
 </html>
