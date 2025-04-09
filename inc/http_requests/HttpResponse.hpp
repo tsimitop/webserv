@@ -6,6 +6,7 @@
 #include "HttpRequest.hpp"
 #include <ctime>
 #include <cstdlib>
+#include <filesystem>
 // /Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/inc/http_requests/HttpResponse.hpp
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -49,6 +50,7 @@ public:
 	void	setContentType(std::string ctype);
 	void	setBody(const std::string& body);
 	void	setContentLength(int len);
+	void	createResponse(int status_code, std::filesystem::path file);
 
 	const std::string respond(const HttpRequest& req);
 };
