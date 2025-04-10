@@ -46,7 +46,6 @@ struct ServerInfo
 	void									validErrorPath(std::string value);
 	void									validErrorType(std::string value);
 	void									defaultErrorSetting();
-	int										allErrorsValid();
 	//setting the values
 	void									setServerTimeOut(std::string line, int& attribute);
 	void									setListen(std::string line);
