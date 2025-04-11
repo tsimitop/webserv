@@ -10,6 +10,7 @@
 #include <filesystem>
 #include "HttpResponse.hpp"
 #include <unistd.h>
+#include <sys/wait.h>
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"

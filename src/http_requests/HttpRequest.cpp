@@ -469,64 +469,45 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 	return resp;
 }
 
+static HttpResponse response(std::ifstream& input_file, HttpResponse& resp, int status_code, std::string type)
+{
+	resp.setStatusCode(status_code);
+	resp.setReasonPhrase(status_code);
+	resp.setContentType(type);
+	std::stringstream ss;
+	ss << input_file.rdbuf();
+	input_file.close();
+	std::string temp;
+	temp = ss.str();
+	resp.setContentLength(temp.length());
+	resp.setBody(temp);
+	return resp;
+}
+
 const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 {
 	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www/";
 	std::filesystem::path	path_of_file_to_delete = www_path += this->filename_;
-	// std::cout << root_path << std::endl;
-	// root_path += this->filename_;
-	// std::cout << root_path << std::endl;
-	// std::cout << "FILENAME: " << this->filename_ << std::endl;
-	// std::cout << remove(path_of_file_to_delete) << std::endl;
 	std::ifstream file(path_of_file_to_delete);
 	if (!file.is_open())
 	{
-		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
+		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/status_code";
 		std::ifstream input_file(error_file.string());
-		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
-		resp.setStatusCode(500);
-		resp.setReasonPhrase(500);
-		resp.setContentType("text/html");
-		std::stringstream ss;
-		ss << input_file.rdbuf();
-		input_file.close();
-		std::string temp;
-		temp = ss.str();
-		resp.setContentLength(temp.length());
-		resp.setBody(temp);
-		return resp;
+		resp = response(input_file, resp, 500, "text/html");
 	}
 	file.close();
 	int removed = remove(path_of_file_to_delete.c_str());
-	// std::cout << removed << std::endl;
-	// removed = remove(path_of_file_to_delete);
-	// std::cout << removed << std::endl;
 	if (removed == 0)
 	{
-		resp.setStatusCode(200);
-		resp.setReasonPhrase(200);
-		resp.setContentType("text/plain");
+		resp = response(file, resp, 200, "text/plain");
 	}
 	else if (removed != 0)
 	{
 		std::cout << "Remove failed. errno: " << errno << " (" << std::strerror(errno) << ")" << std::endl;
 		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
 		std::ifstream input_file(error_file.string());
-		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
-		resp.setStatusCode(500);
-		resp.setReasonPhrase(500);
-		resp.setContentType("text/html");
-		std::stringstream ss;
-		ss << input_file.rdbuf();
-		std::string temp;
-		temp = ss.str();
-		input_file.close();
-		resp.setContentLength(temp.length());
-		resp.setBody(temp);
-		return resp;
+		resp = response(input_file, resp, 500, "text/html");
 	}
-	// printRequest();
-	// printHeaders();
 	return (resp);
 }
 
@@ -547,17 +528,15 @@ const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
 	std::filesystem::path	path_of_program_to_execute = www_path += url_;
 	std::string executable = url_.substr(url_.find_last_of('/') + 1);
 	std::ifstream file(path_of_program_to_execute);
-	//check if file exists?
 	int fd[2];
 	pipe(fd);
 	pid_t pid  = fork();
+	int *status;
 	// pip[0] - the read end of the pipe - is a file descriptor used to read from the pipe (input)
 	// pip[1] - the write end of the pipe - is a file descriptor used to write to the pipe (output)
-	// std::cout << "Remove failed. errno: " << errno << " (" << std::strerror(errno) << ")" << std::endl;
-	char *args[] = {const_cast<char *>("/usr/local/bin/python3"), const_cast<char *>(path_of_program_to_execute.c_str()), NULL};
 	if (pid == 0)
 	{
-		// dup2(fd[0], STDOUT_FILENO);
+		char *args[] = {const_cast<char *>("/usr/local/bin/python3"), const_cast<char *>(path_of_program_to_execute.c_str()), NULL};
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
 		close(fd[1]);
@@ -568,8 +547,13 @@ const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
 		resp.setStatusCode(500);
 		resp.setReasonPhrase(500);
 		resp.setContentType("text/html");
-		return resp;
+		// return resp;
 	}
+	waitpid(-1, status, WNOHANG);
+	if (WIFEXITED(status))
+		*status = WEXITSTATUS(status);
+	else
+		*status = EXIT_FAILURE;
 	char buffer[4096]; //BUFFLEN FROM SOCKETS
 	memset(buffer, 0, 4096);
 	close(fd[1]);
@@ -577,15 +561,12 @@ const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
 	close(fd[0]);
 	resp.setStatusCode(200);
 	resp.setReasonPhrase(200);
-	resp.setContentType("text/plain");
-	std::string body;
-	// std::string body = "<!DOCTYPE html>\n<html>\n<body>\n<p>";
+	resp.setContentType("text/html");
+	std::string body = "<!DOCTYPE html>\n<html>\n<body>\n<p>";
 	body += buffer;
-	// body += "</p>\n</body>\n</html>";
+	body += "</p>\n</body>\n</html>";
 	resp.setContentLength(body.size());
 	resp.setBody(body);
-	// printRequest();
-	// printHeaders();
 	return (resp);
 }
 
@@ -625,3 +606,40 @@ const HttpResponse	HttpRequest::performMethod()
 // 	uploadFile(uploadDir, filename);
 // }
 // request.uploadFile(request.getBasePath(), request.getFilename());
+
+
+// const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
+// {
+// 	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
+// 	std::filesystem::path	path_of_program_to_execute = www_path += url_;
+// 	std::string executable = url_.substr(url_.find_last_of('/') + 1);
+// 	std::ifstream file(path_of_program_to_execute);
+// 	int fd[2];
+// 	pipe(fd);
+// 	pid_t pid  = fork();
+// 	char *args[] = {const_cast<char *>("/usr/local/bin/python3"), const_cast<char *>(path_of_program_to_execute.c_str()), NULL};
+// 	if (pid == 0)
+// 	{
+// 		close(fd[0]);
+// 		dup2(fd[1], STDOUT_FILENO);
+// 		close(fd[1]);
+// 		execve("/usr/local/bin/python3", args, NULL);
+// 		resp.setStatusCode(500);
+// 		resp.setReasonPhrase(500);
+// 		resp.setContentType("text/html");
+// 		return resp;
+// 	}
+// 	char buffer[4096]; //BUFFLEN FROM SOCKETS
+// 	memset(buffer, 0, 4096);
+// 	close(fd[1]);
+// 	read(fd[0], buffer, 4096);
+// 	close(fd[0]);
+// 	resp.setStatusCode(200);
+// 	resp.setReasonPhrase(200);
+// 	resp.setContentType("text/plain");
+// 	std::string body;
+// 	body = buffer;
+// 	resp.setContentLength(body.size());
+// 	resp.setBody(body);
+// 	return (resp);
+// }

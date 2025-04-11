@@ -1,1 +1,1 @@
-print("this is a response coming back from a CGI")
+print("This is a response coming back from a CGI")

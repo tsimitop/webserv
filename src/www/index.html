@@ -16,6 +16,7 @@
 <br><br>
 
 <button onclick="tryCGI()">Try CGI</button>
+<!-- <div id="cgi-output"></div> render the output here -->
 
 <script>
 	function uploadFile() {
@@ -78,8 +79,11 @@
 		})
 		.then(data => {
 		  console.log("CGI successfully executed");
-		  console.log("Response:", data);
-		//   alert(data);
+		//   document.getElementById("cgi-output").innerHTML = data; // rendering it
+		  const newWindow = window.open();
+		  newWindow.document.open();
+		  newWindow.document.write(data);
+		  newWindow.document.close();
 		})
 		.catch(error => {
 		  console.error("Error:", error);
