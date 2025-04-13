@@ -428,51 +428,58 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 	return resp;
 }
 
-const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
+const HttpResponse HttpRequest::getCase(HttpResponse& resp)
 {
-	if (this->url_ == "/" || this->url_ == "index.html" || this->url_ == "/index.html")
-	{
-		std::string url = "/index.html";
-		// Go back two directories from current file, enter www directory, try to open index.html (should gegt directories form config file)
-		std::filesystem::path basePath = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
-		std::filesystem::path target_file = basePath += url;
-		std::ifstream input_file(target_file.string());
-		if (!input_file.is_open())
-		{
-			target_file = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www/errors/404";
-			std::ifstream input_file(target_file.string());
-			resp.setStatusCode(404);
-			resp.setReasonPhrase(404);
-			resp.setContentType("text/html");
-			std::stringstream ss;
-			ss << input_file.rdbuf();
-			input_file.close();
-			std::string temp;
-			temp = ss.str();
-			resp.setContentLength(temp.length());
-			resp.setBody(temp);
-		}
-		else
-		{
-			resp.setStatusCode(200);
-			resp.setReasonPhrase(200);
-			resp.setContentType("text/html"); // figure it out properly using filePath.extension()
-			std::stringstream ss;
-			ss << input_file.rdbuf();
-			input_file.close();
-			std::string temp;
-			temp = ss.str();
-			resp.setContentLength(temp.length());
-			resp.setBody(temp);
-		}
+	std::filesystem::path basePath = std::filesystem::absolute(__FILE__).parent_path().parent_path() / "www";
+	std::filesystem::path target_file = basePath / this->url_.substr(1); // strip leading '/'
+
+	if (this->url_ == "/") {
+		target_file = basePath / "index.html";
 	}
+
+	if (!std::filesystem::exists(target_file) || std::filesystem::is_directory(target_file)) {
+		std::filesystem::path errorFile = basePath / "errors/404";
+		std::ifstream input_file(errorFile.string());
+		resp.setStatusCode(404);
+		resp.setReasonPhrase(404);
+		resp.setContentType("text/html");
+		std::stringstream ss;
+		ss << input_file.rdbuf();
+		input_file.close();
+		std::string temp = ss.str();
+		resp.setContentLength(temp.length());
+		resp.setBody(temp);
+	}
+	else {
+		std::ifstream input_file(target_file, std::ios::binary);
+		resp.setStatusCode(200);
+		resp.setReasonPhrase(200);
+		
+		// Determine Content-Type based on file extension
+		std::string ext = target_file.extension().string();
+		if (ext == ".html") resp.setContentType("text/html");
+		else if (ext == ".css") resp.setContentType("text/css");
+		else if (ext == ".js") resp.setContentType("application/javascript");
+		else if (ext == ".ico") resp.setContentType("image/x-icon");
+		else resp.setContentType("application/octet-stream"); // fallback
+
+		std::stringstream ss;
+		ss << input_file.rdbuf();
+		input_file.close();
+		std::string temp = ss.str();
+		resp.setContentLength(temp.length());
+		resp.setBody(temp);
+	}
+
 	return resp;
 }
+
 
 static HttpResponse response(std::ifstream& input_file, HttpResponse& resp, int status_code, std::string type)
 {
 	resp.setStatusCode(status_code);
 	resp.setReasonPhrase(status_code);
+	// std::cout << "content type = " << type << std::endl;
 	resp.setContentType(type);
 	std::stringstream ss;
 	ss << input_file.rdbuf();
@@ -503,7 +510,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 	}
 	else if (removed != 0)
 	{
-		std::cout << "Remove failed. errno: " << errno << " (" << std::strerror(errno) << ")" << std::endl;
+		// std::cout << "Remove failed. errno: " << errno << " (" << std::strerror(errno) << ")" << std::endl;
 		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
 		std::ifstream input_file(error_file.string());
 		resp = response(input_file, resp, 500, "text/html");
@@ -524,6 +531,7 @@ bool	HttpRequest::isCgi()
 
 const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
 {
+	//handle timeout with poll?
 	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
 	std::filesystem::path	path_of_program_to_execute = www_path += url_;
 	std::string executable = url_.substr(url_.find_last_of('/') + 1);
@@ -531,42 +539,68 @@ const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
 	int fd[2];
 	pipe(fd);
 	pid_t pid  = fork();
-	int *status;
+	int status = 0;
 	// pip[0] - the read end of the pipe - is a file descriptor used to read from the pipe (input)
 	// pip[1] - the write end of the pipe - is a file descriptor used to write to the pipe (output)
 	if (pid == 0)
 	{
-		char *args[] = {const_cast<char *>("/usr/local/bin/python3"), const_cast<char *>(path_of_program_to_execute.c_str()), NULL};
-		close(fd[0]);
+		char *args[] = {
+			const_cast<char *>("/usr/local/bin/python3"),
+			const_cast<char *>(path_of_program_to_execute.c_str()),
+			NULL}
+		;
+		std::string script_method = "REQUEST_METHOD=" + this->getMethod();
+
+		std::string name = "NAME=" + this->getBody().substr(this->getBody().find_first_of("=") + 1);
+		// std::cout << "name = " << name <<std::endl;
+		std::string script_filename = "SCRIPT_FILENAME=" + path_of_program_to_execute.string();
+		std::string content_length = "CONTENT_LENGTH=7"; //change to custom
+		char* envp[] = {
+			const_cast<char*>(script_method.c_str()),
+			const_cast<char*>(content_length.c_str()),
+			const_cast<char*>(script_filename.c_str()),
+			const_cast<char*>(name.c_str()),
+			NULL
+		};
+		int null_fd = open("/dev/null", O_WRONLY);
+		if (!null_fd)
+			std::cout << "failed to create fd\n";
+		dup2(null_fd, STDERR_FILENO);
+		close(null_fd);
 		dup2(fd[1], STDOUT_FILENO);
+		dup2(fd[0], STDIN_FILENO);
+		close(fd[0]);
 		close(fd[1]);
-		// std::cout << "PATH = " << path_of_program_to_execute << std::endl;
-		execve("/usr/local/bin/python3", args, NULL);
-		
-		//Handle error prperly
-		resp.setStatusCode(500);
-		resp.setReasonPhrase(500);
-		resp.setContentType("text/html");
-		// return resp;
+		execve("/usr/local/bin/python3", args, envp);
+		exit (EXIT_FAILURE);
 	}
-	waitpid(-1, status, WNOHANG);
-	if (WIFEXITED(status))
-		*status = WEXITSTATUS(status);
-	else
-		*status = EXIT_FAILURE;
-	char buffer[4096]; //BUFFLEN FROM SOCKETS
-	memset(buffer, 0, 4096);
 	close(fd[1]);
-	read(fd[0], buffer, 4096);
-	close(fd[0]);
-	resp.setStatusCode(200);
-	resp.setReasonPhrase(200);
-	resp.setContentType("text/html");
-	std::string body = "<!DOCTYPE html>\n<html>\n<body>\n<p>";
-	body += buffer;
-	body += "</p>\n</body>\n</html>";
-	resp.setContentLength(body.size());
-	resp.setBody(body);
+	waitpid(-1, &status, 0);
+	if (WIFEXITED(status))
+		status = WEXITSTATUS(status);
+	else
+		status = EXIT_FAILURE;
+	if (status == 0)
+	{
+		char buffer[4096] = {0}; //BUFFLEN FROM SOCKETS init to null directly
+		read(fd[0], buffer, 4096);
+		close(fd[0]);
+		resp.setStatusCode(200);
+		resp.setReasonPhrase(200);
+		resp.setContentType("text/html");
+		std::string body = "<!DOCTYPE html>\n<html>\n<body>\n<p>";
+		body += buffer;
+		body += "</p>\n</body>\n</html>";
+		resp.setContentLength(body.size());
+		resp.setBody(body);
+	}
+	else
+	{
+		close(fd[0]);
+		std::filesystem::path error_file = std::filesystem::absolute(__FILE__).parent_path().parent_path() / "www/errors/500.html";
+		std::ifstream input_file(error_file.string());
+		resp = response(input_file, resp, 500, "text/html");
+	}
 	return (resp);
 }
 
@@ -578,11 +612,11 @@ const HttpResponse	HttpRequest::performMethod()
 	{
 		resp = cgiCase(resp);
 	}
-	else if (this->getMethod() == "GET")
+	else if (this->getMethod() == "GET" && !isCgi())
 	{
 		resp = getCase(resp);
 	}
-	else if (this->getMethod() == "POST")
+	else if (this->getMethod() == "POST" && !isCgi())
 	{
 		resp = postCase(resp);
 	}
@@ -590,56 +624,5 @@ const HttpResponse	HttpRequest::performMethod()
 	{
 		resp = deleteCase(resp);
 	}
-	// else
-	// {
-	// }
 	return resp;
 }
-
-// Proper HTTP response
-// TO BE ADDED AFTER CONFIG PARSING IS DONE!
-// int parse(std::void_t ServerConfig)
-// {
-// 	std::string uploadDir = ServerConfig->uploadDir || "./uploads";
-// 	std::string filename = getFilename();
-// if (!filename.empty())
-// 	uploadFile(uploadDir, filename);
-// }
-// request.uploadFile(request.getBasePath(), request.getFilename());
-
-
-// const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
-// {
-// 	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
-// 	std::filesystem::path	path_of_program_to_execute = www_path += url_;
-// 	std::string executable = url_.substr(url_.find_last_of('/') + 1);
-// 	std::ifstream file(path_of_program_to_execute);
-// 	int fd[2];
-// 	pipe(fd);
-// 	pid_t pid  = fork();
-// 	char *args[] = {const_cast<char *>("/usr/local/bin/python3"), const_cast<char *>(path_of_program_to_execute.c_str()), NULL};
-// 	if (pid == 0)
-// 	{
-// 		close(fd[0]);
-// 		dup2(fd[1], STDOUT_FILENO);
-// 		close(fd[1]);
-// 		execve("/usr/local/bin/python3", args, NULL);
-// 		resp.setStatusCode(500);
-// 		resp.setReasonPhrase(500);
-// 		resp.setContentType("text/html");
-// 		return resp;
-// 	}
-// 	char buffer[4096]; //BUFFLEN FROM SOCKETS
-// 	memset(buffer, 0, 4096);
-// 	close(fd[1]);
-// 	read(fd[0], buffer, 4096);
-// 	close(fd[0]);
-// 	resp.setStatusCode(200);
-// 	resp.setReasonPhrase(200);
-// 	resp.setContentType("text/plain");
-// 	std::string body;
-// 	body = buffer;
-// 	resp.setContentLength(body.size());
-// 	resp.setBody(body);
-// 	return (resp);
-// }

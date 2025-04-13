@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html>
+<head>
+	<title>Webserv</title>
+	<link rel="icon" type="image/x-icon" href="/favicon.ico">
+  </head>
 <body>
 
 <h1>The simplest index ever</h1>
@@ -15,8 +19,14 @@
 
 <br><br>
 
-<button onclick="tryCGI()">Try CGI</button>
-<!-- <div id="cgi-output"></div> render the output here -->
+<h2>CGI</h2>
+
+<button onclick="tryCGI('../cgi/hello.py')">Try working CGI</button><br><br>
+<button onclick="tryCGI('../cgi/loop.py')">Try endless CGI</button><br><br>
+<button onclick="tryCGI('../cgi/hell.py')">Try non-existing CGI</button><br><br>
+<button onclick="tryCGI('../cgi/mistake.py')">Try wrong CGI</button><br><br>
+<input type="text" id="nameOfUser" placeholder="Enter your name">
+<button onclick="tryCGIpost('../cgi/for_post.py')">Try post CGI</button><br><br>
 
 <script>
 	function uploadFile() {
@@ -59,10 +69,8 @@
 		.then(response => {
 			if(response.ok) {
 				console.log ("Deleted: " + filename);
-				// alert("File deleted successfully: " + filename);
 			} else {
 				console.error("Failed to delete: " + filename);
-				// alert("Failed to delete file: " + filename);
 			}
 		})
 		.catch(error => console.error("Error: ", error));
@@ -70,16 +78,35 @@
 </script>
 
 <script>
-	function tryCGI() {
-	  fetch('../cgi/hello.py')
-		.then(response => {
-		  if (!response.ok)
-		  	throw new Error("Network response was not ok");
-		  return response.text();
-		})
+	function tryCGI(location) {
+	  fetch(location)
+		.then(response => response.text())
 		.then(data => {
-		  console.log("CGI successfully executed");
-		//   document.getElementById("cgi-output").innerHTML = data; // rendering it
+		  const newWindow = window.open();
+		  newWindow.document.open();
+		  newWindow.document.write(data);
+		  newWindow.document.close();
+		})
+		.catch(error => {
+		  console.error("Error:", error);
+		});
+	}
+</script>
+
+<script>
+	function tryCGIpost(location) {
+		const name = document.getElementById("nameOfUser").value;
+		const data = `name=${encodeURIComponent(name)}`;
+
+	  fetch(location, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		body: data
+	  })
+		.then(response => response.text())
+		.then(data => {
 		  const newWindow = window.open();
 		  newWindow.document.open();
 		  newWindow.document.write(data);
@@ -93,13 +120,6 @@
 
 </body>
 </html>
-<!-- 
-fetch('../cgi/hello.py')
-.then(response => {if (!response.ok) throw new Error("Network response was not ok");return response.text();})
-.then(data => {console.log("CGI successfully executed");})
-.catch(error => {console.error("Error:", error);
-}); -->
-
 
 <!-- <form action="/uploads/" method="post" enctype="multipart/form-data">
 	<label for="fileUpload">Choose a file:</label>
