@@ -229,14 +229,8 @@ void Poll::pollingFds()
 					HttpResponse response;
 					response = req.performMethod();
 					std::string resp = response.respond(req);
-					// memset(buffer, 0, 1024);
-					// buffer = const_cast<char*>(resp.c_str());
 					std::cout << GREEN << resp << std::endl << QUIT;
-					size_t send_server = 0;
-					for (send_server = 0; send_server != config_.servers_.size();send_server++)
-						if (req.getPort() == config_.servers_[send_server].listen_)
-							break;
-					send(fds_[send_server].fd, resp.c_str(), bytes, 0);
+					send(fds_[i].fd, resp.c_str(), resp.length(), 0);
 				}
 			}
 		}
