@@ -20,6 +20,7 @@ struct Poll
 	Poll();
 	Poll(const Poll& other);
 	Poll(int port, std::string host_name, int max_body_ln, int server_timeout);
+	Poll(const Http& new_config);
 	Poll& operator=(const Poll& other);
 	~Poll();
 	//sockets && poll

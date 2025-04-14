@@ -85,7 +85,8 @@ Poll& Poll::operator=(const Poll& other)
 	}
 	return *this;
 };
-
+Poll::Poll(const Http& new_config): config_(new_config)
+{};
 Poll::~Poll(){};
 
 //Creating the socket

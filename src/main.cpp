@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 		return (1);
 	}
 	Poll poll_one;
-	
+	poll_one = Poll(c);
 	//----------------------End of config parsing--------------------------
 // // POST
 // 	std::string	req = "POST /uploads HTTP/1.1\r\n\
