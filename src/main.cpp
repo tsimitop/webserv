@@ -60,6 +60,8 @@ int main(int argc, char **argv)
 	}
 	Poll poll_one;
 	poll_one = Poll(c);
+	if (poll_one.creatingTheServerSocket() == YES)
+		poll_one.pollingFds();
 	//----------------------End of config parsing--------------------------
 // // POST
 // 	std::string	req = "POST /uploads HTTP/1.1\r\n\

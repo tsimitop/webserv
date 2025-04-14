@@ -122,7 +122,7 @@ void						ServerInfo::validListen(std::string value)
 };
 void						ServerInfo::validServerName(std::string value)
 {
-	if (strIsAlphaOr(value, '_') == NO)
+	if (value != "127.0.0.1" && value != "localhost")
 		valid_inputs_ = NO;
 };
 void						ServerInfo::validIndex(std::string value)
