@@ -165,7 +165,7 @@ void Poll::pollingFds()
 {
 	while(YES)
 	{
-		int activity = poll(fds_.data(),fds_.size(), server_timeout_); // ?? how I'm taking timeout different per server
+		int activity = poll(fds_.data(),fds_.size(), config_.servers_[0].server_timeout_); // ?? how I'm taking timeout different per server
 		if (activity == -1)
 		{
 			std::cerr << "Error: Poll failed or Timed out!\n";
