@@ -3,7 +3,7 @@
 <head>
 	<title>Webserv</title>
 	<link rel="icon" type="image/x-icon" href="/favicon.ico">
-  </head>
+</head>
 <body>
 
 <h1>The simplest index ever</h1>
@@ -79,16 +79,19 @@
 
 <script>
 	function tryCGI(location) {
-	  fetch(location)
+	fetch(location)
 		.then(response => response.text())
 		.then(data => {
-		  const newWindow = window.open();
-		  newWindow.document.open();
-		  newWindow.document.write(data);
-		  newWindow.document.close();
+			history.pushState(data, '', location);
+			document.open();
+			document.write(data);
+			document.close();
+			window.addEventListener('popstate', () => {
+				window.location.href = '/index.html';
+			});
 		})
 		.catch(error => {
-		  console.error("Error:", error);
+			console.error("Error:", error);
 		});
 	}
 </script>
@@ -98,19 +101,22 @@
 		const name = document.getElementById("nameOfUser").value;
 		const data = `name=${encodeURIComponent(name)}`;
 
-	  fetch(location, {
+	fetch(location, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/x-www-form-urlencoded"
 		},
 		body: data
-	  })
+	})
 		.then(response => response.text())
 		.then(data => {
-		  const newWindow = window.open();
-		  newWindow.document.open();
-		  newWindow.document.write(data);
-		  newWindow.document.close();
+			history.pushState(null, '', location);
+			document.open();
+			document.write(data);
+			document.close();
+			window.addEventListener('popstate', () => {
+				window.location.href = '/index.html';
+			});
 		})
 		.catch(error => {
 		  console.error("Error:", error);
