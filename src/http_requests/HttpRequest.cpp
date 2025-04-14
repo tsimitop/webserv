@@ -478,15 +478,104 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 	return (resp);
 }
 
+bool	HttpRequest::isCgi()
+{
+	if (url_.find_last_of('.') != std::string::npos)
+	{
+		std::string temp = url_.substr(url_.find_last_of('.') + 1);
+		if (temp == "py")
+			return (true);
+	}
+	return (false);
+}
+
+const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
+{
+	//handle timeout with poll?
+	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
+	std::filesystem::path	path_of_program_to_execute = www_path += url_;
+	std::string executable = url_.substr(url_.find_last_of('/') + 1);
+	std::ifstream file(path_of_program_to_execute);
+	int fd[2];
+	pipe(fd);
+	pid_t pid  = fork();
+	int status = 0;
+	// pip[0] - the read end of the pipe - is a file descriptor used to read from the pipe (input)
+	// pip[1] - the write end of the pipe - is a file descriptor used to write to the pipe (output)
+	if (pid == 0)
+	{
+		char *args[] = {
+			const_cast<char *>("/usr/local/bin/python3"),
+			const_cast<char *>(path_of_program_to_execute.c_str()),
+			NULL}
+		;
+		std::string script_method = "REQUEST_METHOD=" + this->getMethod();
+
+		std::string name = "NAME=" + this->getBody().substr(this->getBody().find_first_of("=") + 1);
+		// std::cout << "name = " << name <<std::endl;
+		std::string script_filename = "SCRIPT_FILENAME=" + path_of_program_to_execute.string();
+		std::string content_length = "CONTENT_LENGTH=7"; //change to custom
+		char* envp[] = {
+			const_cast<char*>(script_method.c_str()),
+			const_cast<char*>(content_length.c_str()),
+			const_cast<char*>(script_filename.c_str()),
+			const_cast<char*>(name.c_str()),
+			NULL
+		};
+		int null_fd = open("/dev/null", O_WRONLY);
+		if (!null_fd)
+			std::cout << "failed to create fd\n";
+		dup2(null_fd, STDERR_FILENO);
+		close(null_fd);
+		dup2(fd[1], STDOUT_FILENO);
+		dup2(fd[0], STDIN_FILENO);
+		close(fd[0]);
+		close(fd[1]);
+		execve("/usr/local/bin/python3", args, envp);
+		exit (EXIT_FAILURE);
+	}
+	close(fd[1]);
+	waitpid(-1, &status, 0);
+	if (WIFEXITED(status))
+		status = WEXITSTATUS(status);
+	else
+		status = EXIT_FAILURE;
+	if (status == 0)
+	{
+		char buffer[4096] = {0}; //BUFFLEN FROM SOCKETS init to null directly
+		read(fd[0], buffer, 4096);
+		close(fd[0]);
+		resp.setStatusCode(200);
+		resp.setReasonPhrase(200);
+		resp.setContentType("text/html");
+		std::string body = "<!DOCTYPE html>\n<html>\n<body>\n<p>";
+		body += buffer;
+		body += "</p>\n</body>\n</html>";
+		resp.setContentLength(body.size());
+		resp.setBody(body);
+	}
+	else
+	{
+		close(fd[0]);
+		std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
+		resp.createResponse(500, available_errors[500]);
+	}
+	return (resp);
+}
+
 const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
-	if (this->getMethod() == "GET")
+	if (isCgi())
+	{
+		resp = cgiCase(resp);
+	}
+	else if (this->getMethod() == "GET" && !isCgi())
 	{
 		resp = getCase(resp);
 	}
-	else if (this->getMethod() == "POST")
+	else if (this->getMethod() == "POST" && !isCgi())
 	{
 		resp = postCase(resp);
 	}

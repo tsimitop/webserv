@@ -8,6 +8,9 @@
 #include <fstream>
 #include <cstdio>
 #include <filesystem>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 #include "HttpResponse.hpp"
 #include "../config/Http.hpp"
 
@@ -91,4 +94,6 @@ public:
 		public:
 			virtual const char *what() const throw();
 	};
+	bool	isCgi();
+	const HttpResponse	cgiCase(HttpResponse& resp);
 };
