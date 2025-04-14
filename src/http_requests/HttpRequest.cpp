@@ -62,6 +62,9 @@ int HttpRequest::getPort(void) const
 {return (port_);}
 
 // Setters
+void	HttpRequest::setCurrentServer(const ServerInfo& server)
+{current_server_ = server;}
+
 void HttpRequest::setHttpRequest(std::string req)
 {httpRequest_ = req;}
 
@@ -143,6 +146,8 @@ void	HttpRequest::parseHttpVersion(std::string& line)
 
 void	HttpRequest::parseRequestLine(std::string& line)
 {
+	std::cout << "current_server_.locations_[0].allowed_methods_[0]" << std::endl;
+	std::cout << current_server_.locations_[0].allowed_methods_[0] << std::endl;
 	std::vector<std::string> allowed =  current_server_.locations_[0].allowed_methods_;
 	parseMethod(line);
 	parseUrl(line);
@@ -195,8 +200,10 @@ void	HttpRequest::readRequest(const std::string& req)
 	int body = 0;
 	std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
 
+std::cout << "PRINT\n";
 	if (!line.empty() && line.size() > 0)
 		parseRequestLine(line);
+std::cout << "PRINT1\n";
 	requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 	line = requestLine.substr(0, requestLine.find("\r\n"));
 	while ((!line.empty() && line.size() > 0) || (body == 0 && method_ == "POST"))

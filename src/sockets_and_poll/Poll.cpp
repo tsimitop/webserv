@@ -193,6 +193,8 @@ void Poll::pollingFds()
 			{
 				char buffer[max_body_ln_]; // how I 'm taking the max body len  per server
 				int bytes = recv(fds_[i].fd, buffer, sizeof(buffer), 0);
+				HttpRequest req;
+				std::string request = buffer;
 				if (bytes <= 0)
 				{
 					std::cout << "Client with the FD: " << fds_[i].fd << " Disconnected!\n";
@@ -207,6 +209,11 @@ void Poll::pollingFds()
 					std::string filtered_buffer = filteredBuffer(buffer, steps_back);
 					if (bytes - steps_back > 0)
 						std::cout << "Client from FD: " << fds_[i].fd << " send the message: " << buffer << "\n";
+					
+					// req.readRequest(request);
+					for (ServerInfo s : config_.servers_)
+						if (req.getPort() == s.listen_)
+							req.setCurrentServer(s);
 					// here will be responce and request
 
 					// here will be responce and request

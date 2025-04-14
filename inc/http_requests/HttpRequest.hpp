@@ -65,6 +65,7 @@ public:
 	void	setMethod(std::string meth);
 	void	setUrl(std::string url);
 	void	setVersion(std::string ver);
+	void	setCurrentServer(const ServerInfo& server);
 
 	// Parse
 	void	readRequest(const std::string& req); //throws exception
