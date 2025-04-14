@@ -59,6 +59,8 @@ public:
 	std::string										getFilename(void) const;
 	std::string										getBody(void) const;
 	int												getPort(void) const;
+	ServerInfo										getCurrentServer() const;
+
 
 	// Setters
 	void	setHttpRequest(std::string req);
@@ -85,7 +87,7 @@ public:
 	void	printRequest(void) const;
 	void	printBody(void) const;
 
-	// Execute methodes
+	// Execu(te methodes
 	const HttpResponse	performMethod();
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);

@@ -1,7 +1,7 @@
 #include "../../inc/http_requests/HttpRequest.hpp"
 
 // Orthodox Canonical Class Form
-HttpRequest::HttpRequest() : bodyComplete_(""), httpRequest_(""), method_(""), url_(""), version_(""), port_(80), basePath_(""), filename_("") {}
+HttpRequest::HttpRequest() : port_(80), current_server_(){}
 
 HttpRequest::HttpRequest(const HttpRequest& other) {*this = other;}
 
@@ -60,6 +60,9 @@ std::string HttpRequest::getFilename(void) const
 
 int HttpRequest::getPort(void) const
 {return (port_);}
+
+ServerInfo	HttpRequest::getCurrentServer() const
+{return current_server_;}
 
 // Setters
 void	HttpRequest::setCurrentServer(const ServerInfo& server)
@@ -146,16 +149,17 @@ void	HttpRequest::parseHttpVersion(std::string& line)
 
 void	HttpRequest::parseRequestLine(std::string& line)
 {
-	std::cout << "current_server_.locations_[0].allowed_methods_[0]" << std::endl;
-	std::cout << current_server_.locations_[0].allowed_methods_[0] << std::endl;
-	std::vector<std::string> allowed =  current_server_.locations_[0].allowed_methods_;
+	// std::cout << "LISTEN" << std::endl;
+	// std::cout << current_server_.listen_ << std::endl;
+	// std::cout << current_server_.locations_[0].allowed_methods_[0] << std::endl;
+	// std::vector<std::string> allowed =  current_server_.locations_[0].allowed_methods_;
 	parseMethod(line);
 	parseUrl(line);
 	parseHttpVersion(line);
-	if (std::find(allowed.begin(), allowed.end(), method_) == allowed.end())
-		std::cout << RED << "Method not allowed\n" << QUIT;
-	else 
-		std::cout << GREEN << "Method is allowed\n" << QUIT;
+	// if (std::find(allowed.begin(), allowed.end(), method_) == allowed.end())
+	// 	std::cout << RED << "Method not allowed\n" << QUIT;
+	// else 
+	// 	std::cout << GREEN << "Method is allowed\n" << QUIT;
 }
 
 void	HttpRequest::parseLine(std::string line)
@@ -200,10 +204,8 @@ void	HttpRequest::readRequest(const std::string& req)
 	int body = 0;
 	std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
 
-std::cout << "PRINT\n";
 	if (!line.empty() && line.size() > 0)
 		parseRequestLine(line);
-std::cout << "PRINT1\n";
 	requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 	line = requestLine.substr(0, requestLine.find("\r\n"));
 	while ((!line.empty() && line.size() > 0) || (body == 0 && method_ == "POST"))
@@ -222,6 +224,7 @@ std::cout << "PRINT1\n";
 	}
 	if (method_ == "POST" || method_ == "DELETE")
 		updateFilename();
+	this->extractPortFromHost();
 }
 
 static bool isOnlyDigit(const std::string& str)

@@ -210,14 +210,33 @@ void Poll::pollingFds()
 					if (bytes - steps_back > 0)
 						std::cout << "Client from FD: " << fds_[i].fd << " send the message: " << buffer << "\n";
 					
-					// req.readRequest(request);
-					for (ServerInfo s : config_.servers_)
-						if (req.getPort() == s.listen_)
-							req.setCurrentServer(s);
-					// here will be responce and request
+					req.readRequest(request);
+					std::vector<ServerInfo>::iterator it;
+					for (it = config_.servers_.begin(); it != config_.servers_.end(); it++)
+					{
+						std::cout << RED << "SETTING SERVEEEEEEER" << QUIT << std::endl;
 
-					// here will be responce and request
-					send(fds_[i].fd, &buffer, bytes, 0);		
+						std::cout << "(*it).listen_: " << (*it).listen_ << "\n";
+						std::cout << "req.getPort(): " << req.getPort() << "\n";
+						if (req.getPort() == (*it).listen_)
+						{
+							std::cout << BLUE << "SETTING SERVEEEEEEER" << QUIT << std::endl;
+							req.setCurrentServer(*it);
+						}
+					}
+					std::cout << MAGENTA << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
+					std::cout << YELLOW << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
+					HttpResponse response;
+					response = req.performMethod();
+					std::string resp = response.respond(req);
+					// memset(buffer, 0, 1024);
+					// buffer = const_cast<char*>(resp.c_str());
+					std::cout << GREEN << resp << std::endl << QUIT;
+					size_t send_server = 0;
+					for (send_server = 0; send_server != config_.servers_.size();send_server++)
+						if (req.getPort() == config_.servers_[send_server].listen_)
+							break;
+					send(fds_[send_server].fd, resp.c_str(), bytes, 0);
 				}
 			}
 		}
