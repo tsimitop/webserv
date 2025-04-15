@@ -14,15 +14,20 @@ SRCS =	main.cpp \
 		sockets/sockets.cpp \
 		sockets/Server.cpp \
 		http_requests/HttpRequest.cpp \
-		http_requests/HttpResponse.cpp
+		http_requests/HttpResponse.cpp \
+		config_parser/Http.cpp \
+		config_parser/ServerInfo.cpp \
+		config_parser/Location.cpp \
+		sockets_and_poll/Poll.cpp
+
+
+all: $(NAME)
 
 SRC:=		$(addprefix $(SOURCE)/,$(SRCS))
 OBJS:=		$(SRC:$(SOURCE)/%.cpp=$(OBJ_DIR)/%.o)
 
 GREEN  := \033[1;32m
 RESET  := \033[0m
-
-all: $(NAME)
 
 $(OBJS): $(OBJ_DIR)%.o : $(SOURCE)%.cpp
 	@mkdir -p $(dir $@)

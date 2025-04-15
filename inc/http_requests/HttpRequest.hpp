@@ -8,7 +8,11 @@
 #include <fstream>
 #include <cstdio>
 #include <filesystem>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 #include "HttpResponse.hpp"
+#include "../config/Http.hpp"
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -19,6 +23,7 @@
 #define QUIT "\033[0m"
 
 class HttpResponse;
+// class ServerInfo;
 
 class HttpRequest
 {
@@ -33,6 +38,7 @@ private:
 	int												port_;
 	std::string										basePath_;
 	std::string										filename_;
+	ServerInfo										current_server_;
 public:
 	// Orthodox Canonical Class Form
 	HttpRequest();
@@ -41,7 +47,7 @@ public:
 	~HttpRequest();
 
 	// Parameterized constructor
-	HttpRequest(const std::string& request);
+	HttpRequest(const std::string& request, const ServerInfo server_info);
 	
 	// Getters
 	std::unordered_map<std::string, std::string>	getHeaders(void) const;
@@ -53,12 +59,15 @@ public:
 	std::string										getFilename(void) const;
 	std::string										getBody(void) const;
 	int												getPort(void) const;
+	ServerInfo										getCurrentServer() const;
+
 
 	// Setters
 	void	setHttpRequest(std::string req);
 	void	setMethod(std::string meth);
 	void	setUrl(std::string url);
 	void	setVersion(std::string ver);
+	void	setCurrentServer(const ServerInfo& server);
 
 	// Parse
 	void	readRequest(const std::string& req); //throws exception
@@ -78,7 +87,7 @@ public:
 	void	printRequest(void) const;
 	void	printBody(void) const;
 
-	// Execute methodes
+	// Execu(te methodes
 	const HttpResponse	performMethod();
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);
@@ -88,4 +97,6 @@ public:
 		public:
 			virtual const char *what() const throw();
 	};
+	bool	isCgi();
+	const HttpResponse	cgiCase(HttpResponse& resp);
 };

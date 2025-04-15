@@ -1,1 +1,0 @@
-print("this is a response coming back from a CGI, btw you have to fork a process for this")

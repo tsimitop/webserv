@@ -1,7 +1,7 @@
 #include "../../inc/http_requests/HttpRequest.hpp"
 
 // Orthodox Canonical Class Form
-HttpRequest::HttpRequest() : bodyComplete_(""), httpRequest_(""), method_(""), url_(""), version_(""), port_(80), basePath_(""), filename_("") {}
+HttpRequest::HttpRequest() : port_(80), current_server_(){}
 
 HttpRequest::HttpRequest(const HttpRequest& other) {*this = other;}
 
@@ -26,9 +26,11 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 HttpRequest::~HttpRequest() {}
 
 // Parameterized constructor
-HttpRequest::HttpRequest(const std::string& request)
+HttpRequest::HttpRequest(const std::string& request, const ServerInfo server_info)
 {
+	port_ = 80;
 	httpRequest_ = request;
+	current_server_ = server_info;
 }
 
 // Getters
@@ -59,7 +61,13 @@ std::string HttpRequest::getFilename(void) const
 int HttpRequest::getPort(void) const
 {return (port_);}
 
+ServerInfo	HttpRequest::getCurrentServer() const
+{return current_server_;}
+
 // Setters
+void	HttpRequest::setCurrentServer(const ServerInfo& server)
+{current_server_ = server;}
+
 void HttpRequest::setHttpRequest(std::string req)
 {httpRequest_ = req;}
 
@@ -141,9 +149,17 @@ void	HttpRequest::parseHttpVersion(std::string& line)
 
 void	HttpRequest::parseRequestLine(std::string& line)
 {
+	// std::cout << "LISTEN" << std::endl;
+	// std::cout << current_server_.listen_ << std::endl;
+	// std::cout << current_server_.locations_[0].allowed_methods_[0] << std::endl;
+	// std::vector<std::string> allowed =  current_server_.locations_[0].allowed_methods_;
 	parseMethod(line);
 	parseUrl(line);
 	parseHttpVersion(line);
+	// if (std::find(allowed.begin(), allowed.end(), method_) == allowed.end())
+	// 	std::cout << RED << "Method not allowed\n" << QUIT;
+	// else 
+	// 	std::cout << GREEN << "Method is allowed\n" << QUIT;
 }
 
 void	HttpRequest::parseLine(std::string line)
@@ -162,11 +178,7 @@ void	HttpRequest::updateFilename()
 {
 	auto it = headers_.begin();
 	if (method_ == "DELETE")
-	{
 		filename_ = url_.substr(1);
-		// filename_ = url_.substr(url_.find_last_of("/") + 1);
-		// std::cout << filename_ << "= FILENAME\n";
-	}
 	for (it = headers_.begin(); it != headers_.end(); it++)
 	{
 		if (it->first == "Content-Disposition")
@@ -212,6 +224,7 @@ void	HttpRequest::readRequest(const std::string& req)
 	}
 	if (method_ == "POST" || method_ == "DELETE")
 		updateFilename();
+	this->extractPortFromHost();
 }
 
 static bool isOnlyDigit(const std::string& str)
@@ -231,14 +244,6 @@ static bool isOnlyDigit(const std::string& str)
 	return true;
 }
 
-// bool	HttpRequest::validateDelete(void)
-// {
-	// to be coded only if Authorization is found to be required or we implement cookies
-// }
-
-// RFC 9110: A user agent SHOULD NOT send a Content-Length header field when the request
-// message does not contain content and the method semantics do not anticipate such data.
-// https://httpwg.org/specs/rfc9110.html#field.content-length
 bool	HttpRequest::validatePost(void) // what about Connection → Optional; defaults to keep-alive in HTTP/1.1.
 {
 	auto it = headers_.begin();
@@ -309,8 +314,6 @@ bool	HttpRequest::isValid()
 		std::cout << RED << "Post could not be validated" << QUIT << std::endl;
 		return (false);
 	}
-	// if (method_ == "DELETE") //NOT YET I THINK
-	// 	if (!validateDelete())
 	return (true);
 }
 
@@ -388,144 +391,185 @@ const char *HttpRequest::httpParserException::what() const throw()
 // Execute methodes
 const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
-	std::ostringstream os;
-	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1); //recheck this
-	std::ofstream file("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename);
-	// std::ofstream file("/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/uploads/" + filename, std::ios::binary);
-
-	if (!file.is_open()) // probably needs to be handled by html and/or config
+	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
+	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
+	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
+	std::string length = headers_["Content-Length"];
+	if ((int)(this->getBody().length()) != stoi(length)) // remove most of this if statement after debugging
+		resp.createResponse(500, available_errors[500]);
+	else
 	{
-		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
-		std::ifstream input_file(error_file.string());
-		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
-		resp.setStatusCode(500);
-		resp.setReasonPhrase(500);
-		resp.setContentType("text/html");
-		std::stringstream ss;
-		ss << input_file.rdbuf();
-		input_file.close();
-		std::string temp;
-		temp = ss.str();
-		resp.setContentLength(temp.length());
-		resp.setBody(temp);
-		return resp;
-	}
-	file << this->getBody();
-	file.close();
-	// std::string body = this->getBody();
-	// fileStored.write(body.c_str(), body.size());
-
-	resp.setStatusCode(200);
-	resp.setReasonPhrase(200);
-	auto it = this->headers_.begin();
-	for (it = this->headers_.begin(); it != this->headers_.end(); it++)
-	{
-		if (it->first == "Content-Type")
-			resp.setContentType(it->second);
-		else if (it->first == "Content-Length")
-			resp.setContentLength(stoi(it->second));
+		std::ofstream file(current_uploads_path / filename);
+		std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
+		if (!file.is_open()) // probably needs to be handled by html and/or config
+			resp.createResponse(500, available_errors[500]);
+		else
+		{
+			file << this->getBody();
+			file.close();
+			resp.setStatusCode(200);
+			resp.setReasonPhrase(200);
+			auto it = this->headers_.begin();
+			for (it = this->headers_.begin(); it != this->headers_.end(); it++)
+			{
+				if (it->first == "Content-Type")
+					resp.setContentType(it->second);
+				else if (it->first == "Content-Length")
+					resp.setContentLength(stoi(it->second));
+			}
+		}
 	}
 	return resp;
 }
 
+void HttpResponse::createResponse(int status_code, std::filesystem::path file)
+{
+	std::ifstream input_file(file.string());
+	setStatusCode(status_code);
+	setReasonPhrase(status_code);
+	setContentType("text/html");
+	std::stringstream ss;
+	ss << input_file.rdbuf();
+	input_file.close();
+	std::string temp;
+	temp = ss.str();
+	setContentLength(temp.length());
+	setBody(temp);
+}
+
 const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 {
-	if (this->url_ == "/" || this->url_ == "index.html" || this->url_ == "/index.html")
+	std::filesystem::path current_www_path = this->current_server_.www_path_;
+	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
+	std::string current_index = this->current_server_.index;
+	if (this->url_ == "/" || this->url_ == current_index || this->url_ == "/" + current_index)
 	{
-		std::string url = "/index.html";
-		// Go back two directories from current file, enter www directory, try to open index.html (should gegt directories form config file)
-		std::filesystem::path basePath = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
-		std::filesystem::path target_file = basePath += url;
-		std::ifstream input_file(target_file.string());
+		std::filesystem::path target_path = current_www_path / current_index;
+		std::ifstream input_file(target_path.string());
 		if (!input_file.is_open())
-		{
-			target_file = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www/errors/404";
-			std::ifstream input_file(target_file.string());
-			resp.setStatusCode(404);
-			resp.setReasonPhrase(404);
-			resp.setContentType("text/html");
-			std::stringstream ss;
-			ss << input_file.rdbuf();
-			input_file.close();
-			std::string temp;
-			temp = ss.str();
-			resp.setContentLength(temp.length());
-			resp.setBody(temp);
-		}
+			resp.createResponse(404, available_errors[404]);
 		else
-		{
-			resp.setStatusCode(200);
-			resp.setReasonPhrase(200);
-			resp.setContentType("text/html"); // figure it out properly using filePath.extension()
-			std::stringstream ss;
-			ss << input_file.rdbuf();
-			input_file.close();
-			std::string temp;
-			temp = ss.str();
-			resp.setContentLength(temp.length());
-			resp.setBody(temp);
-		}
+			resp.createResponse(200, target_path);
+	}
+	else
+	{
+		std::filesystem::path	target_path = current_www_path / this->url_;
+		std::ifstream			input_file(target_path.string());
+		if (!input_file)
+			resp.createResponse(404, available_errors[404]);
+		else
+			resp.createResponse(200, target_path);
 	}
 	return resp;
 }
 
 const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 {
-	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www/";
-	std::filesystem::path	path_of_file_to_delete = www_path += this->filename_;
-	// std::cout << root_path << std::endl;
-	// root_path += this->filename_;
-	// std::cout << root_path << std::endl;
-	// std::cout << "FILENAME: " << this->filename_ << std::endl;
-	// std::cout << remove(path_of_file_to_delete) << std::endl;
+	std::filesystem::path current_www_path = this->current_server_.www_path_;
+	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
+	std::filesystem::path	path_of_file_to_delete = current_www_path / this->filename_;
 	std::ifstream file(path_of_file_to_delete);
-	if (!file.is_open())
+	if (!file)
+		resp.createResponse(404, available_errors[404]);
+	else
 	{
-		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
-		std::ifstream input_file(error_file.string());
-		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
-		resp.setStatusCode(500);
-		resp.setReasonPhrase(500);
-		resp.setContentType("text/htmlffff");
-		std::stringstream ss;
-		ss << input_file.rdbuf();
-		input_file.close();
-		std::string temp;
-		temp = ss.str();
-		resp.setContentLength(temp.length());
-		resp.setBody(temp);
-		return resp;
+		file.close();
+	
+		int removed = remove(path_of_file_to_delete.c_str());
+		if (removed == 0)
+		{
+			resp.setStatusCode(200);
+			resp.setReasonPhrase(200);
+			resp.setContentType("text/plain");
+		}
+		else if (removed != 0)
+			resp.createResponse(500, available_errors[500]);
 	}
-	file.close();
-	int removed = remove(path_of_file_to_delete.c_str());
-	// std::cout << removed << std::endl;
-	// removed = remove(path_of_file_to_delete);
-	// std::cout << removed << std::endl;
-	if (removed == 0)
+	return (resp);
+}
+
+bool	HttpRequest::isCgi()
+{
+	if (url_.find_last_of('.') != std::string::npos)
 	{
+		std::string temp = url_.substr(url_.find_last_of('.') + 1);
+		if (temp == "py")
+			return (true);
+	}
+	return (false);
+}
+
+const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
+{
+	//handle timeout with poll?
+	std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
+	std::filesystem::path	path_of_program_to_execute = www_path += url_;
+	std::string executable = url_.substr(url_.find_last_of('/') + 1);
+	std::ifstream file(path_of_program_to_execute);
+	int fd[2];
+	pipe(fd);
+	pid_t pid  = fork();
+	int status = 0;
+	// pip[0] - the read end of the pipe - is a file descriptor used to read from the pipe (input)
+	// pip[1] - the write end of the pipe - is a file descriptor used to write to the pipe (output)
+	if (pid == 0)
+	{
+		char *args[] = {
+			const_cast<char *>("/usr/local/bin/python3"),
+			const_cast<char *>(path_of_program_to_execute.c_str()),
+			NULL}
+		;
+		std::string script_method = "REQUEST_METHOD=" + this->getMethod();
+
+		std::string name = "NAME=" + this->getBody().substr(this->getBody().find_first_of("=") + 1);
+		// std::cout << "name = " << name <<std::endl;
+		std::string script_filename = "SCRIPT_FILENAME=" + path_of_program_to_execute.string();
+		std::string content_length = "CONTENT_LENGTH=7"; //change to custom
+		char* envp[] = {
+			const_cast<char*>(script_method.c_str()),
+			const_cast<char*>(content_length.c_str()),
+			const_cast<char*>(script_filename.c_str()),
+			const_cast<char*>(name.c_str()),
+			NULL
+		};
+		int null_fd = open("/dev/null", O_WRONLY);
+		if (!null_fd)
+			std::cout << "failed to create fd\n";
+		dup2(null_fd, STDERR_FILENO);
+		close(null_fd);
+		dup2(fd[1], STDOUT_FILENO);
+		dup2(fd[0], STDIN_FILENO);
+		close(fd[0]);
+		close(fd[1]);
+		execve("/usr/local/bin/python3", args, envp);
+		exit (EXIT_FAILURE);
+	}
+	close(fd[1]);
+	waitpid(-1, &status, 0);
+	if (WIFEXITED(status))
+		status = WEXITSTATUS(status);
+	else
+		status = EXIT_FAILURE;
+	if (status == 0)
+	{
+		char buffer[4096] = {0}; //BUFFLEN FROM SOCKETS init to null directly
+		read(fd[0], buffer, 4096);
+		close(fd[0]);
 		resp.setStatusCode(200);
 		resp.setReasonPhrase(200);
+		resp.setContentType("text/html");
+		std::string body = "<!DOCTYPE html>\n<html>\n<body>\n<p>";
+		body += buffer;
+		body += "</p>\n</body>\n</html>";
+		resp.setContentLength(body.size());
+		resp.setBody(body);
 	}
-	else if (removed != 0)
+	else
 	{
-		std::cout << "Remove failed. errno: " << errno << " (" << std::strerror(errno) << ")" << std::endl;
-		std::filesystem::path error_file = "/Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/src/www/errors/500";
-		std::ifstream input_file(error_file.string());
-		// std::cout << RED << "Failed to create file: " << filename << QUIT << std::endl;
-		resp.setStatusCode(500);
-		resp.setReasonPhrase(500);
-		resp.setContentType("text/htmlggggg");
-		std::stringstream ss;
-		ss << input_file.rdbuf();
-		std::string temp;
-		temp = ss.str();
-		input_file.close();
-		resp.setContentLength(temp.length());
-		resp.setBody(temp);
-		return resp;
+		close(fd[0]);
+		std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
+		resp.createResponse(500, available_errors[500]);
 	}
-	// printRequest();
-	// printHeaders();
 	return (resp);
 }
 
@@ -533,11 +577,15 @@ const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
-	if (this->getMethod() == "GET")
+	if (isCgi())
+	{
+		resp = cgiCase(resp);
+	}
+	else if (this->getMethod() == "GET" && !isCgi())
 	{
 		resp = getCase(resp);
 	}
-	else if (this->getMethod() == "POST")
+	else if (this->getMethod() == "POST" && !isCgi())
 	{
 		resp = postCase(resp);
 	}
@@ -545,19 +593,5 @@ const HttpResponse	HttpRequest::performMethod()
 	{
 		resp = deleteCase(resp);
 	}
-	// else
-	// {
-	// }
 	return resp;
 }
-
-// Proper HTTP response
-// TO BE ADDED AFTER CONFIG PARSING IS DONE!
-// int parse(std::void_t ServerConfig)
-// {
-// 	std::string uploadDir = ServerConfig->uploadDir || "./uploads";
-// 	std::string filename = getFilename();
-// if (!filename.empty())
-// 	uploadFile(uploadDir, filename);
-// }
-// request.uploadFile(request.getBasePath(), request.getFilename());
