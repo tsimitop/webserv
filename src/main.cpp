@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 		return (1);
 	}
 	Poll poll_one;
-	poll_one = Poll(c);
+	poll_one.setConfig(c);
 	if (poll_one.creatingTheServerSocket() == YES)
 		poll_one.pollingFds();
 	//----------------------End of config parsing--------------------------

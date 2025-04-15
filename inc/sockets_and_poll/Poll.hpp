@@ -23,6 +23,8 @@ struct Poll
 	Poll(const Http& new_config);
 	Poll& operator=(const Poll& other);
 	~Poll();
+	//setters
+	void setConfig(const Http& new_config);
 	//sockets && poll
 	int 		creatingTheServerSocket();
 	void 		pollingFds();
