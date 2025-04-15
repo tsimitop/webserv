@@ -229,7 +229,7 @@ void Poll::pollingFds()
 					HttpResponse response;
 					response = req.performMethod();
 					std::string resp = response.respond(req);
-					std::cout << GREEN << resp << std::endl << QUIT;
+// 					std::cout << GREEN << resp << std::endl << QUIT;
 					send(fds_[i].fd, resp.c_str(), resp.length(), 0);
 				}
 			}
