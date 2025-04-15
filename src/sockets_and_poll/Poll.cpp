@@ -71,9 +71,6 @@ max_body_ln_(max_body_ln),
 server_timeout_(server_timeout)
 {};
 
-Poll::Poll(const Http& new_config): config_(new_config)
-{};
-
 Poll& Poll::operator=(const Poll& other)
 {
 	if (this != &other)
@@ -93,6 +90,11 @@ Poll& Poll::operator=(const Poll& other)
 	return *this;
 };
 Poll::~Poll(){};
+//setters
+void Poll::setConfig(const Http& new_config)
+{
+	config_ = new_config;
+};
 //Creating the socket
 int Poll::creatingTheServerSocket()
 {
@@ -195,6 +197,7 @@ void Poll::pollingFds()
 				int bytes = recv(fds_[i].fd, buffer, sizeof(buffer), 0);
 				HttpRequest req;
 				std::string request = buffer;
+				std::cout <<GREEN << "request" << request <<QUIT<< std::endl;
 				if (bytes <= 0)
 				{
 					std::cout << "Client with the FD: " << fds_[i].fd << " Disconnected!\n";
@@ -214,22 +217,22 @@ void Poll::pollingFds()
 					std::vector<ServerInfo>::iterator it;
 					for (it = config_.servers_.begin(); it != config_.servers_.end(); it++)
 					{
-						std::cout << RED << "SETTING SERVEEEEEEER" << QUIT << std::endl;
+						// std::cout << RED << "SETTING SERVEEEEEEER" << QUIT << std::endl;
 
-						std::cout << "(*it).listen_: " << (*it).listen_ << "\n";
-						std::cout << "req.getPort(): " << req.getPort() << "\n";
+						// std::cout << "(*it).listen_: " << (*it).listen_ << "\n";
+						// std::cout << "req.getPort(): " << req.getPort() << "\n";
 						if (req.getPort() == (*it).listen_)
 						{
-							std::cout << BLUE << "SETTING SERVEEEEEEER" << QUIT << std::endl;
+							// std::cout << BLUE << "SETTING SERVEEEEEEER" << QUIT << std::endl;
 							req.setCurrentServer(*it);
 						}
 					}
-					std::cout << MAGENTA << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
-					std::cout << YELLOW << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
+					// std::cout << MAGENTA << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
+					// std::cout << YELLOW << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
 					HttpResponse response;
 					response = req.performMethod();
 					std::string resp = response.respond(req);
-// 					std::cout << GREEN << resp << std::endl << QUIT;
+					std::cout << GREEN << resp << std::endl << QUIT;
 					send(fds_[i].fd, resp.c_str(), resp.length(), 0);
 				}
 			}
