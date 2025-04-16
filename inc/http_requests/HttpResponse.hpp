@@ -51,6 +51,7 @@ public:
 	void	setBody(const std::string& body);
 	void	setContentLength(int len);
 	void	createResponse(int status_code, std::filesystem::path file);
+	void	createCgiResponse(int status_code, std::string content);
 
 	const std::string respond(const HttpRequest& req);
 };

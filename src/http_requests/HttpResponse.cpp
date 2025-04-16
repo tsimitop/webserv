@@ -201,3 +201,30 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 	response += "\r\n";
 	return (response);
 }
+
+void HttpResponse::createResponse(int status_code, std::filesystem::path file)
+{
+	std::ifstream input_file(file.string());
+	setStatusCode(status_code);
+	setReasonPhrase(status_code);
+	setContentType("text/html");
+	std::stringstream ss;
+	ss << input_file.rdbuf();
+	input_file.close();
+	std::string temp;
+	temp = ss.str();
+	setContentLength(temp.length());
+	setBody(temp);
+}
+
+void HttpResponse::createCgiResponse(int status_code, std::string content)
+{
+	setStatusCode(status_code);
+	setReasonPhrase(status_code);
+	setContentType("text/html");
+	std::string body = "<!DOCTYPE html>\n<html>\n<body>\n<p>";
+	body += content;
+	body += "</p>\n</body>\n</html>";
+	setContentLength(body.size());
+	setBody(body);
+}

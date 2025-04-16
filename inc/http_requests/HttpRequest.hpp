@@ -23,7 +23,6 @@
 #define QUIT "\033[0m"
 
 class HttpResponse;
-// class ServerInfo;
 
 class HttpRequest
 {
@@ -81,22 +80,27 @@ public:
 	void	parseUrl(std::string& line);
 	void	parseHttpVersion(std::string& line);
 	void	updateFilename();
+	bool	isCgi();
 
 	// Debug
 	void	printHeaders(void) const;
 	void	printRequest(void) const;
 	void	printBody(void) const;
 
-	// Execu(te methodes
+	// Execute methodes
 	const HttpResponse	performMethod();
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);
 	const HttpResponse	deleteCase(HttpResponse& resp);
+	const HttpResponse	cgiCase(HttpResponse& resp);
 
+	// Utils
+	// char **createEnv(std::filesystem::path path_of_program_to_execute);
+	void	executeCgi(std::filesystem::path path_of_program_to_execute, int* fd);
+
+	// Exceptions
 	class httpParserException : public std::exception {
 		public:
 			virtual const char *what() const throw();
 	};
-	bool	isCgi();
-	const HttpResponse	cgiCase(HttpResponse& resp);
 };

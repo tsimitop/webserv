@@ -1,5 +1,7 @@
 #include "../../inc/sockets_and_poll/Poll.hpp"
 
+#define MAX_LEN 1024
+
 // Helper functions
 int setNonBlockingFd(int fd)
 {
@@ -193,7 +195,7 @@ void Poll::pollingFds()
 		{
 			if (fds_[i].revents & POLLIN)
 			{
-				char buffer[max_body_ln_]; // how I 'm taking the max body len  per server
+				char buffer[MAX_LEN]; // how I 'm taking the max body len  per server
 				int bytes = recv(fds_[i].fd, buffer, sizeof(buffer), 0);
 				HttpRequest req;
 				std::string request = buffer;
