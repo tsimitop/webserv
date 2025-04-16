@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include "HttpResponse.hpp"
+#include "Cgi.hpp"
 #include "../config/Http.hpp"
 
 #define RED "\033[31m"
@@ -57,6 +58,7 @@ public:
 	std::string										getBasePath(void) const;
 	std::string										getFilename(void) const;
 	std::string										getBody(void) const;
+	std::string										getPathW(void) const;
 	int												getPort(void) const;
 	ServerInfo										getCurrentServer() const;
 
@@ -88,11 +90,11 @@ public:
 	void	printBody(void) const;
 
 	// Execute methodes
-	const HttpResponse	performMethod();
+	const HttpResponse	performMethod(int poll_fd);
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);
 	const HttpResponse	deleteCase(HttpResponse& resp);
-	const HttpResponse	cgiCase(HttpResponse& resp);
+	const HttpResponse	cgiCase(int poll_fd, HttpResponse& resp);
 
 	// Utils
 	// char **createEnv(std::filesystem::path path_of_program_to_execute);

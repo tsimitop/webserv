@@ -58,6 +58,9 @@ std::string HttpRequest::getBasePath(void) const
 std::string HttpRequest::getFilename(void) const
 {return (filename_);}
 
+std::string	HttpRequest::getPathW(void) const
+{return (current_server_.www_path_);}
+
 int HttpRequest::getPort(void) const
 {return (port_);}
 
@@ -533,25 +536,11 @@ void	HttpRequest::executeCgi(std::filesystem::path path_of_program_to_execute, i
 	execve("/usr/local/bin/python3", args, envp);
 }
 
-const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
+const HttpResponse	HttpRequest::cgiCase(int poll_fd, HttpResponse& resp)
 {
-	//handle timeout with poll?
-	std::filesystem::path	www_path = this->current_server_.www_path_;
-	// std::filesystem::path	www_path = std::filesystem::absolute(__FILE__).parent_path().parent_path() += "/www";
-	std::filesystem::path	path_of_program_to_execute = www_path += url_;
-	std::string executable = url_.substr(url_.find_last_of('/') + 1);
-	std::ifstream file(path_of_program_to_execute);
-	int fd[2];
-	pipe(fd);
-	pid_t pid  = fork();
-	int status = 0;
-	// pip[0] - the read end of the pipe - is a file descriptor used to read from the pipe (input)
-	// pip[1] - the write end of the pipe - is a file descriptor used to write to the pipe (output)
+	Cgi cgi(poll_fd, (*this));
 	if (pid == 0)
-	{
-		executeCgi(path_of_program_to_execute, fd);
-		exit (EXIT_FAILURE);
-	}
+		cgi.execute();
 	close(fd[1]);
 	waitpid(-1, &status, 0);
 	if (WIFEXITED(status))
@@ -575,13 +564,13 @@ const HttpResponse	HttpRequest::cgiCase(HttpResponse& resp)
 	return (resp);
 }
 
-const HttpResponse	HttpRequest::performMethod()
+const HttpResponse	HttpRequest::performMethod(int poll_fd)
 {
 	HttpResponse resp;
 
 	if (isCgi())
 	{
-		resp = cgiCase(resp);
+		resp = cgiCase(poll_fd, resp);
 	}
 	else if (this->getMethod() == "GET" && !isCgi())
 	{
