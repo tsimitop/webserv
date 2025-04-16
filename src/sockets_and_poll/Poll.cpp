@@ -40,7 +40,7 @@ max_body_ln_(1024),
 server_timeout_(10000),
 max_queued_clients_(5), 
 fds_(),
-// flaged_fds_(),
+fds_with_flag_(),
 server_fd_(0), 
 addr_(),
 config_()
@@ -54,7 +54,7 @@ Poll::Poll(const Poll& other)
 	server_timeout_ = other.server_timeout_;
 	max_queued_clients_ = other.max_queued_clients_;
 	fds_ = other.fds_;
-	// flaged_fds_ = other.flaged_fds_;
+	fds_with_flag_ = other.fds_with_flag_;
 	server_fd_ = other.server_fd_;
 	addr_ = other.addr_;
 	config_ = other.config_;
@@ -82,7 +82,7 @@ Poll& Poll::operator=(const Poll& other)
 		server_timeout_ = other.server_timeout_;
 		max_queued_clients_ = other.max_queued_clients_;
 		fds_ = other.fds_;
-		// flaged_fds_ = other.flaged_fds_;
+		fds_with_flag_ = other.fds_with_flag_;
 		server_fd_ = other.server_fd_;
 		addr_ = other.addr_;
 		config_ = other.config_;
@@ -155,8 +155,8 @@ int Poll::creatingTheServerSocket()
 			continue;
 		};
 		listen(server_fd_, max_queued_clients_);
-		fds_.push_back((pollfd){server_fd_, POLLIN, 0});
-		// flaged_fds_.push_back((PollFdWithFlag){{server_fd_, POLLIN, 0}, SERVER});
+		// fds_.push_back((pollfd){server_fd_, POLLIN, 0});
+		fds_with_flag_.push_back((PollFdWithFlag){{server_fd_, POLLIN, 0}, READING, {}, {}});
 		std::cout << "Server is listening to the port: " << s.listen_ << "\n";
 		// freeing the addrinfo
 		freeaddrinfo(res);
@@ -167,79 +167,130 @@ void Poll::pollingFds()
 {
 	while(YES)
 	{
-		int activity = poll(fds_.data(),fds_.size(), config_.servers_[0].server_timeout_); // ?? how I'm taking timeout different per server
+		// my struct is extracting the pollfds
+		fds_.clear();
+		// is running the pollfds
+		for (size_t i = 0; i != fds_with_flag_.size(); i++)
+			fds_.push_back(fds_with_flag_[i].fd_);
+		int activity = poll(fds_.data(),fds_.size(), config_.servers_[0].server_timeout_);
 		if (activity == -1)
 		{
 			std::cerr << "Error: Poll failed or Timed out!\n";
 			poll_success_flag_ = NO;
 			break;
 		}
+		for (size_t i = 0; i != fds_with_flag_.size(); i++)
+			 fds_with_flag_[i].fd_ =fds_[i];
 		for (size_t i = 0; i != config_.servers_.size(); i++)
 		{
-			if (fds_[i].revents & POLLIN)
+			// struct here
+			if (fds_with_flag_[i].fd_.revents & POLLIN)
 			{
-				int client_fd = accept(fds_[i].fd, NULL, NULL);
+				//struct here
+				int client_fd = accept(fds_with_flag_[i].fd_.fd, NULL, NULL);
 				if (client_fd == -1)
 					continue ;
 				else
 				{
+					// PollFdWithFlag temp_poll_fd_with_flag;
 					setNonBlockingFd(client_fd);
-					fds_.push_back((pollfd){client_fd, POLLIN, 0});
+					fds_with_flag_.push_back((PollFdWithFlag){(pollfd){client_fd, POLLIN, 0}, READING, {}, {}});
 					std::cout << "Client Connected to the FD: " << client_fd << "\n";
 				}
 			}
 		}
-		for (size_t i = config_.servers_.size(); i != fds_.size(); i++)
+		// struct here
+		for (size_t i = config_.servers_.size(); i != fds_with_flag_.size(); i++)
 		{
-			if (fds_[i].revents & POLLIN)
+			// struct here
+			// InfoFd this will have inside the pollfd POLLIN | POLLOUT , the state the final buffer
+			HttpRequest req;
+			HttpResponse response;
+			if (fds_with_flag_[i].fd_.revents & (POLLERR | POLLHUP))
 			{
+				close(fds_with_flag_[i].fd_.fd);
+				fds_with_flag_.erase(fds_with_flag_.begin() + i);
+				i--;
+			}
+			if (fds_with_flag_[i].fd_.revents & POLLIN)
+			{
+				// std::vector<char> whole_buffer; 
 				char buffer[max_body_ln_]; // how I 'm taking the max body len  per server
-				int bytes = recv(fds_[i].fd, buffer, sizeof(buffer), 0);
-				HttpRequest req;
-				std::string request = buffer;
-				std::cout <<GREEN << "request" << request <<QUIT<< std::endl;
-				if (bytes <= 0)
+				//struct here
+				int bytes = recv(fds_with_flag_[i].fd_.fd, buffer, sizeof(buffer), 0);
+				size_t l = 0;
+				// std::string request;
+				// std::cout <<GREEN << "request" << request <<QUIT<< std::endl;
+				if (bytes < 0)
 				{
-					std::cout << "Client with the FD: " << fds_[i].fd << " Disconnected!\n";
-					close(fds_[i].fd);
-					fds_.erase(fds_.begin() + i);
-					--i;
+					if (errno == EAGAIN | errno == EWOULDBLOCK)
+					{
+						while (l != max_body_ln_)
+						{
+							fds_with_flag_[i].final_buffer_.push_back(buffer[l]);
+							l++;
+						}
+					}
+					else
+					{
+						close(fds_with_flag_[i].fd_.fd);
+						fds_with_flag_.erase(fds_with_flag_.begin() + i);
+						i--;
+					}
+					continue;
 				}
 				else
 				{
 					buffer[bytes] = '\0';
+					l = 0;
+					// request.clear();
+					while (buffer[l] != '\0')
+					{
+						fds_with_flag_[i].final_buffer_.push_back(buffer[l]);
+						l++;
+					}
 					int steps_back = 0;
 					std::string filtered_buffer = filteredBuffer(buffer, steps_back);
+					std::string message;
+					for (size_t j = 0; j!=fds_with_flag_[i].final_buffer_.size(); j++)
+						message += fds_with_flag_[i].final_buffer_[j];
 					if (bytes - steps_back > 0)
-						std::cout << "Client from FD: " << fds_[i].fd << " send the message: " << buffer << "\n";
-					
-					req.readRequest(request);
+					{
+						//struct here
+						std::cout << "Client from FD: " << fds_with_flag_[i].fd_.fd << " send the message: " << message << "\n";
+					}
+					//---TH
+					// I need the updated string
+					std::string request;
+					for (size_t j = 0; j!=fds_with_flag_[i].final_buffer_.size(); j++)
+						request += fds_with_flag_[i].final_buffer_[j];
+					fds_with_flag_[i].req_.readRequest(request);
 					std::vector<ServerInfo>::iterator it;
 					for (it = config_.servers_.begin(); it != config_.servers_.end(); it++)
-					{
-						// std::cout << RED << "SETTING SERVEEEEEEER" << QUIT << std::endl;
-
-						// std::cout << "(*it).listen_: " << (*it).listen_ << "\n";
-						// std::cout << "req.getPort(): " << req.getPort() << "\n";
-						if (req.getPort() == (*it).listen_)
-						{
-							// std::cout << BLUE << "SETTING SERVEEEEEEER" << QUIT << std::endl;
-							req.setCurrentServer(*it);
-						}
-					}
-					// std::cout << MAGENTA << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
-					// std::cout << YELLOW << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
-					HttpResponse response;
-					response = req.performMethod();
-					std::string resp = response.respond(req);
-					std::cout << GREEN << resp << std::endl << QUIT;
-					send(fds_[i].fd, resp.c_str(), resp.length(), 0);
+						if (fds_with_flag_[i].req_.getPort() == (*it).listen_)
+							fds_with_flag_[i].req_.setCurrentServer(*it);
+					fds_with_flag_[i].fd_.events |= POLLOUT;
 				}
+			}
+			if(fds_with_flag_[i].fd_.events & POLLOUT)
+			{
+				response = fds_with_flag_[i].req_.performMethod();
+				std::string resp = response.respond(fds_with_flag_[i].req_);
+				std::cout << GREEN << resp << std::endl << QUIT;
+				//---TH
+				//struct here
+				send(fds_with_flag_[i].fd_.fd, resp.c_str(), resp.length(), 0);
+				close(fds_with_flag_[i].fd_.fd);//I need to do close for the poll to hangup
+				fds_with_flag_.erase(fds_with_flag_.begin() + i);
+				i--;
+			// 	// fds_with_flag_[i].state_ = DONE;
 			}
 		}
 	}
+	//struct here
 	for (size_t i = 0; i != config_.servers_.size(); i++)
-		close(fds_[i].fd);
-	while (!fds_.empty())
+		close(fds_with_flag_[i].fd_.fd);
+	//struct here
+	while (!fds_with_flag_.empty())
 		fds_.erase(fds_.begin());
 };

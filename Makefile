@@ -18,8 +18,8 @@ SRCS =	main.cpp \
 		config_parser/Http.cpp \
 		config_parser/ServerInfo.cpp \
 		config_parser/Location.cpp \
-		sockets_and_poll/Poll.cpp
-
+		sockets_and_poll/Poll.cpp \
+		sockets_and_poll/PollFdWithFlag.cpp
 
 all: $(NAME)
 
