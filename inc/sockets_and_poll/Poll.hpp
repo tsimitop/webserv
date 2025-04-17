@@ -4,12 +4,8 @@
 
 struct Poll 
 {
-	//attributes
+	//===============ATTRIBUTES =====================================================
 	int 		poll_success_flag_;
-	int 		port_;
-	std::string host_name_;
-	size_t 		max_body_ln_;
-	int			server_timeout_;
 	int 		max_queued_clients_;
 	std::vector<pollfd> fds_;
 	std::vector<PollFdWithFlag> fds_with_flag_;
@@ -17,77 +13,32 @@ struct Poll
 	sockaddr_in addr_;
 	Http		config_;
 	
-	//Defaults
+	//===============DEFAULTS========================================================
 	Poll();
 	Poll(const Poll& other);
-	Poll(int port, std::string host_name, int max_body_ln, int server_timeout);
-	Poll(const Http& new_config);
 	Poll& operator=(const Poll& other);
 	~Poll();
-	//setters
+	//===============THE SETTER (THE ONLY ONE)=======================================
 	void setConfig(const Http& new_config);
-	//sockets && poll
-	int 		creatingTheServerSocket();
-	void 		pollingFds();
-	// for every server I need to go and make a socket with the accept
-	// I need to be able to open all the ports
-	// So let's try to start from the ports one by one transelating them in working servers
-	// from config to addrinfo  host port max_body_size server_timeout
+	//===============BINDING && SYNCHRONUS I/O ======================================
+	int 		binding();
+	void 		synchroIO();
+	//===============POLL CALL ======================================================
+	int			polling();
+	//===============POLL STATES ====================================================
+	void		pollhup(size_t& i);
+	int			pollin(size_t i);
+	void		pollout(size_t i);
+	//================HELPER METHODS ================================================
+	void		closingServers();
+	void		connecting();
+	void		disconecting(size_t& i, std::string str);
+	void		setMaxBodyLen(size_t i, char buffer[], int bytes);
+	void		findingPort(size_t l, size_t i, int bytes, char buffer[]);
+	size_t		lengthProt(size_t i);
 };
 
-// Helper functions
+//===================OUTER HELPER FUNCTIONS ==========================================
 int 			setNonBlockingFd(int fd);
 std::string		filteredBuffer(std::string buffer, int& steps_back);
 std::string 	safeNullTermination(int bytes, size_t max_body_ln, std::string buffer);
-// for every server we will need one port that is running
-
-
-
-
-// #pragma once
-
-// #include "./PollFdWithFlag.hpp"
-
-// struct Poll 
-// {
-// 	//attributes
-// 	//flags
-// 	int 		poll_success_flag_;
-// 	int 		port_;
-// 	std::string host_name_;
-// 	size_t 		max_body_ln_;
-// 	int			server_timeout_;
-// 	int 		max_queued_clients_;
-// 	std::vector<pollfd> fds_;
-// 	//PollFdWithFlag
-// 	// std::vector<PollFdWithFlag> flaged_fds_;
-// 	int 		server_fd_;
-// 	sockaddr_in addr_;
-// 	Http		config_;
-	
-// 	//Defaults
-// 	Poll();
-// 	Poll(const Poll& other);
-// 	Poll(
-// 			int port, 
-// 			std::string host_name, 
-// 			int max_body_ln, 
-// 			int server_timeout
-// 		);
-// 	Poll(const Http& new_config);
-// 	Poll& operator=(const Poll& other);
-// 	~Poll();
-// 	//sockets && poll
-// 	int 		creatingTheServerSocket();
-// 	void 		pollingFds();
-// 	// for every server I need to go and make a socket with the accept
-// 	// I need to be able to open all the ports
-// 	// So let's try to start from the ports one by one transelating them in working servers
-// 	// from config to addrinfo  host port max_body_size server_timeout
-// };
-
-// // Helper functions
-// int 			setNonBlockingFd(int fd);
-// std::string		filteredBuffer(std::string buffer, int& steps_back);
-// std::string 	safeNullTermination(int bytes, size_t max_body_ln, std::string buffer);
-// // for every server we will need one port that is running

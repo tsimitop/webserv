@@ -21,6 +21,7 @@ struct ServerInfo
 	std::string								server_name_;
 	std::string								index;
 	long long								client_max_body_size_; // * 1024 value
+
 	//------------------------vector inputs-------------------------------
 	std::map <int, std::filesystem::path>	errors; // error type  and error path
 	std::vector<Location>					locations_;
@@ -31,6 +32,7 @@ struct ServerInfo
 	std::filesystem::path					uploads_dir_;
 	//--------------------------flags-------------------------------------
 	int 									valid_inputs_;
+	int										before_locations_;
 	//methods
 	//helpers
 	std::string 							spaceTrimmer(std::string str);
