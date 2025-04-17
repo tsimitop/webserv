@@ -12,7 +12,6 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include "HttpResponse.hpp"
-// #include "Cgi.hpp"
 #include "../config/Http.hpp"
 
 #define RED "\033[31m"

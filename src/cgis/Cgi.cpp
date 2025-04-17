@@ -1,4 +1,4 @@
-#include "../../inc/http_requests/Cgi.hpp"
+#include "../../inc/cgis/Cgi.hpp"
 
 Cgi::Cgi(const Cgi& other)
 {*this = other;}

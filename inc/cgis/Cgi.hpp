@@ -1,7 +1,7 @@
 #pragma once
 
-#include "HttpRequest.hpp"
-#include "HttpResponse.hpp"
+#include "../http_requests/HttpRequest.hpp"
+#include "../http_requests/HttpResponse.hpp"
 #include "CgiSingleton.hpp"
 
 // class HttpRequest;

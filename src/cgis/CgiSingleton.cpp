@@ -1,4 +1,4 @@
-#include "../../inc/http_requests/CgiSingleton.hpp"
+#include "../../inc/cgis/CgiSingleton.hpp"
 
 std::unordered_map<int, Cgi> CgiSingleton::running_cgis_;
 
@@ -7,7 +7,7 @@ CgiSingleton::CgiSingleton(){}
 void CgiSingleton::add_event(int poll_fd, Cgi& event)
 {
 	running_cgis_.emplace(poll_fd, event);
-	std::cout << "Added enent.\n";
+	std::cout << "Added event.\n";
 }
 
 void CgiSingleton::remove_event(int poll_fd)
@@ -15,7 +15,7 @@ void CgiSingleton::remove_event(int poll_fd)
 	auto found = running_cgis_.find(poll_fd);
 	if (found != running_cgis_.end())
 	{
-		std::cout << "FD of POLL: " << poll_fd << ": Removed event.\n";
+		std::cout << "FD of POLL: " << poll_fd << "-> Removed event.\n";
 		running_cgis_.erase(found);
 	}
 }

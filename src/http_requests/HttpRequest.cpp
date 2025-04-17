@@ -1,5 +1,5 @@
 #include "../../inc/http_requests/HttpRequest.hpp"
-#include "../../inc/http_requests/Cgi.hpp"
+#include "../../inc/cgis/Cgi.hpp"
 
 // Orthodox Canonical Class Form
 HttpRequest::HttpRequest() : port_(80), current_server_(){}

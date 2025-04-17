@@ -7,7 +7,6 @@
 #include <ctime>
 #include <cstdlib>
 #include <filesystem>
-// /Users/tsimitop/Documents/42_coding/webserv_workspace/webserv/inc/http_requests/HttpResponse.hpp
 #define RED "\033[31m"
 #define GREEN "\033[32m"
 #define YELLOW "\033[33m"

@@ -17,8 +17,8 @@ SRCS =	main.cpp \
 		config_parser/ServerInfo.cpp \
 		config_parser/Location.cpp \
 		sockets_and_poll/Poll.cpp \
-		http_requests/Cgi.cpp \
-		http_requests/CgiSingleton.cpp
+		cgis/Cgi.cpp \
+		cgis/CgiSingleton.cpp
 
 
 all: $(NAME)
