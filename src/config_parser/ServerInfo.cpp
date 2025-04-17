@@ -16,7 +16,8 @@ ServerInfo::ServerInfo() :
 	www_path_(""),
 	errors_path_(""),
 	uploads_dir_(""),
-	valid_inputs_(YES)
+	valid_inputs_(YES),
+	before_locations_(YES)
 {
 };
 ServerInfo::ServerInfo(std::filesystem::path absolute_path)
@@ -61,6 +62,7 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 	errors_path_ = other.errors_path_;
 	uploads_dir_ = other.uploads_dir_;
 	valid_inputs_ = other.valid_inputs_;
+	before_locations_ = other.before_locations_;
 };
 ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 {
@@ -84,6 +86,7 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 		errors_path_ = other.errors_path_;
 		uploads_dir_ = other.uploads_dir_;
 		valid_inputs_ = other.valid_inputs_;
+		before_locations_ = other.before_locations_;
 	}
 	return *this;
 };
@@ -91,7 +94,7 @@ ServerInfo::~ServerInfo(){};
 //methods
 size_t ServerInfo::calcBodySizeInBites(size_t body_size)
 {
-	return (body_size * 1024);
+	return (body_size);
 };
 
 std::string 				ServerInfo::spaceTrimmer(std::string str)
@@ -152,15 +155,21 @@ void						ServerInfo::validClientMaxBodySize(std::string& value)
 {
 	std::string sub = value.substr(0, value.size() - 1);
 	char last_char_value = value[value.size() - 1];
-	if 	((strIsNumber(value) && std::stol(value) <= 10000000))
+	if 	((strIsNumber(value) && std::stol(value) <= 10000000 && std::stol(value) > 1024))
 			return ;
 	if 	((strIsNumber(sub) &&  last_char_value == 'm' && stol(sub) <=10))
 	{
 		value = sub + "000000";
 		return ;
 	}
+	if 	((strIsNumber(sub) &&  last_char_value == 'k' && stol(sub) <=10000))
+	{
+		value = sub + "000";
+		return ;
+	}
 	valid_inputs_ = NO;
 };
+
 int						ServerInfo::allSimpleInputsValid()
 {
 	return (valid_inputs_);
@@ -257,7 +266,7 @@ void						ServerInfo::setClientMaxBodySize(std::string line)
 		current_line >>key >> eq >> value;
 		validClientMaxBodySize(value);
 		if (valid_inputs_ != NO)
-			client_max_body_size_ = std::stol(value) * 1024;
+			client_max_body_size_ = std::stol(value);
 	}
 };
 void						ServerInfo::pushToErrors(std::string line)

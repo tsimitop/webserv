@@ -217,29 +217,35 @@ void Http::parsingServers()
 		ServerInfo s(executable_root_http_);
 		s.valid_inputs_ = YES;
 		s.lines_of_server_ = current_non_semi;
+		s.before_locations_ = YES;
 		for (std::string l : s.lines_of_server_)
 		{
 			std::stringstream line(l);
 			std::string k;
 			line >> k;
-			if (k == "keepalive_timeout")
-				s.setServerTimeOut(l, s.keep_alive_timeout_);
-			else if (k == "send_timeout")
-				s.setServerTimeOut(l, s.send_timeout_);
-			else if (k == "server_timeout")
-				s.setServerTimeOut(l, s.server_timeout_);
-			else if(k == "listen")
-				s.setListen(l);
-			else if (k == "server_name")
-				s.setServerName(l);
-			else if (k == "index")
-				s.setIndex(l);
-			else if (k == "client_max_body_size")
-				s.setClientMaxBodySize(l);
-			else if (k == "error_pages")
-				s.pushToErrors(l);
-			else
-				;
+			if (k == "location/" || k == "location")
+				s.before_locations_ = NO;
+			if (s.before_locations_ == YES)
+			{
+				if (k == "keepalive_timeout")
+					s.setServerTimeOut(l, s.keep_alive_timeout_);
+				else if (k == "send_timeout")
+					s.setServerTimeOut(l, s.send_timeout_);
+				else if (k == "server_timeout")
+					s.setServerTimeOut(l, s.server_timeout_);
+				else if(k == "listen")
+					s.setListen(l);
+				else if (k == "server_name")
+					s.setServerName(l);
+				else if (k == "index")
+					s.setIndex(l);
+				else if (k == "client_max_body_size")
+					s.setClientMaxBodySize(l);
+				else if (k == "error_pages")
+					s.pushToErrors(l);
+				else
+					;
+			}
 		}
 		s.locationIndexes();
 		s.pushLocationsLines();//creating the locations and pushing the corresponding location lines

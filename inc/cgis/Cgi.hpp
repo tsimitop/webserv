@@ -13,9 +13,9 @@ private:
 	int						poll_fd_;
 	bool					cgi_is_executable_; // can it be executed
 	bool					timed_out_;
-	bool					exec_complete_;
 	HttpRequest				cgi_request_;
 	HttpResponse			cgi_response_;
+	bool					exec_complete_;
 	std::filesystem::path	www_path_;
 	std::string				url_;
 	std::filesystem::path	path_of_program_to_execute_;

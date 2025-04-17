@@ -1,4 +1,5 @@
 #include "../../inc/cgis/CgiSingleton.hpp"
+#include <memory>
 
 std::unordered_map<int, Cgi> CgiSingleton::running_cgis_;
 
@@ -33,7 +34,24 @@ CgiSingleton CgiSingleton::getInstance()
 	return instance;
 }
 
+// std::shared_ptr<Cgi> CgiSingleton::access_event(int poll_fd) const
+// {
+// 	return (running_cgis_[poll_fd]);
+// }
+
+// std::shared_ptr<Cgi> CgiSingleton::access_event(int poll_fd) const
+// {
+// 	return (running_cgis_[poll_fd]);
+// }
+
+
+Cgi& CgiSingleton::access_cgi(int poll_fd) const
+{
+	return (running_cgis_.at(poll_fd));
+}
+
 CgiSingleton::~CgiSingleton(){}
+
 /*
  Solution
 All implementations of the Singleton have these two steps in common:

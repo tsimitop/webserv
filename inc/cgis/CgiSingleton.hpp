@@ -19,6 +19,8 @@ public:
 	// The static method that controls access to the singleton instance.
 	static CgiSingleton getInstance();
 	std::unordered_map<int, Cgi> getRunningCgis() const;
+	// std::shared_ptr<Cgi> access_event(int poll_fd) const;
+	Cgi& access_cgi(int poll_fd) const;
 
 };
 

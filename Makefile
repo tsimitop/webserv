@@ -17,6 +17,7 @@ SRCS =	main.cpp \
 		config_parser/ServerInfo.cpp \
 		config_parser/Location.cpp \
 		sockets_and_poll/Poll.cpp \
+		sockets_and_poll/PollFdWithFlag.cpp \
 		cgis/Cgi.cpp \
 		cgis/CgiSingleton.cpp
 

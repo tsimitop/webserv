@@ -4,7 +4,7 @@ Location::Location() :
 location_lines_(), 
 executable_root_location_(),
 valid_inputs_(YES),
-client_max_body_size_(),
+client_max_body_size_(-1),
 allowed_methods_(), 
 location_html_(""), 
 uploads_dir_(""), 
@@ -75,11 +75,16 @@ void						Location::validClientMaxBodySize(std::string& value)
 {
 	std::string sub = value.substr(0, value.size() - 1);
 	char last_char_value = value[value.size() - 1];
-	if 	((strIsNumber(value) && std::stol(value) <= 10000000))
+	if 	((strIsNumber(value) && std::stol(value) <= 10000000 && std::stol(value) > 1024))
 			return ;
 	if 	((strIsNumber(sub) &&  last_char_value == 'm' && stol(sub) <=10))
 	{
 		value = sub + "000000";
+		return ;
+	}
+	if 	((strIsNumber(sub) &&  last_char_value == 'k' && stol(sub) <=10000))
+	{
+		value = sub + "000";
 		return ;
 	}
 	valid_inputs_ = NO;
@@ -120,7 +125,7 @@ void		Location::setClientMaxBodySize(std::string line)
 		current_line >>key >> eq >> value;
 		validClientMaxBodySize(value);
 		if (valid_inputs_ != NO)
-			client_max_body_size_ = std::stol(value) * 1024;
+			client_max_body_size_ = std::stol(value);
 	}
 };
 

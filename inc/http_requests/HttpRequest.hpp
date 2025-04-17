@@ -89,7 +89,7 @@ public:
 	void	printBody(void) const;
 
 	// Execute methodes
-	const HttpResponse	performMethod(int poll_fd);
+	const HttpResponse	performMethod();
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);
 	const HttpResponse	deleteCase(HttpResponse& resp);

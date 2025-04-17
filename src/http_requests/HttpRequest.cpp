@@ -206,12 +206,18 @@ void	HttpRequest::readRequest(const std::string& req)
 {
 	std::string requestLine = req;
 	int body = 0;
+
+	//thomas debugging
+	size_t len_req = req.length();
+	(void) len_req;
+	//thomas debugging
 	std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
 
 	if (!line.empty() && line.size() > 0)
 		parseRequestLine(line);
 	requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 	line = requestLine.substr(0, requestLine.find("\r\n"));
+
 	while ((!line.empty() && line.size() > 0) || (body == 0 && method_ == "POST"))
 	{
 		parseLine(line);
@@ -399,6 +405,12 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
 	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
 	std::string length = headers_["Content-Length"];
+	//thomas debugging
+	size_t body_length = this->getBody().length();
+	size_t st_len = (size_t)stoi(length);
+	(void)body_length;
+	(void)st_len;
+	//thomas debugging
 	if ((int)(this->getBody().length()) != stoi(length)) // remove most of this if statement after debugging
 		resp.createResponse(500, available_errors[500]);
 	else
@@ -518,7 +530,7 @@ const HttpResponse	HttpRequest::cgiCase(int poll_fd, HttpResponse& resp)
 	return (resp);
 }
 
-const HttpResponse	HttpRequest::performMethod(int poll_fd)
+const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
