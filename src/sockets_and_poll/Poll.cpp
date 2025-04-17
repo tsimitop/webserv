@@ -232,6 +232,7 @@ void Poll::pollingFds()
 					// std::cout << MAGENTA << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
 					// std::cout << YELLOW << "req.getCurrentServer().listen_->->-> " << req.getCurrentServer().listen_ << QUIT << std::endl;
 					HttpResponse response;
+					// if (!req.isCGI())
 					response = req.performMethod(fds_[i].fd);
 					std::string resp = response.respond(req);
 					std::cout << GREEN << resp << std::endl << QUIT;

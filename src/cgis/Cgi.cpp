@@ -19,20 +19,31 @@ Cgi& Cgi::operator=(const Cgi& other)
 	this->executable_ = other.executable_;
 	this->pid_ = other.pid_;
 	this->response_body_ = other.response_body_;
+	this->procces_start_ = other.procces_start_;
+	this->exec_complete_ = other.exec_complete_;
 	return *this;
 }
 
+void Cgi::check_timeout()
+{
+	std::chrono::time_point<std::chrono::high_resolution_clock> current_time_ = std::chrono::high_resolution_clock::now();
+	if (procces_start_ + timeout_total_ >= current_time_)
+		timed_out_ = true;
+}
 
 Cgi::Cgi(int poll_fd, const HttpRequest& request)
-: status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request)
+: status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request), exec_complete_(false),
 {
 	www_path_ = request.getPathW();
 	url_ = request.getUrl();
 	path_of_program_to_execute_ = www_path_ += url_;
 	executable_ = url_.substr(url_.find_last_of('/') + 1);
+	timeout_total_ = std::chrono::milliseconds(request.getCurrentServer().server_timeout_);
 
+	// std::cout << (timeout_procces_) <<std::endl;
 	if (pipe(pipe_fd_) == -1)
 		std::cout << "Error creating pipe\n"; // Change that!
+	procces_start_ = std::chrono::high_resolution_clock::now();
 	pid_  = fork();
 	if (pid_ == -1)
 		std::cout << "Error forking\n"; // Change that!
@@ -90,15 +101,46 @@ void Cgi::setStatus(int status)
 std::string Cgi::getRespBody() const
 {return response_body_;}
 
+bool Cgi::isExecutable() const
+{return cgi_is_executable_;}
+
+bool Cgi::hasTimedOut() const
+{return timed_out_;}
+
 Cgi::~Cgi(){}
 
-void Cgi::parform_wait()
+bool Cgi::performed_wait()
 {
-	waitpid(pid_, &status_, WNOHANG);
-	if (WIFEXITED(status_))
-		status_ = WEXITSTATUS(status_);
-	else
-		status_ = EXIT_FAILURE;
+	// should return true if process is done, false, if not done yet.
+	// DONE means: 
+		// 1- Process returns any status 0 or non-zero (either success or fail)
+		// 2- TIME OUT
+			// In case of Time out, KILL THE PROCESS, and write timeout status to response object.
+	// 1- check if process is done
+	// 2- if process is done, pipe out and store results in response object
+	int ret = waitpid(pid_, &status_, WNOHANG);
+	if (ret == -1)
+	{
+		cgi_is_executable_ = false;
+		std::cout<<"Error in waitpid\n";
+	}
+	else if (ret == 0)
+	{
+		check_timeout();
+		std::cout<<"Process not finished\n";
+	}
+	else if (ret > 0)
+	{
+		exec_complete_ = true;
+		std::cout<<"Process finished\n";
+		if (WIFEXITED(status_))
+			status_ = WEXITSTATUS(status_);
+		else
+			status_ = EXIT_FAILURE;
+	}
+	if (hasTimedOut() == true || exec_complete_ == true)
+		return (true);
+	return (false);
 }
 
 bool Cgi::read_pipe()

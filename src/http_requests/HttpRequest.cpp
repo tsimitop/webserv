@@ -496,21 +496,25 @@ const HttpResponse	HttpRequest::cgiCase(int poll_fd, HttpResponse& resp)
 	if (cgi.getPid() == 0)
 		cgi.execute();
 	close(cgi.getFdOne());
-	cgi.parform_wait();
-	if (cgi.getStatus() == 0)
+
+
+	if (cgi.performed_wait() == true)
 	{
-		if(cgi.read_pipe())
+		if (cgi.getStatus() == 0)
 		{
-			std::cout<<BLUE << "CGI reading is true\n" << QUIT;
-			resp.createCgiResponse(200, cgi.getRespBody());
+			if(cgi.read_pipe())
+			{
+				std::cout<<BLUE << "CGI reading is true\n" << QUIT;
+				resp.createCgiResponse(200, cgi.getRespBody());
+			}
+			else
+			{
+				std::cout<<YELLOW << "CGI reading is false\n" << QUIT;
+				resp.createResponse(500, available_errors[500]);
+			}
 		}
-		else
-		{
-			std::cout<<YELLOW << "CGI reading is false\n" << QUIT;
-			resp.createResponse(500, available_errors[500]);
-		}
+		CgiSingleton::remove_event(poll_fd);
 	}
-	CgiSingleton::remove_event(poll_fd);
 	return (resp);
 }
 

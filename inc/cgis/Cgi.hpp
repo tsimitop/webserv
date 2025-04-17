@@ -3,9 +3,7 @@
 #include "../http_requests/HttpRequest.hpp"
 #include "../http_requests/HttpResponse.hpp"
 #include "CgiSingleton.hpp"
-
-// class HttpRequest;
-// class HttpResponse;
+#include <chrono>
 
 class Cgi
 {
@@ -15,6 +13,7 @@ private:
 	int						poll_fd_;
 	bool					cgi_is_executable_; // can it be executed
 	bool					timed_out_;
+	bool					exec_complete_;
 	HttpRequest				cgi_request_;
 	HttpResponse			cgi_response_;
 	std::filesystem::path	www_path_;
@@ -23,6 +22,8 @@ private:
 	std::string				executable_;
 	pid_t					pid_;
 	std::string				response_body_;
+	std::chrono::milliseconds									timeout_total_;
+	std::chrono::time_point<std::chrono::high_resolution_clock>	procces_start_;
 
 	Cgi() = delete;
 public:
@@ -37,11 +38,14 @@ public:
 	int getStatus() const;
 	int getFdOne() const;
 	std::string getRespBody() const;
+	bool isExecutable() const;
+	bool hasTimedOut() const;
 	
 	void setStatus(int status);
 
-	HttpResponse update_status(HttpResponse& resp);
-	void parform_wait();
+	// HttpResponse update_status(HttpResponse& resp);
+	bool performed_wait();
 	bool read_pipe();
+	void check_timeout();
 
 };
