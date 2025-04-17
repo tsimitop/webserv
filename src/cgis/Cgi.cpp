@@ -32,7 +32,7 @@ void Cgi::check_timeout()
 }
 
 Cgi::Cgi(int poll_fd, const HttpRequest& request)
-: status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request), exec_complete_(false),
+: status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request), exec_complete_(false)
 {
 	www_path_ = request.getPathW();
 	url_ = request.getUrl();

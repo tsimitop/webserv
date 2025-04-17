@@ -522,11 +522,7 @@ const HttpResponse	HttpRequest::performMethod(int poll_fd)
 {
 	HttpResponse resp;
 
-	if (isCgi())
-	{
-		resp = cgiCase(poll_fd, resp);
-	}
-	else if (this->getMethod() == "GET" && !isCgi())
+	if (this->getMethod() == "GET" && !isCgi())
 	{
 		resp = getCase(resp);
 	}
