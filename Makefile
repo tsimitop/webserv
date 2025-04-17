@@ -11,14 +11,14 @@ SOURCE	= ./src
 OBJ_DIR	= ./obj
 
 SRCS =	main.cpp \
-		sockets/sockets.cpp \
-		sockets/Server.cpp \
 		http_requests/HttpRequest.cpp \
 		http_requests/HttpResponse.cpp \
 		config_parser/Http.cpp \
 		config_parser/ServerInfo.cpp \
 		config_parser/Location.cpp \
-		sockets_and_poll/Poll.cpp
+		sockets_and_poll/Poll.cpp \
+		http_requests/Cgi.cpp \
+		http_requests/CgiSingleton.cpp
 
 
 all: $(NAME)

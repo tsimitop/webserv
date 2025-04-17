@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include "HttpResponse.hpp"
-#include "Cgi.hpp"
+// #include "Cgi.hpp"
 #include "../config/Http.hpp"
 
 #define RED "\033[31m"
@@ -98,7 +98,7 @@ public:
 
 	// Utils
 	// char **createEnv(std::filesystem::path path_of_program_to_execute);
-	void	executeCgi(std::filesystem::path path_of_program_to_execute, int* fd);
+	// void	executeCgi(std::filesystem::path path_of_program_to_execute, int* fd);
 
 	// Exceptions
 	class httpParserException : public std::exception {

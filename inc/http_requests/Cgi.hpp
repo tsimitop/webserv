@@ -2,6 +2,10 @@
 
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "CgiSingleton.hpp"
+
+// class HttpRequest;
+// class HttpResponse;
 
 class Cgi
 {
@@ -18,14 +22,26 @@ private:
 	std::filesystem::path	path_of_program_to_execute_;
 	std::string				executable_;
 	pid_t					pid_;
+	std::string				response_body_;
 
 	Cgi() = delete;
-	Cgi(const Cgi& other) = delete;
-	Cgi& operator=(const Cgi& other) = delete;
 public:
+	Cgi& operator=(const Cgi& other);
+	Cgi(const Cgi& other);
 	Cgi(int poll_fd, const HttpRequest& request);
 	~Cgi();
 
 	void execute();
 	int getPollFd() const;
+	pid_t getPid() const;
+	int getStatus() const;
+	int getFdOne() const;
+	std::string getRespBody() const;
+	
+	void setStatus(int status);
+
+	HttpResponse update_status(HttpResponse& resp);
+	void parform_wait();
+	bool read_pipe();
+
 };

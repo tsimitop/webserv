@@ -1,4 +1,27 @@
-#include "Cgi.hpp"
+#include "../../inc/http_requests/Cgi.hpp"
+
+Cgi::Cgi(const Cgi& other)
+{*this = other;}
+
+Cgi& Cgi::operator=(const Cgi& other)
+{
+	this->status_ = other.status_;
+	this->pipe_fd_[0] = other.pipe_fd_[0];
+	this->pipe_fd_[1] = other.pipe_fd_[1];
+	this->poll_fd_ = other.poll_fd_;
+	this->cgi_is_executable_ = other.cgi_is_executable_;
+	this->timed_out_ = other.timed_out_;
+	this->cgi_request_ = other.cgi_request_;
+	this->cgi_response_ = other.cgi_response_;
+	this->www_path_ = other.www_path_;
+	this->url_ = other.url_;
+	this->path_of_program_to_execute_ = other.path_of_program_to_execute_;
+	this->executable_ = other.executable_;
+	this->pid_ = other.pid_;
+	this->response_body_ = other.response_body_;
+	return *this;
+}
+
 
 Cgi::Cgi(int poll_fd, const HttpRequest& request)
 : status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request)
@@ -52,4 +75,62 @@ void Cgi::execute()
 int Cgi::getPollFd() const
 {return poll_fd_;}
 
+pid_t Cgi::getPid() const
+{return pid_;}
+
+int Cgi::getStatus() const
+{return status_;}
+
+int Cgi::getFdOne() const
+{return pipe_fd_[1];}
+
+void Cgi::setStatus(int status)
+{status_ = status;}
+
+std::string Cgi::getRespBody() const
+{return response_body_;}
+
 Cgi::~Cgi(){}
+
+void Cgi::parform_wait()
+{
+	waitpid(pid_, &status_, WNOHANG);
+	if (WIFEXITED(status_))
+		status_ = WEXITSTATUS(status_);
+	else
+		status_ = EXIT_FAILURE;
+}
+
+bool Cgi::read_pipe()
+{
+	if (status_ == 0)
+	{
+		char buffer[4096] = {0};
+		int read_bytes = read(pipe_fd_[0], buffer, 4096);
+		if (read_bytes == 0)
+		{
+			std::cout << "Pipe seems to be empty\n";
+			return false;
+		}
+		if (read_bytes < 0)
+		{
+			std::cout << "Error reading from pipe\n";
+			close(pipe_fd_[0]);
+			return false;
+		}
+		while(read_bytes)
+		{
+			response_body_ += buffer;
+			memset(buffer, 0, 4096);
+			read_bytes = read(pipe_fd_[0], buffer, 4096);
+			if (read_bytes < 0)
+			{
+				std::cout << "Error reading from pipe\n";
+				close(pipe_fd_[0]);
+				return false;
+			}
+		}
+	}
+	close(pipe_fd_[0]);
+	return true;
+}

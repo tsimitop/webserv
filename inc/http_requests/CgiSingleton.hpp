@@ -1,22 +1,25 @@
 #pragma once
 #include "Cgi.hpp"
 #include <algorithm>
-#include <vector>
+#include <unordered_map>
+#include <iostream>
 
 class Cgi;
 
 class CgiSingleton
 {
 private:
-	static std::vector<Cgi>	running_cgis_;
+	static std::unordered_map<int, Cgi>	running_cgis_;
 	CgiSingleton();
 public:
-	void add_event(Cgi event);
-	void remove_event(int poll_fd);
+	static void add_event(int poll_fd, Cgi& event);
+	static void remove_event(int poll_fd);
 	~CgiSingleton();
 
 	// The static method that controls access to the singleton instance.
-	static std::vector<Cgi> getInstance();
+	static CgiSingleton getInstance();
+	std::unordered_map<int, Cgi> getRunningCgis() const;
+
 };
 
 

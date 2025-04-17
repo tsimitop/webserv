@@ -1,32 +1,37 @@
-#include "CgiSingleton.hpp"
+#include "../../inc/http_requests/CgiSingleton.hpp"
 
-void CgiSingleton::add_event(Cgi event)
+std::unordered_map<int, Cgi> CgiSingleton::running_cgis_;
+
+CgiSingleton::CgiSingleton(){}
+
+void CgiSingleton::add_event(int poll_fd, Cgi& event)
 {
-	running_cgis_.push_back(event);
+	running_cgis_.emplace(poll_fd, event);
 	std::cout << "Added enent.\n";
 }
 
 void CgiSingleton::remove_event(int poll_fd)
 {
-	for (auto it = running_cgis_.begin(); it != running_cgis_.end(); it++)
+	auto found = running_cgis_.find(poll_fd);
+	if (found != running_cgis_.end())
 	{
-		if ((*it).getPollFd() == poll_fd)
-		{
-			running_cgis_.erase(it);
-			std::cout << "FD of POLL: " << poll_fd << ": Removed event.\n";
-			break;
-		}
+		std::cout << "FD of POLL: " << poll_fd << ": Removed event.\n";
+		running_cgis_.erase(found);
 	}
 }
 
-std::vector<Cgi> CgiSingleton::getInstance()
+std::unordered_map<int, Cgi> CgiSingleton::getRunningCgis() const
 {
 	if (running_cgis_.size() == 0)
 		std::cout << "No running cgis at the moment\n";
-	else
-		return (running_cgis_);
+	return (running_cgis_);
 }
 
+CgiSingleton CgiSingleton::getInstance()
+{
+	static CgiSingleton instance;
+	return instance;
+}
 
 CgiSingleton::~CgiSingleton(){}
 /*
