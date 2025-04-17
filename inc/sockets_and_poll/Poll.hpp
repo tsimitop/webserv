@@ -5,7 +5,7 @@
 struct Poll 
 {
 	//===============ATTRIBUTES =====================================================
-	int 		poll_success_flag_;
+	int 		socket_success_flag_;
 	int 		max_queued_clients_;
 	std::vector<pollfd> fds_;
 	std::vector<PollFdWithFlag> fds_with_flag_;

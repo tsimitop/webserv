@@ -2,7 +2,7 @@
 
 //===============DEFAULTS========================================================
 Poll::Poll():
-poll_success_flag_(YES), 
+socket_success_flag_(YES), 
 max_queued_clients_(5), 
 fds_(),
 fds_with_flag_(),
@@ -13,7 +13,7 @@ config_()
 
 Poll::Poll(const Poll& other)
 {
-	poll_success_flag_ = other.poll_success_flag_;
+	socket_success_flag_ = other.socket_success_flag_;
 	max_queued_clients_ = other.max_queued_clients_;
 	fds_ = other.fds_;
 	fds_with_flag_ = other.fds_with_flag_;
@@ -26,7 +26,7 @@ Poll& Poll::operator=(const Poll& other)
 {
 	if (this != &other)
 	{
-		poll_success_flag_ = other.poll_success_flag_;
+		socket_success_flag_ = other.socket_success_flag_;
 		max_queued_clients_ = other.max_queued_clients_;
 		fds_ = other.fds_;
 		fds_with_flag_ = other.fds_with_flag_;
@@ -47,7 +47,7 @@ void Poll::setConfig(const Http& new_config)
 //===============BINDING && SYNCHRONUS I/O ======================================
 int Poll::binding()
 {
-	int poll_success_flag_ = YES;
+	int socket_success_flag_ = YES;
 	for (ServerInfo s : config_.servers_)
 	{
 		addrinfo temp, *res;
@@ -63,14 +63,14 @@ int Poll::binding()
 			{
 				std::cerr << "Error: Get Address Info Failed!\n";
 				freeaddrinfo(res);
-				poll_success_flag_ = NO;
+				socket_success_flag_ = NO;
 				continue;
 			};
 		}
 		else
 		{
 			std::cerr << "The port or host_name is empty!\n";
-			poll_success_flag_ = NO;
+			socket_success_flag_ = NO;
 			continue;
 		}
 		server_fd_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -78,7 +78,7 @@ int Poll::binding()
 		{
 			std::cerr << "Error: Socket Failed!\n";
 			freeaddrinfo(res);
-			poll_success_flag_ = NO;
+			socket_success_flag_ = NO;
 			continue;
 		}
 		setNonBlockingFd(server_fd_);
@@ -87,14 +87,14 @@ int Poll::binding()
 		{
 			std::cerr << "Error: SockOpt failed!\n";
 			freeaddrinfo(res);
-			poll_success_flag_ = NO;
+			socket_success_flag_ = NO;
 			continue;
 		};
 		if (bind(server_fd_,res->ai_addr,res->ai_addrlen) == -1)
 		{
 			std::cerr << "Error: Bind failed!\n";
 			freeaddrinfo(res);
-			poll_success_flag_ = NO;
+			socket_success_flag_ = NO;
 			continue;
 		};
 		listen(server_fd_, max_queued_clients_);
@@ -104,7 +104,7 @@ int Poll::binding()
 		// freeing the addrinfo
 		freeaddrinfo(res);
 	}
-	return poll_success_flag_;
+	return socket_success_flag_;
 };
 //===============POLL CALL ======================================================
 int Poll::polling()
@@ -117,7 +117,6 @@ int Poll::polling()
 		if (activity == -1)
 		{
 			std::cerr << "Error: Poll failed or Timed out!\n";
-			poll_success_flag_ = NO;
 			return activity;
 		}
 		for (size_t i = 0; i != fds_with_flag_.size(); i++)
@@ -250,12 +249,12 @@ void		Poll::setMaxBodyLen(size_t i,char buffer[], int bytes)
 			std::string temp;
 			HttpRequest temp_req;
 			for (size_t i = 0; i != (size_t)bytes; i++)
-			temp.push_back(buffer[i]);
+				temp.push_back(buffer[i]);
 			size_t here = temp.find("Host: localhost:") + 16;
 			int port = std::stoul(temp.substr(here, here + 4));
 			for(ServerInfo& s : config_.servers_)
-			if (s.listen_ == port)
-			fds_with_flag_[i].setRealMaxBodySizeLn((size_t)s.client_max_body_size_);
+				if (s.listen_ == port)
+					fds_with_flag_[i].setRealMaxBodySizeLn((size_t)s.client_max_body_size_);
 			fds_with_flag_[i].state_ = NOT_FIRST_TIME;
 		}
 };
@@ -263,20 +262,20 @@ void		Poll::setMaxBodyLen(size_t i,char buffer[], int bytes)
 void		Poll::findingPort(size_t l, size_t i, int bytes, char buffer[])
 {
 	while (l != std::min((size_t)bytes, std::max((size_t)1024, fds_with_flag_[i].real_max_body_size_ln_)))
-			{
-				fds_with_flag_[i].final_buffer_.push_back(buffer[l]);
-				l++;
-			}
-			if (l == std::max((size_t)1024, fds_with_flag_[i].real_max_body_size_ln_))
-				fds_with_flag_[i].final_buffer_.push_back('\0');
-			std::string request;
-			for (size_t j = 0; j!=fds_with_flag_[i].final_buffer_.size(); j++)
-				request += fds_with_flag_[i].final_buffer_[j];
-			fds_with_flag_[i].req_.readRequest(request);
-			for (ServerInfo& s : config_.servers_)
-				if (fds_with_flag_[i].req_.getPort() == (s).listen_)
-					fds_with_flag_[i].req_.setCurrentServer(s);
-			fds_with_flag_[i].fd_.events |= POLLOUT;
+	{
+		fds_with_flag_[i].final_buffer_.push_back(buffer[l]);
+		l++;
+	}
+	if (l == std::max((size_t)1024, fds_with_flag_[i].real_max_body_size_ln_))
+		fds_with_flag_[i].final_buffer_.push_back('\0');
+	std::string request;
+	for (size_t j = 0; j!=fds_with_flag_[i].final_buffer_.size(); j++)
+		request += fds_with_flag_[i].final_buffer_[j];
+	fds_with_flag_[i].req_.readRequest(request);
+	for (ServerInfo& s : config_.servers_)
+		if (fds_with_flag_[i].req_.getPort() == (s).listen_)
+			fds_with_flag_[i].req_.setCurrentServer(s);
+	fds_with_flag_[i].fd_.events |= POLLOUT;
 };
 
 void		Poll::disconecting(size_t& i, std::string str)
