@@ -35,6 +35,8 @@ public:
 	Cgi(int poll_fd, const HttpRequest& request);
 	~Cgi();
 
+	void setResponseBody(std::string response_str);
+
 	void execute();
 	void execution_close();
 	int getPollFd() const;
@@ -46,6 +48,7 @@ public:
 	bool hasTimedOut() const;
 	bool hasForked() const;
 	HttpRequest getCgiRequest() const;
+	bool cgiPidDone() const;
 	
 	void setStatus(int status);
 

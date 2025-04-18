@@ -152,6 +152,9 @@ void Poll::synchroIO()
 {
 	while(YES)
 	{
+		for (size_t i = config_.servers_.size(); i != fds_with_flag_.size(); i++)
+			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd) && CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd)->cgiPidDone())
+				fds_with_flag_[i].fd_.events = POLLOUT;
 		if (polling() == -1)
 			break;
 		connecting();
@@ -181,6 +184,7 @@ void		Poll::pollhup(size_t& i)
 
 int	Poll::pollin(size_t i)
 {
+std::cout << "entered pollin\n";
 	int answer = YES;
 	if (i >= fds_with_flag_.size())
 		return answer = NO;
@@ -242,20 +246,42 @@ void		Poll::pollout(size_t i)
 		}
 		else if (fds_with_flag_[i].req_.isCgi())
 		{
-			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd) == nullptr)
-				CgiSingleton::getInstance().add_event(fds_with_flag_[i].fd_.fd, std::make_shared<Cgi>(fds_with_flag_[i].fd_.fd, fds_with_flag_[i].req_));
-			std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
-			if (!cgi->hasForked())
-				cgi->execution_close();
-			if (cgi->performed_wait())
-			{
-				response = cgi->response_of_cgi(response);
-				response_str = response.respond(fds_with_flag_[i].req_);
-				std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
+		// 	if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd) == nullptr)
+		// 		CgiSingleton::getInstance().add_event(fds_with_flag_[i].fd_.fd, std::make_shared<Cgi>(fds_with_flag_[i].fd_.fd, fds_with_flag_[i].req_));
+		// 	std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
+		// 	if (!cgi->hasForked())
+		// 		cgi->execution_close();
+		// 	if (cgi->performed_wait())
+		// 	{
+		// 		response = cgi->response_of_cgi(response);
+		// 		response_str = response.respond(fds_with_flag_[i].req_);
+				// std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
+				std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
+				response_str = cgi->getRespBody();
 				send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
 				fds_with_flag_[i].fd_.events = POLLHUP;
 				CgiSingleton::getInstance().remove_event(fds_with_flag_[i].fd_.fd);
-			}
+		// 	}
+		}
+	}
+	else if (fds_with_flag_[i].req_.isCgi())
+	{
+		std::string response_str;
+
+		if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd) == nullptr)
+			CgiSingleton::getInstance().add_event(fds_with_flag_[i].fd_.fd, std::make_shared<Cgi>(fds_with_flag_[i].fd_.fd, fds_with_flag_[i].req_));
+		std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
+		if (!cgi->hasForked())
+			cgi->execution_close();
+		if (cgi->performed_wait())
+		{
+			response = cgi->response_of_cgi(response);
+			response_str = response.respond(fds_with_flag_[i].req_);
+			cgi->setResponseBody(response_str);
+			std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
+			// send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
+			// fds_with_flag_[i].fd_.events = POLLHUP;
+			// CgiSingleton::getInstance().remove_event(fds_with_flag_[i].fd_.fd);
 		}
 	}
 };
@@ -310,7 +336,8 @@ void		Poll::findingPort(size_t l, size_t i, int bytes, char buffer[])
 	for (ServerInfo& s : config_.servers_)
 		if (fds_with_flag_[i].req_.getPort() == (s).listen_)
 			fds_with_flag_[i].req_.setCurrentServer(s);
-	fds_with_flag_[i].fd_.events |= POLLOUT;
+	if (!fds_with_flag_[i].req_.isCgi())
+		fds_with_flag_[i].fd_.events |= POLLOUT;
 };
 
 void		Poll::disconecting(size_t& i, std::string str)

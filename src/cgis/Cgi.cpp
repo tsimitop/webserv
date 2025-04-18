@@ -65,7 +65,7 @@ Cgi::Cgi(int poll_fd, const HttpRequest& request)
 	url_ = request.getUrl();
 	path_of_program_to_execute_ = www_path_ += url_;
 	executable_ = url_.substr(url_.find_last_of('/') + 1);
-	timeout_total_ = std::chrono::milliseconds(request.getCurrentServer().server_timeout_ / 100);
+	timeout_total_ = std::chrono::milliseconds(request.getCurrentServer().server_timeout_);
 
 	if (pipe(pipe_fd_) == -1)
 		std::cout << "Error creating pipe\n"; // Change that!
@@ -111,6 +111,9 @@ std::cout << "Execute python script path: " << path_of_program_to_execute_.strin
 	execve(language.c_str(), args.data(), envp);
 	exit (EXIT_FAILURE);
 }
+
+bool Cgi::cgiPidDone() const
+{return exec_complete_;}
 
 int Cgi::getPollFd() const
 {return poll_fd_;}
@@ -248,3 +251,6 @@ void Cgi::execution_close()
 		this->execute();
 	close(this->getFdOne());
 }
+
+void Cgi::setResponseBody(std::string response_str)
+{response_body_ = response_str;}

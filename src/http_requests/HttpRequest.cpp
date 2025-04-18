@@ -39,7 +39,6 @@ std::cout << "Called Parameterized Constructor!!!\n";
 	httpRequest_ = request;
 	current_server_ = server_info;
 	available_errors_ = this->current_server_.errors;
-std::cout << "Request constructor available errors size: " << available_errors_.size() << std::endl;
 	current_www_path_ = this->current_server_.www_path_;
 }
 
@@ -165,17 +164,9 @@ void	HttpRequest::parseHttpVersion(std::string& line)
 
 void	HttpRequest::parseRequestLine(std::string& line)
 {
-	// std::cout << "LISTEN" << std::endl;
-	// std::cout << current_server_.listen_ << std::endl;
-	// std::cout << current_server_.locations_[0].allowed_methods_[0] << std::endl;
-	// std::vector<std::string> allowed =  current_server_.locations_[0].allowed_methods_;
 	parseMethod(line);
 	parseUrl(line);
 	parseHttpVersion(line);
-	// if (std::find(allowed.begin(), allowed.end(), method_) == allowed.end())
-	// 	std::cout << RED << "Method not allowed\n" << QUIT;
-	// else 
-	// 	std::cout << GREEN << "Method is allowed\n" << QUIT;
 }
 
 void	HttpRequest::parseLine(std::string line)
@@ -219,10 +210,6 @@ void	HttpRequest::readRequest(const std::string& req)
 	std::string requestLine = req;
 	int body = 0;
 
-	//thomas debugging
-	size_t len_req = req.length();
-	(void) len_req;
-	//thomas debugging
 	std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
 
 	if (!line.empty() && line.size() > 0)
@@ -416,12 +403,6 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
 	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
 	std::string length = headers_["Content-Length"];
-	// thomas debugging
-	// size_t body_length = this->getBody().length();
-	// size_t st_len = (size_t)stoi(length);
-	// (void)body_length;
-	// (void)st_len;
-	// thomas debugging
 	if ((int)(this->getBody().length()) != stoi(length)) // remove most of this if statement after debugging
 		resp.createResponse(500, available_errors_[500]);
 	else
