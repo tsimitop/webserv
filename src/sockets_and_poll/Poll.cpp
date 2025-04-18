@@ -56,7 +56,8 @@ int Poll::binding()
 		temp.ai_family = AF_UNSPEC;
 		temp.ai_socktype = SOCK_STREAM;
 		temp.ai_flags = AI_PASSIVE;
-	
+// // Run with docker
+// s.server_name_ = "0.0.0.0";
 		if (!s.server_name_.empty() && !port_char_pointer.empty())
 		{
 			if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
@@ -166,18 +167,29 @@ void Poll::synchroIO()
 //===============POLL STATES ====================================================
 void		Poll::pollhup(size_t& i)
 {
-	if (fds_with_flag_[i].fd_.revents & (POLLERR | POLLHUP))
-		disconecting(i, "(POLLERR | POLLHUP)");
+	std::cout<<"SIZE: "<<fds_with_flag_.size()<<std::endl;
+	std::cout<<"I: "<<i<<std::endl;
+	if (i < fds_with_flag_.size())
+	{
+		if (fds_with_flag_[i].fd_.revents & (POLLERR | POLLHUP))
+			disconecting(i, "(POLLERR | POLLHUP)");
+	}
+	else
+		exit(EXIT_FAILURE);
 };
 
 int	Poll::pollin(size_t i)
 {
 	int answer = YES;
+	if (i >= fds_with_flag_.size())
+		return answer = NO;
 	if (fds_with_flag_[i].fd_.revents & (POLLIN))
 	{
 		char buffer[lengthProt(i) + 1];
+		memset(buffer, 0, lengthProt(i) + 1); // It had garbage
 		//struct here
 		int bytes = recv(fds_with_flag_[i].fd_.fd, buffer, lengthProt(i), 0);
+		std::cout << YELLOW<<buffer<<QUIT<<std::endl;
 		size_t l = 0;
 		setMaxBodyLen(i, buffer, bytes);
 		if ((size_t)bytes == lengthProt(i) || bytes == 0 || bytes < 0)
@@ -213,24 +225,33 @@ int	Poll::pollin(size_t i)
 
 void		Poll::pollout(size_t i)
 {
-	HttpResponse resp;
+	HttpResponse response;
 	if(fds_with_flag_[i].fd_.events & POLLOUT)
 	{
-		HttpResponse response;
+		std::string response_str;
 		if (!fds_with_flag_[i].req_.isCgi())
 		{
 			response = fds_with_flag_[i].req_.performMethod();
-			std::string resp = response.respond(fds_with_flag_[i].req_);
-			std::cout << GREEN << resp << std::endl << QUIT;
-			send(fds_with_flag_[i].fd_.fd, resp.c_str(), resp.length(), 0);
+			response_str = response.respond(fds_with_flag_[i].req_);
+			std::cout << GREEN << response_str << std::endl << QUIT;
+			send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
 			fds_with_flag_[i].fd_.events = POLLHUP;
 		}
-		else
+		else if (fds_with_flag_[i].req_.isCgi())
 		{
-			fds_with_flag_[i].req_.cgiCase(fds_with_flag_[i].fd_.fd, resp);
-			CgiSingleton::access_cgi(fds_with_flag_[i].fd_.fd);
-			// CgiSingleton::access_event(fds_with_flag_[i].fd_.fd)
-			// if (CgiSingleton::access_event.performed_wait() == true)
+			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd) == nullptr)
+				CgiSingleton::getInstance().add_event(fds_with_flag_[i].fd_.fd, std::make_shared<Cgi>(fds_with_flag_[i].fd_.fd, fds_with_flag_[i].req_));
+			std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
+			if (!cgi->hasForked())
+				cgi->execution_close();
+			if (cgi->performed_wait())
+			{
+				response = cgi->response_of_cgi(response);
+				std::cout << GREEN << "RESPONSE\n" << response.getBody() << std::endl << QUIT;
+				send(fds_with_flag_[i].fd_.fd, response.getBody().c_str(), response.getBody().length(), 0);
+				fds_with_flag_[i].fd_.events = POLLHUP;
+				CgiSingleton::getInstance().remove_event(fds_with_flag_[i].fd_.fd);
+			}
 		}
 	}
 };

@@ -27,6 +27,8 @@ class HttpResponse;
 class HttpRequest
 {
 private:
+	std::map<int, std::filesystem::path>			available_errors_;
+	std::filesystem::path							current_www_path_;
 	std::unordered_map<std::string, std::string>	headers_;
 	std::vector<std::string>						bodyVector_; //for POST key1=value1&key2=value2&key3=value3 
 	std::string										bodyComplete_;
@@ -60,6 +62,7 @@ public:
 	std::string										getPathW(void) const;
 	int												getPort(void) const;
 	ServerInfo										getCurrentServer() const;
+	std::map<int, std::filesystem::path>			getAvailableErrors() const;
 
 
 	// Setters

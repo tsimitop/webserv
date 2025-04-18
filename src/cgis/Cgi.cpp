@@ -5,6 +5,7 @@ Cgi::Cgi(const Cgi& other)
 
 Cgi& Cgi::operator=(const Cgi& other)
 {
+	this->available_errors_ = other.available_errors_;
 	this->status_ = other.status_;
 	this->pipe_fd_[0] = other.pipe_fd_[0];
 	this->pipe_fd_[1] = other.pipe_fd_[1];
@@ -21,26 +22,27 @@ Cgi& Cgi::operator=(const Cgi& other)
 	this->response_body_ = other.response_body_;
 	this->procces_start_ = other.procces_start_;
 	this->exec_complete_ = other.exec_complete_;
+	this->has_forked_ = other.has_forked_;
 	return *this;
 }
 
 void Cgi::check_timeout()
 {
 	std::chrono::time_point<std::chrono::high_resolution_clock> current_time_ = std::chrono::high_resolution_clock::now();
-	if (procces_start_ + timeout_total_ >= current_time_)
+	if (procces_start_ + timeout_total_ <= current_time_)
 		timed_out_ = true;
 }
 
 Cgi::Cgi(int poll_fd, const HttpRequest& request)
 : status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request), exec_complete_(false)
 {
+	available_errors_ = request.getAvailableErrors();
 	www_path_ = request.getPathW();
 	url_ = request.getUrl();
 	path_of_program_to_execute_ = www_path_ += url_;
 	executable_ = url_.substr(url_.find_last_of('/') + 1);
 	timeout_total_ = std::chrono::milliseconds(request.getCurrentServer().server_timeout_);
 
-	// std::cout << (timeout_procces_) <<std::endl;
 	if (pipe(pipe_fd_) == -1)
 		std::cout << "Error creating pipe\n"; // Change that!
 	procces_start_ = std::chrono::high_resolution_clock::now();
@@ -51,8 +53,11 @@ Cgi::Cgi(int poll_fd, const HttpRequest& request)
 
 void Cgi::execute()
 {
+std::cout << "Execute python script path: " << path_of_program_to_execute_.string() <<std::endl;
+
 	char *args[] = {
 		const_cast<char *>("/usr/local/bin/python3"), // from config file
+		// const_cast<char *>("/usr/bin/python3"), // DOCKER
 		const_cast<char *>(path_of_program_to_execute_.c_str()),
 		NULL}
 	;
@@ -80,11 +85,13 @@ void Cgi::execute()
 	close(pipe_fd_[1]);
 	execve("/usr/local/bin/python3", args, envp);
 	exit (EXIT_FAILURE);
-	// executeCgi(path_of_program_to_execute, fd);
 }
 
 int Cgi::getPollFd() const
 {return poll_fd_;}
+
+HttpRequest Cgi::getCgiRequest() const
+{return cgi_request_;}
 
 pid_t Cgi::getPid() const
 {return pid_;}
@@ -107,6 +114,9 @@ bool Cgi::isExecutable() const
 bool Cgi::hasTimedOut() const
 {return timed_out_;}
 
+bool Cgi::hasForked() const
+{return has_forked_;}
+
 Cgi::~Cgi(){}
 
 bool Cgi::performed_wait()
@@ -127,6 +137,7 @@ bool Cgi::performed_wait()
 	else if (ret == 0)
 	{
 		check_timeout();
+		std::cout << "Process has timed out: " << std::boolalpha << hasTimedOut() <<std::endl;
 		std::cout<<"Process not finished\n";
 	}
 	else if (ret > 0)
@@ -175,4 +186,40 @@ bool Cgi::read_pipe()
 	}
 	close(pipe_fd_[0]);
 	return true;
+}
+
+HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
+{
+	if (this->getStatus() == 0)
+	{
+		if(this->read_pipe())
+		{
+			std::cout<<BLUE << "CGI reading is true\n" << QUIT;
+			resp.createCgiResponse(200, this->getRespBody());
+		}
+		else
+		{
+			std::cout<<YELLOW << "CGI reading is false\n" << QUIT;
+			resp.createResponse(500, available_errors_[500]);
+		}
+	}
+	else
+	{
+		std::cout<<YELLOW << "Proccess exit number = " << this->getStatus() << "\n" << QUIT;
+		resp.createResponse(500, available_errors_[500]);
+	}
+	if (this->hasTimedOut() == true)
+	{
+		std::cout<<YELLOW << "Timeout\n" << QUIT;
+		resp.createResponse(500, available_errors_[500]);
+	}
+	return (resp);
+}
+
+void Cgi::execution_close()
+{
+	has_forked_ = true;
+	if (this->getPid() == 0)
+		this->execute();
+	close(this->getFdOne());
 }

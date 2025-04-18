@@ -1,14 +1,14 @@
 #include "../../inc/cgis/CgiSingleton.hpp"
 #include <memory>
 
-std::unordered_map<int, Cgi> CgiSingleton::running_cgis_;
+std::unordered_map<int, std::shared_ptr<Cgi>> CgiSingleton::running_cgis_;
 
 CgiSingleton::CgiSingleton(){}
 
-void CgiSingleton::add_event(int poll_fd, Cgi& event)
+void CgiSingleton::add_event(int poll_fd, std::shared_ptr<Cgi> event)
 {
 	running_cgis_.emplace(poll_fd, event);
-	std::cout << "Added event.\n";
+	std::cout << "Added event of fd: " << poll_fd <<std::endl;
 }
 
 void CgiSingleton::remove_event(int poll_fd)
@@ -21,47 +21,29 @@ void CgiSingleton::remove_event(int poll_fd)
 	}
 }
 
-std::unordered_map<int, Cgi> CgiSingleton::getRunningCgis() const
+std::unordered_map<int, std::shared_ptr<Cgi>> CgiSingleton::getRunningCgis() const
 {
 	if (running_cgis_.size() == 0)
 		std::cout << "No running cgis at the moment\n";
 	return (running_cgis_);
 }
 
-CgiSingleton CgiSingleton::getInstance()
+CgiSingleton& CgiSingleton::getInstance()
 {
 	static CgiSingleton instance;
 	return instance;
 }
 
-// std::shared_ptr<Cgi> CgiSingleton::access_event(int poll_fd) const
-// {
-// 	return (running_cgis_[poll_fd]);
-// }
-
-// std::shared_ptr<Cgi> CgiSingleton::access_event(int poll_fd) const
-// {
-// 	return (running_cgis_[poll_fd]);
-// }
-
-
-Cgi& CgiSingleton::access_cgi(int poll_fd) const
+std::shared_ptr<Cgi> CgiSingleton::access_cgi(int poll_fd)
 {
-	return (running_cgis_.at(poll_fd));
+    auto it = running_cgis_.find(poll_fd);
+    if (it != running_cgis_.end())
+        return it->second;
+    else
+    {
+        std::cout << poll_fd << ": poll_fd not found in running_cgis_" << std::endl;
+        return nullptr;
+    }
 }
 
 CgiSingleton::~CgiSingleton(){}
-
-/*
- Solution
-All implementations of the Singleton have these two steps in common:
-
-Make the default constructor private, to prevent other objects from using the 
-new operator with the Singleton class.
-Create a static creation method that acts as a constructor. Under the hood, 
-this method calls the private constructor to create an object and saves it in a 
-static field. All following calls to this method return the cached object.
-If your code has access to the Singleton class, then it’s able to call the 
-Singleton’s static method. So whenever that method is called, the same object 
-is always returned.
-*/

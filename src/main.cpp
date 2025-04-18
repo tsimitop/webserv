@@ -37,6 +37,7 @@
 int main(int argc, char **argv)
 {
 	HttpResponse	response;
+	std::cout << "STARTING WEB SERVER: you will be informed on the sockets listening soon.\n";
 	
 	//---------------------------Config parsing---------------------------
 	Http c;

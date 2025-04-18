@@ -2,6 +2,7 @@
 
 #include "./PollFdWithFlag.hpp"
 #include "../cgis/CgiSingleton.hpp"
+#include <memory>
 
 struct Poll 
 {

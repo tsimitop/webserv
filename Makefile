@@ -53,4 +53,17 @@ superclean: fclean
 
 re: fclean all
 
+docker_compile:
+	docker build -t webserv .
+
+docker_run: docker_compile
+	@docker run --cap-add=NET_ADMIN -it -p 4242:4242 -p 4243:4243 -p 4244:4244 -p 4245:4245 --name webserv webserv
+
+docker_it:
+	docker run -it --rm webserv bash
+
+docker_clean:
+	docker stop webserv
+	docker rm webserv
+
 .PHONY: all clean fclean re superclean

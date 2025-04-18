@@ -352,8 +352,8 @@ void	ServerInfo::parsingLocations()
 				location.setPath(line, location.redir_);
 			else if(key == "cgi_extension")
 				location.pushCgiMap(line);
-			else
-				;
+			// else
+			// 	;
 		}
 	}
 };

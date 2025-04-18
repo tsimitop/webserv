@@ -243,8 +243,8 @@ void Http::parsingServers()
 					s.setClientMaxBodySize(l);
 				else if (k == "error_pages")
 					s.pushToErrors(l);
-				else
-					;
+				// else
+				// 	;
 			}
 		}
 		s.locationIndexes();

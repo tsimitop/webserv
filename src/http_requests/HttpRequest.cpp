@@ -32,9 +32,15 @@ HttpRequest::HttpRequest(const std::string& request, const ServerInfo server_inf
 	port_ = 80;
 	httpRequest_ = request;
 	current_server_ = server_info;
+	// available_errors_ = "/usr/src/app/src/www/errors";
+	available_errors_ = this->current_server_.errors;
+	current_www_path_ = this->current_server_.www_path_;
 }
 
 // Getters
+std::map<int, std::filesystem::path>	HttpRequest::getAvailableErrors() const
+{return available_errors_;}
+
 std::unordered_map<std::string, std::string> HttpRequest::getHeaders(void) const
 {return (headers_);}
 
@@ -403,22 +409,20 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
 	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
-	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
 	std::string length = headers_["Content-Length"];
-	//thomas debugging
-	size_t body_length = this->getBody().length();
-	size_t st_len = (size_t)stoi(length);
-	(void)body_length;
-	(void)st_len;
-	//thomas debugging
+	// thomas debugging
+	// size_t body_length = this->getBody().length();
+	// size_t st_len = (size_t)stoi(length);
+	// (void)body_length;
+	// (void)st_len;
+	// thomas debugging
 	if ((int)(this->getBody().length()) != stoi(length)) // remove most of this if statement after debugging
-		resp.createResponse(500, available_errors[500]);
+		resp.createResponse(500, available_errors_[500]);
 	else
 	{
 		std::ofstream file(current_uploads_path / filename);
-		std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
 		if (!file.is_open()) // probably needs to be handled by html and/or config
-			resp.createResponse(500, available_errors[500]);
+			resp.createResponse(500, available_errors_[500]);
 		else
 		{
 			file << this->getBody();
@@ -440,24 +444,25 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 
 const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 {
-	std::filesystem::path current_www_path = this->current_server_.www_path_;
 	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
 	std::string current_index = this->current_server_.index;
 	if (this->url_ == "/" || this->url_ == current_index || this->url_ == "/" + current_index)
 	{
-		std::filesystem::path target_path = current_www_path / current_index;
+		std::filesystem::path target_path = "src/www/" + current_index;
+		std::cout << "Path of index: " << target_path.string() << std::endl;
+		std::cout << "Path of current_www_path_: " << current_www_path_ << std::endl;
 		std::ifstream input_file(target_path.string());
 		if (!input_file.is_open())
-			resp.createResponse(404, available_errors[404]);
+			resp.createResponse(404, available_errors_[404]);
 		else
 			resp.createResponse(200, target_path);
 	}
 	else
 	{
-		std::filesystem::path	target_path = current_www_path / this->url_;
+		std::filesystem::path	target_path = current_www_path_ / this->url_;
 		std::ifstream			input_file(target_path.string());
 		if (!input_file)
-			resp.createResponse(404, available_errors[404]);
+			resp.createResponse(404, available_errors_[404]);
 		else
 			resp.createResponse(200, target_path);
 	}
@@ -466,12 +471,10 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 
 const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 {
-	std::filesystem::path current_www_path = this->current_server_.www_path_;
-	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
-	std::filesystem::path	path_of_file_to_delete = current_www_path / this->filename_;
+	std::filesystem::path	path_of_file_to_delete = current_www_path_ / this->filename_;
 	std::ifstream file(path_of_file_to_delete);
 	if (!file)
-		resp.createResponse(404, available_errors[404]);
+		resp.createResponse(404, available_errors_[404]);
 	else
 	{
 		file.close();
@@ -484,7 +487,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 			resp.setContentType("text/plain");
 		}
 		else if (removed != 0)
-			resp.createResponse(500, available_errors[500]);
+			resp.createResponse(500, available_errors_[500]);
 	}
 	return (resp);
 }
@@ -500,45 +503,15 @@ bool	HttpRequest::isCgi()
 	return (false);
 }
 
-const HttpResponse	HttpRequest::cgiCase(int poll_fd, HttpResponse& resp)
-{
-	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
-	Cgi cgi(poll_fd, (*this));
-	CgiSingleton::add_event(poll_fd, cgi);
-	if (cgi.getPid() == 0)
-		cgi.execute();
-	close(cgi.getFdOne());
-
-
-	if (cgi.performed_wait() == true)
-	{
-		if (cgi.getStatus() == 0)
-		{
-			if(cgi.read_pipe())
-			{
-				std::cout<<BLUE << "CGI reading is true\n" << QUIT;
-				resp.createCgiResponse(200, cgi.getRespBody());
-			}
-			else
-			{
-				std::cout<<YELLOW << "CGI reading is false\n" << QUIT;
-				resp.createResponse(500, available_errors[500]);
-			}
-		}
-		CgiSingleton::remove_event(poll_fd);
-	}
-	return (resp);
-}
-
 const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
-	if (this->getMethod() == "GET" && !isCgi())
+	if (this->getMethod() == "GET")
 	{
 		resp = getCase(resp);
 	}
-	else if (this->getMethod() == "POST" && !isCgi())
+	else if (this->getMethod() == "POST")
 	{
 		resp = postCase(resp);
 	}
