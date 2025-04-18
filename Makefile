@@ -2,7 +2,7 @@ NAME = webserv
 
 CC = c++
 
-CFLAGS = -g -Wall -Werror -Wextra -std=c++17 -fsanitize=address
+CFLAGS = -g -fsanitize=address -std=c++17 -Wall -Werror -Wextra
 
 #DEBUG = -g
 

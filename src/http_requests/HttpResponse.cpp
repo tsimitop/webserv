@@ -205,6 +205,8 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 void HttpResponse::createResponse(int status_code, std::filesystem::path file)
 {
 	std::ifstream input_file(file.string());
+	if (!input_file.is_open())
+		std::cout << RED << "Could not open error file: " << file.string() << QUIT << std::endl;
 	setStatusCode(status_code);
 	setReasonPhrase(status_code);
 	setContentType("text/html");

@@ -1,5 +1,6 @@
 #include "../../inc/sockets_and_poll/Poll.hpp"
 
+#define MAX_BUFFER 4096
 //===============DEFAULTS========================================================
 Poll::Poll():
 socket_success_flag_(YES), 
@@ -100,7 +101,7 @@ int Poll::binding()
 		};
 		listen(server_fd_, max_queued_clients_);
 		// fds_.push_back((pollfd){server_fd_, POLLIN, 0});
-		fds_with_flag_.push_back((PollFdWithFlag){{server_fd_, POLLIN, 0}, FIRST_TIME, {}, {}, 0});
+		fds_with_flag_.push_back((PollFdWithFlag){{server_fd_, POLLIN, 0}, FIRST_TIME, {}, (HttpRequest){"", s}, 0});
 		std::cout << "Server is listening to the port: " << s.listen_ << "\n";
 		// freeing the addrinfo
 		freeaddrinfo(res);
@@ -167,8 +168,8 @@ void Poll::synchroIO()
 //===============POLL STATES ====================================================
 void		Poll::pollhup(size_t& i)
 {
-	std::cout<<"SIZE: "<<fds_with_flag_.size()<<std::endl;
-	std::cout<<"I: "<<i<<std::endl;
+	// std::cout<<"SIZE: "<<fds_with_flag_.size()<<std::endl;
+	// std::cout<<"I: "<<i<<std::endl;
 	if (i < fds_with_flag_.size())
 	{
 		if (fds_with_flag_[i].fd_.revents & (POLLERR | POLLHUP))
@@ -185,8 +186,10 @@ int	Poll::pollin(size_t i)
 		return answer = NO;
 	if (fds_with_flag_[i].fd_.revents & (POLLIN))
 	{
-		char buffer[lengthProt(i) + 1];
-		memset(buffer, 0, lengthProt(i) + 1); // It had garbage
+		// char buffer[lengthProt(i) + 1];
+		// memset(buffer, 0, lengthProt(i) + 1); // It had garbage
+		char buffer[MAX_BUFFER + 1];
+		memset(buffer, 0, MAX_BUFFER + 1); // It had garbage
 		//struct here
 		int bytes = recv(fds_with_flag_[i].fd_.fd, buffer, lengthProt(i), 0);
 		std::cout << YELLOW<<buffer<<QUIT<<std::endl;
@@ -247,8 +250,9 @@ void		Poll::pollout(size_t i)
 			if (cgi->performed_wait())
 			{
 				response = cgi->response_of_cgi(response);
-				std::cout << GREEN << "RESPONSE\n" << response.getBody() << std::endl << QUIT;
-				send(fds_with_flag_[i].fd_.fd, response.getBody().c_str(), response.getBody().length(), 0);
+				response_str = response.respond(fds_with_flag_[i].req_);
+				std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
+				send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
 				fds_with_flag_[i].fd_.events = POLLHUP;
 				CgiSingleton::getInstance().remove_event(fds_with_flag_[i].fd_.fd);
 			}

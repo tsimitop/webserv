@@ -48,7 +48,7 @@ public:
 	~HttpRequest();
 
 	// Parameterized constructor
-	HttpRequest(const std::string& request, const ServerInfo server_info);
+	HttpRequest(const std::string& request, const ServerInfo& server_info);
 	
 	// Getters
 	std::unordered_map<std::string, std::string>	getHeaders(void) const;
@@ -62,7 +62,7 @@ public:
 	std::string										getPathW(void) const;
 	int												getPort(void) const;
 	ServerInfo										getCurrentServer() const;
-	std::map<int, std::filesystem::path>			getAvailableErrors() const;
+	const std::map<int, std::filesystem::path>&		getAvailableErrors() const;
 
 
 	// Setters

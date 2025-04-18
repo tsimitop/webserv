@@ -84,6 +84,7 @@
 		.then(data => {
 			history.pushState(data, '', location);
 			document.open();
+			console.log(data);
 			document.write(data);
 			document.close();
 			window.addEventListener('popstate', () => {

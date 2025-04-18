@@ -27,7 +27,7 @@ private:
 	std::string										response_body_;
 	std::chrono::milliseconds									timeout_total_;
 	std::chrono::time_point<std::chrono::high_resolution_clock>	procces_start_;
-
+	// const HttpRequest*								request_ptr_;
 	Cgi() = delete;
 public:
 	Cgi& operator=(const Cgi& other);

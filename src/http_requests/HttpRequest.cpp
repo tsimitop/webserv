@@ -27,18 +27,29 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 HttpRequest::~HttpRequest() {}
 
 // Parameterized constructor
-HttpRequest::HttpRequest(const std::string& request, const ServerInfo server_info)
+HttpRequest::HttpRequest(const std::string& request, const ServerInfo& server_info)
 {
+std::cout << "Called Parameterized Constructor!!!\n";
 	port_ = 80;
 	httpRequest_ = request;
 	current_server_ = server_info;
-	// available_errors_ = "/usr/src/app/src/www/errors";
 	available_errors_ = this->current_server_.errors;
+std::cout << "Request constructor available errors size: " << available_errors_.size() << std::endl;
+// std::cout << "0th element: " << available_errors_[500].string() << std::endl;
+// std::cout << "0th element: " << available_errors_[505].string() << std::endl;
+// std::cout << "0th element: " << available_errors_[400].string() << std::endl;
+// std::cout << "0th element: " << available_errors_[404].string() << std::endl;
+// std::cout << "0th element: " << available_errors_[900].string() << std::endl;
+// std::cout << "1th element: " << available_errors_.at(1) << std::endl;
+// std::cout << "2th element: " << available_errors_.at(2) << std::endl;
+// std::cout << "3th element: " << available_errors_.at(3) << std::endl;
+// std::cout << "4th element: " << available_errors_.at(4) << std::endl;
+// std::cout << "5th element: " << available_errors_.at(5) << std::endl;
 	current_www_path_ = this->current_server_.www_path_;
 }
 
 // Getters
-std::map<int, std::filesystem::path>	HttpRequest::getAvailableErrors() const
+const std::map<int, std::filesystem::path>&	HttpRequest::getAvailableErrors() const
 {return available_errors_;}
 
 std::unordered_map<std::string, std::string> HttpRequest::getHeaders(void) const

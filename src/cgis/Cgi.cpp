@@ -1,4 +1,5 @@
 #include "../../inc/cgis/Cgi.hpp"
+#include "vector"
 
 Cgi::Cgi(const Cgi& other)
 {*this = other;}
@@ -36,7 +37,9 @@ void Cgi::check_timeout()
 Cgi::Cgi(int poll_fd, const HttpRequest& request)
 : status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request), exec_complete_(false)
 {
-	available_errors_ = request.getAvailableErrors();
+	available_errors_ = cgi_request_.getAvailableErrors();
+	std::cout << "request available_errors_: " << request.getAvailableErrors().size() << std::endl;
+	std::cout << "available_errors_ size: " << available_errors_.size() << std::endl;
 	www_path_ = request.getPathW();
 	url_ = request.getUrl();
 	path_of_program_to_execute_ = www_path_ += url_;
@@ -55,12 +58,13 @@ void Cgi::execute()
 {
 std::cout << "Execute python script path: " << path_of_program_to_execute_.string() <<std::endl;
 
-	char *args[] = {
-		const_cast<char *>("/usr/local/bin/python3"), // from config file
-		// const_cast<char *>("/usr/bin/python3"), // DOCKER
-		const_cast<char *>(path_of_program_to_execute_.c_str()),
-		NULL}
-	;
+	std::vector<char *> args;
+	// std::string language = "/usr/bin/python3"; // DOCKER
+	std::string language = "/usr/local/bin/python3"; // Mac from config file
+// std::cout << "Programme to be executed: " << path_of_program_to_execute_.string() << std::endl;
+	args.push_back(const_cast<char *>(language.c_str()));
+	args.push_back(const_cast<char *>(path_of_program_to_execute_.c_str()));
+	
 	std::string script_method = "REQUEST_METHOD=" + cgi_request_.getMethod();
 
 	std::string name = "NAME=" + cgi_request_.getBody().substr(cgi_request_.getBody().find_first_of("=") + 1); // do not proccess here, do it in the .py
@@ -83,7 +87,7 @@ std::cout << "Execute python script path: " << path_of_program_to_execute_.strin
 	dup2(pipe_fd_[0], STDIN_FILENO);
 	close(pipe_fd_[0]);
 	close(pipe_fd_[1]);
-	execve("/usr/local/bin/python3", args, envp);
+	execve(language.c_str(), args.data(), envp);
 	exit (EXIT_FAILURE);
 }
 
@@ -137,8 +141,8 @@ bool Cgi::performed_wait()
 	else if (ret == 0)
 	{
 		check_timeout();
-		std::cout << "Process has timed out: " << std::boolalpha << hasTimedOut() <<std::endl;
-		std::cout<<"Process not finished\n";
+		// std::cout << "Process has timed out: " << std::boolalpha << hasTimedOut() <<std::endl;
+		// std::cout<<"Process not finished\n";
 	}
 	else if (ret > 0)
 	{
@@ -190,27 +194,27 @@ bool Cgi::read_pipe()
 
 HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 {
-	if (this->getStatus() == 0)
-	{
-		if(this->read_pipe())
-		{
-			std::cout<<BLUE << "CGI reading is true\n" << QUIT;
-			resp.createCgiResponse(200, this->getRespBody());
-		}
-		else
-		{
-			std::cout<<YELLOW << "CGI reading is false\n" << QUIT;
-			resp.createResponse(500, available_errors_[500]);
-		}
-	}
-	else
-	{
-		std::cout<<YELLOW << "Proccess exit number = " << this->getStatus() << "\n" << QUIT;
-		resp.createResponse(500, available_errors_[500]);
-	}
+	std::cout << "Status: " << this->getStatus() << std::endl;
 	if (this->hasTimedOut() == true)
 	{
 		std::cout<<YELLOW << "Timeout\n" << QUIT;
+		resp.createResponse(500, available_errors_[500]);
+		return resp;
+	}
+	if (this->getStatus() != 0)
+	{
+		std::cout<<YELLOW << "Proccess exit number = " << this->getStatus() << "\n" << QUIT;
+		resp.createResponse(500, available_errors_[500]);
+		return resp;
+	}
+	if(this->read_pipe())
+	{
+		std::cout<<BLUE << "CGI reading is true\n" << QUIT;
+		resp.createCgiResponse(200, this->getRespBody());
+	}
+	else
+	{
+		std::cout<<YELLOW << "CGI reading is false\n" << QUIT;
 		resp.createResponse(500, available_errors_[500]);
 	}
 	return (resp);
