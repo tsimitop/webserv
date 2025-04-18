@@ -29,7 +29,7 @@ struct PollFdWithFlag
 	HttpRequest			req_;
 	size_t				real_max_body_size_ln_;
 
-	PollFdWithFlag();
+	PollFdWithFlag() = delete;
 	PollFdWithFlag(const PollFdWithFlag& other);
 	PollFdWithFlag(pollfd temp_fd, int s_or_c, std::vector<char>final_buffer, HttpRequest req, size_t real_max_body_size_ln);
 	PollFdWithFlag& operator=(const PollFdWithFlag& other);

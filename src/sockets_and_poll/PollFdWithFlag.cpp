@@ -1,16 +1,15 @@
 #include "../../inc/sockets_and_poll/PollFdWithFlag.hpp"
 
-PollFdWithFlag::PollFdWithFlag() : fd_(), state_(FIRST_TIME), final_buffer_(), req_(), real_max_body_size_ln_(0)
-{
-};
+// PollFdWithFlag::PollFdWithFlag() : fd_(), state_(FIRST_TIME), final_buffer_(), req_(), real_max_body_size_ln_(0)
+// {
+// };
 PollFdWithFlag::PollFdWithFlag(const PollFdWithFlag& other)
-{
-	fd_ = other.fd_;
-	state_ = other.state_;
-	final_buffer_ = other.final_buffer_;
-	req_ = other.req_;
-	real_max_body_size_ln_ = other.real_max_body_size_ln_;
-};
+: fd_(other.fd_),
+state_(other.state_),
+final_buffer_(other.final_buffer_),
+req_(other.req_),
+real_max_body_size_ln_(other.real_max_body_size_ln_)
+{};
 
 PollFdWithFlag::PollFdWithFlag(pollfd temp_fd, int s_or_c, std::vector<char> final_buffer, HttpRequest req, size_t real_max_body_size_ln):
 fd_(temp_fd), 

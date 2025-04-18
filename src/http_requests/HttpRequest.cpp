@@ -20,6 +20,11 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 		this->port_ = other.port_;
 		this->basePath_ = other.basePath_;
 		this->filename_ = other.filename_;
+		this->available_errors_ = other.available_errors_;
+	std::cout << "other.HttpRequest CHECKING= " << other.available_errors_.size() <<std::endl;
+	std::cout << "this->HttpRequest CHECKING= " << available_errors_.size() <<std::endl;
+
+		this->current_www_path_ = other.current_www_path_;
 	}
 	return (*this);
 }
@@ -35,16 +40,6 @@ std::cout << "Called Parameterized Constructor!!!\n";
 	current_server_ = server_info;
 	available_errors_ = this->current_server_.errors;
 std::cout << "Request constructor available errors size: " << available_errors_.size() << std::endl;
-// std::cout << "0th element: " << available_errors_[500].string() << std::endl;
-// std::cout << "0th element: " << available_errors_[505].string() << std::endl;
-// std::cout << "0th element: " << available_errors_[400].string() << std::endl;
-// std::cout << "0th element: " << available_errors_[404].string() << std::endl;
-// std::cout << "0th element: " << available_errors_[900].string() << std::endl;
-// std::cout << "1th element: " << available_errors_.at(1) << std::endl;
-// std::cout << "2th element: " << available_errors_.at(2) << std::endl;
-// std::cout << "3th element: " << available_errors_.at(3) << std::endl;
-// std::cout << "4th element: " << available_errors_.at(4) << std::endl;
-// std::cout << "5th element: " << available_errors_.at(5) << std::endl;
 	current_www_path_ = this->current_server_.www_path_;
 }
 

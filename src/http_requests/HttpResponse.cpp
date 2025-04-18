@@ -204,6 +204,7 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 
 void HttpResponse::createResponse(int status_code, std::filesystem::path file)
 {
+std::cout << "Find " << status_code << " at filepath: " << file << std::endl;
 	std::ifstream input_file(file.string());
 	if (!input_file.is_open())
 		std::cout << RED << "Could not open error file: " << file.string() << QUIT << std::endl;

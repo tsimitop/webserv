@@ -2,7 +2,27 @@
 #include "vector"
 
 Cgi::Cgi(const Cgi& other)
-{*this = other;}
+: available_errors_(other.available_errors_),
+status_(other.status_),
+poll_fd_(other.poll_fd_),
+cgi_is_executable_(other.cgi_is_executable_),
+timed_out_(other.timed_out_),
+has_forked_(other.has_forked_),
+cgi_request_(other.cgi_request_),  // <--- directly copy-construct
+cgi_response_(other.cgi_response_),
+exec_complete_(other.exec_complete_),
+www_path_(other.www_path_),
+url_(other.url_),
+path_of_program_to_execute_(other.path_of_program_to_execute_),
+executable_(other.executable_),
+pid_(other.pid_),
+response_body_(other.response_body_),
+timeout_total_(other.timeout_total_),
+procces_start_(other.procces_start_)
+{
+pipe_fd_[0] = other.pipe_fd_[0];
+pipe_fd_[1] = other.pipe_fd_[1];
+}
 
 Cgi& Cgi::operator=(const Cgi& other)
 {
@@ -37,6 +57,7 @@ void Cgi::check_timeout()
 Cgi::Cgi(int poll_fd, const HttpRequest& request)
 : status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request), exec_complete_(false)
 {
+	std::cout << "CHECKING= " << cgi_request_.getAvailableErrors().size() <<std::endl;
 	available_errors_ = cgi_request_.getAvailableErrors();
 	std::cout << "request available_errors_: " << request.getAvailableErrors().size() << std::endl;
 	std::cout << "available_errors_ size: " << available_errors_.size() << std::endl;
@@ -44,7 +65,7 @@ Cgi::Cgi(int poll_fd, const HttpRequest& request)
 	url_ = request.getUrl();
 	path_of_program_to_execute_ = www_path_ += url_;
 	executable_ = url_.substr(url_.find_last_of('/') + 1);
-	timeout_total_ = std::chrono::milliseconds(request.getCurrentServer().server_timeout_);
+	timeout_total_ = std::chrono::milliseconds(request.getCurrentServer().server_timeout_ / 100);
 
 	if (pipe(pipe_fd_) == -1)
 		std::cout << "Error creating pipe\n"; // Change that!
@@ -198,7 +219,7 @@ HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 	if (this->hasTimedOut() == true)
 	{
 		std::cout<<YELLOW << "Timeout\n" << QUIT;
-		resp.createResponse(500, available_errors_[500]);
+		resp.createResponse(504, available_errors_[504]);
 		return resp;
 	}
 	if (this->getStatus() != 0)

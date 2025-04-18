@@ -141,7 +141,7 @@ void	Poll::connecting()
 			{
 				// PollFdWithFlag temp_poll_fd_with_flag;
 				setNonBlockingFd(client_fd);
-				fds_with_flag_.push_back((PollFdWithFlag){(pollfd){client_fd, POLLIN, 0}, FIRST_TIME, {}, {}, 0});
+				fds_with_flag_.push_back((PollFdWithFlag){(pollfd){client_fd, POLLIN, 0}, FIRST_TIME, {}, (HttpRequest){"", config_.servers_[i]}, 0});
 				std::cout << "Client Connected : " << client_fd << "\n";
 			}
 		}
@@ -282,7 +282,7 @@ void		Poll::setMaxBodyLen(size_t i,char buffer[], int bytes)
 		if (fds_with_flag_[i].state_ == FIRST_TIME && bytes > 0)
 		{
 			std::string temp;
-			HttpRequest temp_req;
+			// HttpRequest temp_req;
 			for (size_t i = 0; i != (size_t)bytes; i++)
 				temp.push_back(buffer[i]);
 			size_t here = temp.find("Host: localhost:") + 16;
