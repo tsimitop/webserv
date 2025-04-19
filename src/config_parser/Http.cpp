@@ -238,7 +238,7 @@ void Http::parsingServers()
 		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
 			current_non_semi.push_back(lines_without_semicolons_[j]);
 		ServerInfo s(executable_root_http_);
-		s.valid_inputs_ = YES;
+		s.valid_server_ = YES;
 		s.lines_of_server_ = current_non_semi;
 		s.before_locations_ = YES;
 		for (std::string l : s.lines_of_server_)

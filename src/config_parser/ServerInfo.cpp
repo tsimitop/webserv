@@ -309,7 +309,7 @@ void						ServerInfo::pushLocationsLines()
 	for (size_t i = 0; i + 1 < location_indexes_.size(); i+=2)
 	{
 		Location location(executable_root_server_);
-		location.valid_inputs_ = 1;
+		location.valid_location_ = 1;
 		for (size_t j = location_indexes_[i]; j != location_indexes_[i + 1] + 1; j++)
 			location.location_lines_.push_back(lines_of_server_[j]);
 		locations_.push_back(location);

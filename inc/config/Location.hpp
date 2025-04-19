@@ -68,8 +68,13 @@ const std::map<int, std::string> all_posible_errors
 struct Location
 {
 	//===============ATTRIBUTES =====================================================
+	//------------------lines of locations-----
+	std::vector<std::string>	location_lines_;
+	//------------------Executable path--------
+	std::filesystem::path 		executable_root_location_;
 	//-------flags-----------------------------
-	int							valid_inputs_;
+	int							valid_location_;
+	//-------others-----------------------------
 	long long					client_max_body_size_;
 	std::vector<std::string>	allowed_methods_;
 	std::filesystem::path 		location_html_;
@@ -77,10 +82,7 @@ struct Location
 	std::filesystem::path 		uploads_html_;
 	std::filesystem::path 		redir_;
 	std::map <std::string, std::filesystem::path> cgi_map_;
-	//------------------lines of locations-----
-	std::vector<std::string>	location_lines_;
-	//------------------Executable path--------
-	std::filesystem::path 		executable_root_location_;
+	//-------flags-----------------------------
 	//===============DEFAULT CONSTRUCTORS ===========================================
 	Location();
 	Location(std::filesystem::path absolute_path);

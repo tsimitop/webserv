@@ -3,7 +3,7 @@
 Location::Location() : 
 location_lines_(), 
 executable_root_location_(),
-valid_inputs_(YES),
+valid_location_(YES),
 client_max_body_size_(-1),
 allowed_methods_(), 
 location_html_(""), 
@@ -21,7 +21,7 @@ Location::Location(const Location& other)
 {
 	location_lines_ = other.location_lines_;
 	executable_root_location_ = other.executable_root_location_;
-	valid_inputs_ = other.valid_inputs_;
+	valid_location_ = other.valid_location_;
 	uploads_dir_ = other.uploads_dir_;
 	location_html_ = other.location_html_;
 	uploads_html_ = other.uploads_html_;
@@ -38,7 +38,7 @@ Location& Location::operator=(const Location& other)
 	{
 		location_lines_ = other.location_lines_;
 		executable_root_location_ = other.executable_root_location_;
-		valid_inputs_ = other.valid_inputs_;
+		valid_location_ = other.valid_location_;
 		uploads_dir_ = other.uploads_dir_;
 		uploads_html_ = other.uploads_html_;
 		client_max_body_size_ = other.client_max_body_size_;
@@ -68,7 +68,7 @@ void						Location::validPath(std::string line)
 				!(std::filesystem::exists(checking_path))
 			)
 		)
-		valid_inputs_ = NO;
+		valid_location_ = NO;
 };
 
 void						Location::validClientMaxBodySize(std::string& value)
@@ -87,7 +87,7 @@ void						Location::validClientMaxBodySize(std::string& value)
 		value = sub + "000";
 		return ;
 	}
-	valid_inputs_ = NO;
+	valid_location_ = NO;
 };
 
 void					Location::validMethods(std::string line)
@@ -102,18 +102,18 @@ void					Location::validMethods(std::string line)
 		{
 			if(temp != "POST" && temp != "GET" && temp != "DELETE")
 			{
-				valid_inputs_ = NO;
+				valid_location_ = NO;
 				return;
 			}
 		}
 		return ;
 	}
 	else
-		valid_inputs_ = NO;
+		valid_location_ = NO;
 };
 int						Location::validLocation()
 {
-	return (valid_inputs_);
+	return (valid_location_);
 };
 //===================Setting Methods================================================
 void		Location::setClientMaxBodySize(std::string line)
@@ -124,7 +124,7 @@ void		Location::setClientMaxBodySize(std::string line)
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
 		validClientMaxBodySize(value);
-		if (valid_inputs_ != NO)
+		if (valid_location_ != NO)
 			client_max_body_size_ = std::stol(value);
 	}
 };
@@ -132,7 +132,7 @@ void		Location::setClientMaxBodySize(std::string line)
 void	Location::setAllowedMethods(std::string line)
 {
 	validMethods(line);
-	if (valid_inputs_ != NO)
+	if (valid_location_ != NO)
 	{
 		std::stringstream l(line);
 		std::string key, eq, value;
@@ -156,7 +156,7 @@ void	Location::setPath (std::string line, std::filesystem::path& attribute)
 	std::stringstream l(line);
 	std::string key, eq, value;
 	l >> key >> eq >> value;
-	if (valid_inputs_ != NO)
+	if (valid_location_ != NO)
 		settingTheRightPath(value, attribute);
 };
 void	Location::pushCgiMap(std::string line)
@@ -166,7 +166,7 @@ void	Location::pushCgiMap(std::string line)
 	std::string key, eq, value;
 	l >> key >> eq >> value;
 	std::filesystem::path p;
-	if (valid_inputs_ != NO)
+	if (valid_location_ != NO)
 		settingTheRightPath(value, p);
 	if (cgi_map_.find(p) == cgi_map_.end())
 	{
@@ -220,23 +220,3 @@ int		strIsAlphaOr(std::string str, char extraChar)
 			return NO;
 	return YES;
 };
-//--------Testing--------------------------------
-// static void logToFile(const std::string& message) {
-// 	try {
-
-// 		std::string filePath = "./webserv.log";
-// 		std::ofstream logfile(filePath.c_str(), std::ios::app);
-// 		if (!logfile.is_open()) {
-// 			throw std::runtime_error("Couldnt open webserv.log");
-// 		}
-
-// 		auto now = std::chrono::system_clock::now();
-// 		auto time = std::chrono::system_clock::to_time_t(now);
-// 		std::stringstream ss;
-// 		ss << std::put_time(std::localtime(&time), "[%Y-%m-%d %H:%M:%S]");
-
-// 		logfile << ss.str() << " " << message << std::endl;
-// 	} catch (const std::exception& e) {
-// 	}
-// }
-//--------Testing--------------------------------
