@@ -26,7 +26,7 @@ struct ServerInfo
 	std::filesystem::path					errors_path_;
 	std::filesystem::path					uploads_dir_;
 	//-------------flags-----------------------
-	int 									valid_inputs_;
+	int 									valid_server_;
 	int										before_locations_;
 	//=============DEFAULT CONTRUCTORS ============================================
 	ServerInfo();

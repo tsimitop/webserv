@@ -16,32 +16,19 @@ ServerInfo::ServerInfo() :
 	www_path_(""),
 	errors_path_(""),
 	uploads_dir_(""),
-	valid_inputs_(YES),
+	valid_server_(YES),
 	before_locations_(YES)
 {
 };
 ServerInfo::ServerInfo(std::filesystem::path absolute_path)
 {
 	executable_root_server_ = absolute_path;
-	// std::cout << "absolute_path: " << executable_root_server_ << std::endl;; 
-	// www_path_ = absolute_path / "src" / "www";
 	www_path_ = absolute_path / "src/www";
 	errors_path_ = www_path_ / "errors";
 	uploads_dir_ = www_path_ / "uploads";
 	defaultErrorSetting();
 
 };
-// ServerInfo::ServerInfo(std::filesystem::path absolute_path)
-// {
-// 	executable_root_server_ = absolute_path;
-// 	// std::cout << "absolute_path: " << executable_root_server_ << std::endl;; 
-// 	// www_path_ = absolute_path / "src" / "www";
-// 	www_path_ = absolute_path / "www";
-// 	errors_path_ = www_path_  / "errors";
-// 	uploads_dir_ = www_path_ / "uploads";
-// 	//----------default errors---------------------------
-// 	defaultErrorSetting();
-// };
 ServerInfo::ServerInfo(const ServerInfo& other)
 {
 	keep_alive_timeout_= other.keep_alive_timeout_;
@@ -61,7 +48,7 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 	www_path_ = other.www_path_;
 	errors_path_ = other.errors_path_;
 	uploads_dir_ = other.uploads_dir_;
-	valid_inputs_ = other.valid_inputs_;
+	valid_server_ = other.valid_server_;
 	before_locations_ = other.before_locations_;
 };
 ServerInfo& ServerInfo::operator=(const ServerInfo& other)
@@ -85,7 +72,7 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 		www_path_ = other.www_path_;
 		errors_path_ = other.errors_path_;
 		uploads_dir_ = other.uploads_dir_;
-		valid_inputs_ = other.valid_inputs_;
+		valid_server_ = other.valid_server_;
 		before_locations_ = other.before_locations_;
 	}
 	return *this;
@@ -116,17 +103,17 @@ void						ServerInfo::validServerTimeOut(std::string value)
 {
 	// string has only digits
 		if (strIsNumber(value) == NO || (strIsNumber(value) == YES && std::stol(value) > 100000))
-			valid_inputs_ = NO;
+			valid_server_ = NO;
 };
 void						ServerInfo::validListen(std::string value)
 {
 	if(strIsNumber(value) == NO || (strIsNumber(value) == YES && std::stol(value) > 9999))
-		valid_inputs_ = NO;
+		valid_server_ = NO;
 };
 void						ServerInfo::validServerName(std::string value)
 {
 	if (value != "127.0.0.1" && value != "localhost")
-		valid_inputs_ = NO;
+		valid_server_ = NO;
 };
 void						ServerInfo::validIndex(std::string value)
 {
@@ -141,14 +128,14 @@ void						ServerInfo::validIndex(std::string value)
 			)
 		)
 		{
-			valid_inputs_ = NO;
+			valid_server_ = NO;
 			return ;
 		}
 		std::ifstream path(www_path_ / value);
 		if (!path)
 		{
 			std::cerr << www_path_ / value << "didn't open\n";
-			valid_inputs_ = NO;
+			valid_server_ = NO;
 		}
 };
 void						ServerInfo::validClientMaxBodySize(std::string& value)
@@ -167,12 +154,12 @@ void						ServerInfo::validClientMaxBodySize(std::string& value)
 		value = sub + "000";
 		return ;
 	}
-	valid_inputs_ = NO;
+	valid_server_ = NO;
 };
 
 int						ServerInfo::allSimpleInputsValid()
 {
-	return (valid_inputs_);
+	return (valid_server_);
 };
 void						ServerInfo::validErrorPath(std::string value)
 {
@@ -184,7 +171,7 @@ void						ServerInfo::validErrorPath(std::string value)
 	std::ifstream check(checking_path);
 	if (!check)
 	{
-		valid_inputs_ = NO;
+		valid_server_ = NO;
 		return ;
 	}
 };
@@ -196,7 +183,7 @@ void						ServerInfo::validErrorType(std::string value)
 	if (strIsNumber(error_type) && 
 	all_posible_errors.find(std::stol(error_type)) != all_posible_errors.end())
 		return ;
-	valid_inputs_ = NO; 
+	valid_server_ = NO; 
 };
 void 					ServerInfo::defaultErrorSetting()
 {
@@ -217,7 +204,7 @@ void						ServerInfo::setServerTimeOut(std::string line, int& attribute)
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
 		validServerTimeOut(value);
-		if (valid_inputs_ != NO)
+		if (valid_server_ != NO)
 			attribute = std::stoi(value);
 	}
 };
@@ -229,7 +216,7 @@ void						ServerInfo::setListen(std::string line)
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
 		validListen(value);
-		if (valid_inputs_ != NO)
+		if (valid_server_ != NO)
 			listen_ = std::stoi(value);
 	}
 };
@@ -241,7 +228,7 @@ void						ServerInfo::setServerName(std::string line)
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
 		validServerName(value);
-		if (valid_inputs_ != NO)
+		if (valid_server_ != NO)
 			server_name_ = value;
 	}
 };
@@ -253,7 +240,7 @@ void						ServerInfo::setIndex(std::string line)
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
 		validIndex(value);
-		if (valid_inputs_ != NO)
+		if (valid_server_ != NO)
 			index = value;
 	}
 };
@@ -265,7 +252,7 @@ void						ServerInfo::setClientMaxBodySize(std::string line)
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
 		validClientMaxBodySize(value);
-		if (valid_inputs_ != NO)
+		if (valid_server_ != NO)
 			client_max_body_size_ = std::stol(value);
 	}
 };
@@ -280,7 +267,7 @@ void						ServerInfo::pushToErrors(std::string line)
 		validErrorType(value);
 		size_t the_last_backslash = value.find_last_of('/');
 		std::string error_type = value.substr(the_last_backslash + 1, 3);
-		if (valid_inputs_ != NO)
+		if (valid_server_ != NO)
 		{
 			if (all_posible_errors.find(std::stoi(error_type)) != all_posible_errors.end())
 			{
@@ -291,7 +278,7 @@ void						ServerInfo::pushToErrors(std::string line)
 				
 			}
 			else
-				valid_inputs_ = NO;
+				valid_server_ = NO;
 		}
 			
 	}
