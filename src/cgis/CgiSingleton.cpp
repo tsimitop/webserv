@@ -41,7 +41,7 @@ std::shared_ptr<Cgi> CgiSingleton::access_cgi(int poll_fd)
         return it->second;
     else
     {
-        std::cout << poll_fd << ": poll_fd not found in running_cgis_" << std::endl;
+        // std::cout << poll_fd << ": poll_fd not found in running_cgis_" << std::endl;
         return nullptr;
     }
 }

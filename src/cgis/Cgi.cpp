@@ -51,16 +51,19 @@ void Cgi::check_timeout()
 {
 	std::chrono::time_point<std::chrono::high_resolution_clock> current_time_ = std::chrono::high_resolution_clock::now();
 	if (procces_start_ + timeout_total_ <= current_time_)
+	{
 		timed_out_ = true;
+		exec_complete_ = true;
+	}
 }
 
 Cgi::Cgi(int poll_fd, const HttpRequest& request)
 : status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request), exec_complete_(false)
 {
-	std::cout << "CHECKING= " << cgi_request_.getAvailableErrors().size() <<std::endl;
+	// std::cout << "CHECKING= " << cgi_request_.getAvailableErrors().size() <<std::endl;
 	available_errors_ = cgi_request_.getAvailableErrors();
-	std::cout << "request available_errors_: " << request.getAvailableErrors().size() << std::endl;
-	std::cout << "available_errors_ size: " << available_errors_.size() << std::endl;
+	// std::cout << "request available_errors_: " << request.getAvailableErrors().size() << std::endl;
+	// std::cout << "available_errors_ size: " << available_errors_.size() << std::endl;
 	www_path_ = request.getPathW();
 	url_ = request.getUrl();
 	path_of_program_to_execute_ = www_path_ += url_;

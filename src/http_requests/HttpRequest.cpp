@@ -21,8 +21,8 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 		this->basePath_ = other.basePath_;
 		this->filename_ = other.filename_;
 		this->available_errors_ = other.available_errors_;
-	std::cout << "other.HttpRequest CHECKING= " << other.available_errors_.size() <<std::endl;
-	std::cout << "this->HttpRequest CHECKING= " << available_errors_.size() <<std::endl;
+	// std::cout << "other.HttpRequest CHECKING= " << other.available_errors_.size() <<std::endl;
+	// std::cout << "this->HttpRequest CHECKING= " << available_errors_.size() <<std::endl;
 
 		this->current_www_path_ = other.current_www_path_;
 	}
@@ -34,7 +34,6 @@ HttpRequest::~HttpRequest() {}
 // Parameterized constructor
 HttpRequest::HttpRequest(const std::string& request, const ServerInfo& server_info)
 {
-std::cout << "Called Parameterized Constructor!!!\n";
 	port_ = 80;
 	httpRequest_ = request;
 	current_server_ = server_info;
@@ -404,7 +403,10 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
 	std::string length = headers_["Content-Length"];
 	if ((int)(this->getBody().length()) != stoi(length)) // remove most of this if statement after debugging
+	{
+		std::cout << RED << "Body length is not correct\n" << QUIT;
 		resp.createResponse(500, available_errors_[500]);
+	}
 	else
 	{
 		std::ofstream file(current_uploads_path / filename);

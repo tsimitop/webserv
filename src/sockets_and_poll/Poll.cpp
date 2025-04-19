@@ -111,11 +111,13 @@ int Poll::binding()
 //===============POLL CALL ======================================================
 int Poll::polling()
 {
+	// std::cout << "entered polling()\n";
+
 	fds_.clear();
 		// is running the pollfds
 		for (size_t i = 0; i != fds_with_flag_.size(); i++)
 			fds_.push_back(fds_with_flag_[i].fd_);
-		int activity = poll(fds_.data(),fds_.size(), config_.servers_[0].server_timeout_);
+		int activity = poll(fds_.data(),fds_.size(), 0);
 		if (activity == -1)
 		{
 			std::cerr << "Error: Poll failed or Timed out!\n";
@@ -128,6 +130,7 @@ int Poll::polling()
 
 void	Poll::connecting()
 {
+	// std::cout << "connecting()\n";
 	for (size_t i = 0; i != config_.servers_.size(); i++)
 	{
 		// struct here
@@ -152,9 +155,10 @@ void Poll::synchroIO()
 {
 	while(YES)
 	{
+		// std::cout << "synchroIO loop\n";
 		for (size_t i = config_.servers_.size(); i != fds_with_flag_.size(); i++)
 			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd) && CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd)->cgiPidDone())
-				fds_with_flag_[i].fd_.events = POLLOUT;
+					fds_with_flag_[i].fd_.events |= POLLOUT;
 		if (polling() == -1)
 			break;
 		connecting();
@@ -171,23 +175,28 @@ void Poll::synchroIO()
 //===============POLL STATES ====================================================
 void		Poll::pollhup(size_t& i)
 {
+	// std::cout << "pollhup()\n";
 	// std::cout<<"SIZE: "<<fds_with_flag_.size()<<std::endl;
 	// std::cout<<"I: "<<i<<std::endl;
-	if (i < fds_with_flag_.size())
-	{
+	// std::cout<<"entered pollhup() of "<<fds_with_flag_[i].fd_.fd<<std::endl;
+	// if (i < fds_with_flag_.size())
+	// {
 		if (fds_with_flag_[i].fd_.revents & (POLLERR | POLLHUP))
+		{
+			std::cout << RED << "\n" << fds_with_flag_[i].fd_.fd << ": hanging up()\n" <<QUIT;
 			disconecting(i, "(POLLERR | POLLHUP)");
-	}
-	else
-		exit(EXIT_FAILURE);
+		}
+	// }
+	// else
+	// 	exit(EXIT_FAILURE);
 };
 
 int	Poll::pollin(size_t i)
 {
-std::cout << "entered pollin\n";
+// std::cout << "entered pollin()\n";
 	int answer = YES;
-	if (i >= fds_with_flag_.size())
-		return answer = NO;
+	// if (i >= fds_with_flag_.size())
+	// 	return answer = NO;
 	if (fds_with_flag_[i].fd_.revents & (POLLIN))
 	{
 		// char buffer[lengthProt(i) + 1];
@@ -232,6 +241,7 @@ std::cout << "entered pollin\n";
 
 void		Poll::pollout(size_t i)
 {
+// std::cout << "entered pollout()\n";
 	HttpResponse response;
 	if(fds_with_flag_[i].fd_.events & POLLOUT)
 	{
@@ -242,26 +252,21 @@ void		Poll::pollout(size_t i)
 			response_str = response.respond(fds_with_flag_[i].req_);
 			std::cout << GREEN << response_str << std::endl << QUIT;
 			send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
-			fds_with_flag_[i].fd_.events = POLLHUP;
+			// fds_with_flag_[i].fd_.events = POLLHUP;
+			// std::cout <<fds_with_flag_[i].fd_.fd << ": should be hung up\n";
 		}
 		else if (fds_with_flag_[i].req_.isCgi())
 		{
-		// 	if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd) == nullptr)
-		// 		CgiSingleton::getInstance().add_event(fds_with_flag_[i].fd_.fd, std::make_shared<Cgi>(fds_with_flag_[i].fd_.fd, fds_with_flag_[i].req_));
-		// 	std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
-		// 	if (!cgi->hasForked())
-		// 		cgi->execution_close();
-		// 	if (cgi->performed_wait())
-		// 	{
-		// 		response = cgi->response_of_cgi(response);
-		// 		response_str = response.respond(fds_with_flag_[i].req_);
-				// std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
-				std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
-				response_str = cgi->getRespBody();
-				send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
-				fds_with_flag_[i].fd_.events = POLLHUP;
-				CgiSingleton::getInstance().remove_event(fds_with_flag_[i].fd_.fd);
-		// 	}
+			std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
+			if (cgi == nullptr)
+			{
+				std::cout << RED << "Cgi is not accessible from singleton\n";
+				return;
+			}
+			response_str = cgi->getRespBody();
+			send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
+			fds_with_flag_[i].fd_.events = POLLHUP;
+			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].fd_.fd);
 		}
 	}
 	else if (fds_with_flag_[i].req_.isCgi())
