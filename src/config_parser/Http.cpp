@@ -1,5 +1,5 @@
 #include "../../inc/config/Http.hpp"
-//=======================Default Http===============================
+//===============DEFAULT CONSTRUCTORS ===========================================
 
 Http::Http() : 
 	servers_(), 
@@ -38,8 +38,9 @@ Http& Http::operator=(const Http& other)
 };
 Http::~Http()
 {
-};;
-//parsers
+};
+//===============METHODS=========================================================
+//-------------LINES & INDEXES-------------
 void Http::configLines(std::filesystem::path config_path)
 {
 	std::vector<std::string> res;
@@ -107,7 +108,7 @@ void	Http::serverIndexes()
 	}
 	server_indexes_.push_back(i);
 };
-
+//-------------VALIDATORS------------------
 int		Http::validFormatForOneServer(size_t start, size_t end)
 {
 	size_t index = 0;
@@ -193,7 +194,7 @@ int		Http::validFormatForOneServer(size_t start, size_t end)
 
 void	Http::validServersFormat()
 {
-	for (size_t i = 0; i + 1!= server_indexes_.size(); i++) // 0 , 28, 42, 57 | , 69
+	for (size_t i = 0; i + 1!= server_indexes_.size(); i++)
 	{
 		std::vector<std::string> current_lines;
 		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
@@ -206,6 +207,28 @@ void	Http::validServersFormat()
 	}
 	valid_config_ = YES;
 };
+//-------------PARSING---------------------
+void Http::preparingAndValidatingConfig(int argc, char* argv[])
+{
+	executable_root_http_ = 
+	std::filesystem::canonical
+	(
+		std::filesystem::absolute(argv[0])
+	).parent_path();
+	std::filesystem::path config_path;
+	if (argc == 1)
+		config_path = executable_root_http_ / "src/config/default.conf";
+	else if (argc == 2)
+		config_path = executable_root_http_ / "src/config" / argv[1];
+	configLines(config_path);
+	if (valid_config_ == YES)
+	{
+		serverIndexes();
+		validServersFormat();
+		if (valid_config_ == YES)
+			configLinesWithoutSemicolons();
+	}
+}
 
 void Http::parsingServers()
 {
@@ -248,30 +271,8 @@ void Http::parsingServers()
 			}
 		}
 		s.locationIndexes();
-		s.pushLocationsLines();//creating the locations and pushing the corresponding location lines
+		s.pushLocationsLines();
 		s.parsingLocations();
 		servers_.push_back(s);
 	}
 };
-
-void Http::preparingAndValidatingConfig(int argc, char* argv[])
-{
-	executable_root_http_ = 
-	std::filesystem::canonical
-	(
-		std::filesystem::absolute(argv[0])
-	).parent_path();
-	std::filesystem::path config_path;
-	if (argc == 1)
-		config_path = executable_root_http_ / "src/config/default.conf";
-	else if (argc == 2)
-		config_path = executable_root_http_ / "src/config" / argv[1];// calling the copy constructor for the executable path and by calling the assiment constructor
-	configLines(config_path);
-	if (valid_config_ == YES)
-	{
-		serverIndexes();
-		validServersFormat();
-		if (valid_config_ == YES)
-			configLinesWithoutSemicolons();
-	}
-}
