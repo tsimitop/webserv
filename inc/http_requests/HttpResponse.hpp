@@ -28,6 +28,7 @@ private:
 	int										contentLength_;
 	std::string								body_;
 public:
+
 	// Orthodox Canonical Class Form
 	HttpResponse();
 	HttpResponse(const HttpResponse& other);

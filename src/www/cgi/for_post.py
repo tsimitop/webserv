@@ -11,7 +11,7 @@ def main():
 
 	# print("Content-Type: text/html\n")
 	# print(f"Hello, {name}\n")
-	# print("Hello, " + name + "\n")
+	# print("Hello, " + name + std::endl;)
 	print(f"<p>Hello, {name}</p>")
 	print(f"<p>Hello, {name}</p>")
 	# print(f"<h1>Hello, {name}!</h1>")

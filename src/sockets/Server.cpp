@@ -16,7 +16,7 @@ Server::Server() {
 	int	status = getaddrinfo(NULL, PORT, &hints_, &server_info_);
 	if (status != 0)
 	{
-		std::cerr << "getaddrinfo failed: " << gai_strerror(status) << "\n";
+		std::cerr << "getaddrinfo failed: " << gai_strerror(status) << std::endl;;
 	}
 
 
@@ -29,12 +29,12 @@ Server::Server() {
 	int	reuse = 1;
 	if (setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof (reuse)))
 	{
-		std::cerr << "setsockopt failed: " << strerror(errno) << "\n";
+		std::cerr << "setsockopt failed: " << strerror(errno) << std::endl;;
 	}
 	status = bind(server_socket_, server_info_->ai_addr, server_info_->ai_addrlen);
 	if (status == -1)
 	{
-		std::cerr << "bind failed: " << strerror(errno) << "\n";
+		std::cerr << "bind failed: " << strerror(errno) << std::endl;;
 	}
 
 	if (listen(server_socket_, 5) == -1)

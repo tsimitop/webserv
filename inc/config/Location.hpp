@@ -8,6 +8,10 @@
 #include <filesystem>
 #include <vector>
 
+
+//--------Testing--------------------------------
+// static void logToFile(const std::string& message);
+//--------Testing--------------------------------
 enum answer{YES = 1, NO = 0};
 enum methods{GET = 1, POST = 2, DELETE = 4};
 const std::map<int, std::string> all_posible_errors 

@@ -220,3 +220,23 @@ int		strIsAlphaOr(std::string str, char extraChar)
 			return NO;
 	return YES;
 };
+//--------Testing--------------------------------
+// static void logToFile(const std::string& message) {
+// 	try {
+
+// 		std::string filePath = "./webserv.log";
+// 		std::ofstream logfile(filePath.c_str(), std::ios::app);
+// 		if (!logfile.is_open()) {
+// 			throw std::runtime_error("Couldnt open webserv.log");
+// 		}
+
+// 		auto now = std::chrono::system_clock::now();
+// 		auto time = std::chrono::system_clock::to_time_t(now);
+// 		std::stringstream ss;
+// 		ss << std::put_time(std::localtime(&time), "[%Y-%m-%d %H:%M:%S]");
+
+// 		logfile << ss.str() << " " << message << std::endl;
+// 	} catch (const std::exception& e) {
+// 	}
+// }
+//--------Testing--------------------------------

@@ -16,7 +16,7 @@ try
 // catch(const std::exception& e)
 catch(...)
 {
-	// std::cerr << RED << e.what() << "\n";
+	// std::cerr << RED << e.what() << std::endl;;
 	std::cerr << RED << "Exception thrown: error while parsing http request.\n";
 	exit(EXIT_FAILURE);
 }
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 	// catch(const std::exception& e)
 	catch(...)
 	{
-		// std::cerr << RED << e.what() << "\n";
+		// std::cerr << RED << e.what() << std::endl;;
 		std::cerr << RED << "Exception thrown: error while parsing http request.\n";
 		exit(EXIT_FAILURE);
 	}

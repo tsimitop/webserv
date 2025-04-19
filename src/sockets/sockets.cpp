@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   sockets.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: daspring <daspring@student.42heilbronn.de  +#+  +:+       +#+        */
+/*   By: tnakas <tnakas@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/29 20:21:21 by daspring          #+#    #+#             */
-/*   Updated: 2025/03/30 18:45:42 by daspring         ###   ########.fr       */
+/*   Updated: 2025/04/17 20:58:13 by tnakas           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ void	start_server()
 	status = getaddrinfo(NULL, PORT, &hints, &server_info);														// ERROR HANDLING !! (using fprintf, stderr, gai_strerror ??)
 	if (status != 0)
 	{
-		std::cerr << "getaddrinfo failed: " << gai_strerror(status) << "\n";
+		std::cerr << "getaddrinfo failed: " << gai_strerror(status) << std::endl;;
 	}
 
 
@@ -40,12 +40,12 @@ void	start_server()
 	status = bind(server_filedes, server_info->ai_addr, server_info->ai_addrlen);								// ERROR HANDLING - reusing status??
 	if (status == -1)
 	{
-		std::cerr << "bind failed: " << strerror(errno) << "\n";
+		std::cerr << "bind failed: " << strerror(errno) << std::endl;;
 	}
 	int	reuse = 1;																						// does not work yet ...
 	if (setsockopt(server_filedes, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof (reuse)))
 	{
-		std::cerr << "setsockopt failed: " << strerror(errno) << "\n";
+		std::cerr << "setsockopt failed: " << strerror(errno) << std::endl;;
 	}
 
 	if (listen(server_filedes, 5) == -1)

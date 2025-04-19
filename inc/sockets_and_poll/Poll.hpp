@@ -5,7 +5,7 @@
 struct Poll 
 {
 	//===============ATTRIBUTES =====================================================
-	int 		socket_success_flag_;
+	int 		poll_success_flag_;
 	int 		max_queued_clients_;
 	std::vector<pollfd> fds_;
 	std::vector<PollFdWithFlag> fds_with_flag_;
@@ -18,7 +18,7 @@ struct Poll
 	Poll(const Poll& other);
 	Poll& operator=(const Poll& other);
 	~Poll();
-	//===============THE SETTER (THE ONLY ONE)=======================================
+	//===============SETTERS=========================================================
 	void setConfig(const Http& new_config);
 	//===============BINDING && SYNCHRONUS I/O ======================================
 	int 		binding();
@@ -30,12 +30,14 @@ struct Poll
 	int			pollin(size_t i);
 	void		pollout(size_t i);
 	//================HELPER METHODS ================================================
-	void		closingServers();
 	void		connecting();
 	void		disconecting(size_t& i, std::string str);
-	void		setMaxBodyLen(size_t i, char buffer[], int bytes);
-	void		findingPort(size_t l, size_t i, int bytes, char buffer[]);
+	void		closingServers();
+	void		setMaxBodyLen(size_t i, int bytes);
+	void		definingRequest(size_t i);
 	size_t		lengthProt(size_t i);
+	int			eAgainAndEWouldblock(size_t i, int bytes);
+	int			updateFinalBuffer(size_t i, int bytes, char buffer[]);
 };
 
 //===================OUTER HELPER FUNCTIONS ==========================================
