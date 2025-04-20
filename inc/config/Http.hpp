@@ -7,6 +7,7 @@ struct ServerInfo;
 struct Http
 {
 	std::vector <ServerInfo>	servers_;
+	std::vector <ServerInfo>	active_servers_;
 	std::filesystem::path		executable_root_http_;
 	//===============PARSING ATTRIBUTES START =======================================
 	std::vector<std::string>	lines;
@@ -25,9 +26,10 @@ struct Http
 	void						configLinesWithoutSemicolons();
 	void						serverIndexes();
 	//-------------VALIDATORS------------------
-	int							validFormatForOneServer(size_t start, size_t end);
+	int							validFormatForOneServer(size_t server_index);
 	void						validServersFormat();
 	//-------------PARSING---------------------
 	void						preparingAndValidatingConfig(int argc, char* argv[]);
 	void						parsingServers();
+	//-------------UPDATED METHODS-------------
 };

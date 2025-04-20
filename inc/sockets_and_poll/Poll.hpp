@@ -12,6 +12,7 @@ struct Poll
 	int 		server_fd_;
 	sockaddr_in addr_;
 	Http		config_;
+	size_t		number_of_active_servers_;
 	
 	//===============DEFAULTS========================================================
 	Poll();

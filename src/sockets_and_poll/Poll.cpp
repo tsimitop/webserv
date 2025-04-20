@@ -8,7 +8,8 @@ fds_(),
 fds_with_flag_(),
 server_fd_(0), 
 addr_(),
-config_()
+config_(),
+number_of_active_servers_(0)
 {};
 
 Poll::Poll(const Poll& other)
@@ -20,6 +21,7 @@ Poll::Poll(const Poll& other)
 	server_fd_ = other.server_fd_;
 	addr_ = other.addr_;
 	config_ = other.config_;
+	number_of_active_servers_ = other.number_of_active_servers_;
 };
 
 Poll& Poll::operator=(const Poll& other)
@@ -33,6 +35,7 @@ Poll& Poll::operator=(const Poll& other)
 		server_fd_ = other.server_fd_;
 		addr_ = other.addr_;
 		config_ = other.config_;
+		number_of_active_servers_ = other.number_of_active_servers_;
 	}
 	return *this;
 };
@@ -42,76 +45,88 @@ Poll::~Poll(){};
 void Poll::setConfig(const Http& new_config)
 {
 	config_ = new_config;
+	std::cout << "make a breakpoint\n";
 };
 
 //===============BINDING && SYNCHRONUS I/O ======================================
 int Poll::binding()
 {
 	int poll_success_flag_ = YES;
-	for (ServerInfo& s : config_.servers_)
+	for (ServerInfo& s : config_.active_servers_)
 	{
-		addrinfo temp, *res;
-		memset(&temp, 0, sizeof(temp));
-		std::string port_char_pointer = std::to_string(s.listen_);
-		temp.ai_family = AF_UNSPEC;
-		temp.ai_socktype = SOCK_STREAM;
-		temp.ai_flags = AI_PASSIVE;
-	
-		if (!s.server_name_.empty() && !port_char_pointer.empty())
-		{
-			if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
+			addrinfo temp, *res;
+			memset(&temp, 0, sizeof(temp));
+			std::string port_char_pointer = std::to_string(s.listen_);
+			temp.ai_family = AF_UNSPEC;
+			temp.ai_socktype = SOCK_STREAM;
+			temp.ai_flags = AI_PASSIVE;
+		
+			if (!s.server_name_.empty() && !port_char_pointer.empty())
 			{
-				std::cerr << "Error: Get Address Info Failed!" << std::endl;
+				if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
+				{
+					std::cerr << "Error: Get Address Info Failed!" << std::endl;
+					freeaddrinfo(res);
+					poll_success_flag_ = NO;
+					continue;
+				};
+			}
+			else
+			{
+				std::cerr << "The port or host_name is empty!" << std::endl;
+				poll_success_flag_ = NO;
+				continue;
+			}
+			server_fd_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+			if (server_fd_ == -1)
+			{
+				std::cerr << "Error: Socket Failed!" << std::endl;
+				freeaddrinfo(res);
+				poll_success_flag_ = NO;
+				continue;
+			}
+			setNonBlockingFd(server_fd_);
+			int opt = 1;
+			if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+			{
+				std::cerr << "Error: SockOpt failed!" << std::endl;
 				freeaddrinfo(res);
 				poll_success_flag_ = NO;
 				continue;
 			};
-		}
-		else
-		{
-			std::cerr << "The port or host_name is empty!" << std::endl;
-			poll_success_flag_ = NO;
-			continue;
-		}
-		server_fd_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-		if (server_fd_ == -1)
-		{
-			std::cerr << "Error: Socket Failed!" << std::endl;
+			if (bind(server_fd_,res->ai_addr,res->ai_addrlen) == -1)
+			{
+				std::cerr << "Error: Bind failed!" << std::endl;
+				freeaddrinfo(res);
+				poll_success_flag_ = NO;
+				continue;
+			};
+			listen(server_fd_, max_queued_clients_);
+			fds_with_flag_.push_back(
+				(PollFdWithFlag){{server_fd_, POLLIN, 0}, 
+				FIRST_TIME,
+				SERVER,
+				{}, 
+				(HttpRequest){"", s}, 
+				0, 0, 0,
+				{}, s});
+			std::cout << "Success: Server fd[" << server_fd_ << "] is listening to the port: " << s.listen_ << std::endl;
+			// freeing the addrinfo
 			freeaddrinfo(res);
-			poll_success_flag_ = NO;
-			continue;
+			number_of_active_servers_++;
 		}
-		setNonBlockingFd(server_fd_);
-		int opt = 1;
-		if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-		{
-			std::cerr << "Error: SockOpt failed!" << std::endl;
-			freeaddrinfo(res);
-			poll_success_flag_ = NO;
-			continue;
-		};
-		if (bind(server_fd_,res->ai_addr,res->ai_addrlen) == -1)
-		{
-			std::cerr << "Error: Bind failed!" << std::endl;
-			freeaddrinfo(res);
-			poll_success_flag_ = NO;
-			continue;
-		};
-		listen(server_fd_, max_queued_clients_);
-		fds_with_flag_.push_back(
-			(PollFdWithFlag){{server_fd_, POLLIN, 0}, 
-			FIRST_TIME,
-			SERVER,
-			{}, 
-			(HttpRequest){"", s}, 
-			0, 0, 0,
-			{}, s});
-		std::cout << "Server : " << server_fd_ << " is listening to the port: " << s.listen_ << std::endl;
-		// freeing the addrinfo
-		freeaddrinfo(res);
-	}
 	return poll_success_flag_;
 };
+
+	// std::cout << "//==================================================================================================\n";
+	// std::cout << "\\-/_\\-/-\\-/_\\-/-\\-/_\\-                              ________|||<------------------------------" << std::endl;
+	// std::cout << "/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\    /--------\\\\\\<----------------------/--------\\" << std::endl;
+	// std::cout << "\\-/_\\-/-\\-/_\\-/-\\-/_\\-/-\\-/_\\-/-\\                 | ^  -  ^ |||<----------------------|---------|" << std::endl;
+	// std::cout << "Error: THIS>--WERSERVER- -IS- -[[=NOT==]]VALID-> (|<8> | <*>|)))<--------------------(-----------)" << std::endl;
+	// std::cout << "/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_                  \\  <\\_/>  ///<----------------------\\---------/" << std::endl;
+	// std::cout << "\\-\\_\\-\\-\\-\\_\\-\\-\\-\\_\\-\\-\\-\\_\\-\\-\\-\\_\\-\\-\\-\\_\\-\\-   \\ -[-]- ///<------------------------\\-------/" << std::endl;
+	// std::cout << " /-\\_/-\\_/-\\_/-\\_/-\\_/                              \\__v__///<--------------------------\\-----/" << std::endl;
+	// std::cout << "//==================================================================================================\n";
 //===============POLL CALL ======================================================
 int Poll::polling()
 {
@@ -119,7 +134,7 @@ int Poll::polling()
 		// is running the pollfds
 		for (size_t i = 0; i != fds_with_flag_.size(); i++)
 			fds_.push_back(fds_with_flag_[i].pollfd_);
-		int activity = poll(fds_.data(),fds_.size(), config_.servers_[0].server_timeout_);
+		int activity = poll(fds_.data(),fds_.size(), config_.active_servers_[0].server_timeout_);
 		if (activity == -1)
 		{
 			std::cerr << "Error: Poll failed or Timed out!" << std::endl;
@@ -133,7 +148,7 @@ int Poll::polling()
 
 void	Poll::connecting()
 {
-	for (size_t i = 0; i != config_.servers_.size(); i++)
+	for (size_t i = 0; i != config_.active_servers_.size(); i++)
 	{
 		if (fds_with_flag_[i].pollfd_.revents & POLLIN)
 		{
@@ -149,7 +164,7 @@ void	Poll::connecting()
 					CLIENT,
 					{}, {}, 
 					0, 0, 0,
-					{(size_t)fds_with_flag_[i].pollfd_.fd}, config_.servers_[i]}); // saving with which port they are connected and in which server
+					{(size_t)fds_with_flag_[i].pollfd_.fd}, config_.active_servers_[i]}); // saving with which port they are connected and in which server
 				std::cout << "Client: " << client_fd << " connected to Server: " << fds_with_flag_[i].pollfd_.fd << std::endl;
 			}
 			fds_with_flag_[i].connected_fds_.push_back((size_t)client_fd);
@@ -162,9 +177,17 @@ void Poll::synchroIO()
 	while(YES)
 	{
 		if (polling() == -1)
+		{
+			if (errno == EINTR)
+				std::cerr<< "Error: poll failed! Interupted signal!";
+			if (errno == EINVAL)
+				std::cerr<< "Error: poll failed!File dirrectories exceeding the max fds or wrong time out value!";
+			if (errno == ENOMEM)
+				std::cerr << "Error: poll failed! Not allocation enough space!";
 			break;
+		}
 		connecting();
-		for (size_t i = config_.servers_.size(); i != fds_with_flag_.size(); i++)
+		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 		{
 			pollhup(i);
 			if (pollin(i) == NO)
@@ -177,8 +200,9 @@ void Poll::synchroIO()
 //===============POLL STATES ====================================================
 void		Poll::pollhup(size_t& i)
 {
+	std::string poll_err = fds_with_flag_[i].pollfd_.revents & POLLERR ? "POLLERR:" : "POLLHUP: ";
 	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP))
-		disconecting(i, "(POLLERR | POLLHUP)");
+		disconecting(i, poll_err);
 };
 
 
@@ -192,30 +216,31 @@ int	Poll::pollin(size_t i)
 		
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
 		// std::cout << "Bytes" << bytes<< std::endl;
-		if (fds_with_flag_[i].content_length_ == 0)
-			fds_with_flag_[i].setContentLength(bytes,buffer);
-		//------------
-		size_t final_buffer_len = fds_with_flag_[i].final_buffer_.length();
-		(void) final_buffer_len;
-		size_t content_len = fds_with_flag_[i].content_length_;
-		(void) content_len;
-		//-------------
-		std::string method;
-		for (size_t i = 0; i != 3; i++)
-			method.push_back(i);
+		
+		
 		if (bytes == 0 || bytes < 0)
 			answer = eAgainAndEWouldblock(i, bytes);
-		else if(temp_len ==(size_t)bytes || (content_len > (size_t)bytes + final_buffer_len && content_len !=0))
-			{
-				answer = updateFinalBuffer(i, bytes, buffer);
-			}
 		else
 		{
-			buffer[bytes] = '\0';
-			updateFinalBuffer(i, bytes, buffer);
-			definingRequest(i);
-			delete[] buffer;
+			if (fds_with_flag_[i].content_length_ == 0 && bytes > 0)
+				fds_with_flag_[i].setContentLength(bytes,buffer);
+			//------------
+			size_t final_buffer_len = fds_with_flag_[i].final_buffer_.length();
+			size_t content_len = fds_with_flag_[i].content_length_;
+			//-------------
+			if(temp_len ==(size_t)bytes || (content_len > (size_t)bytes + final_buffer_len && content_len !=0))
+				{
+					answer = updateFinalBuffer(i, bytes, buffer);
+				}
+			else
+			{
+				buffer[bytes] = '\0';
+				updateFinalBuffer(i, bytes, buffer);
+				definingRequest(i);
+			}
 		}
+		if (buffer)
+			delete[] buffer;
 	}
 	return answer;
 };
@@ -259,7 +284,11 @@ void		Poll::closingServers()
 
 size_t		Poll::lengthProt(size_t i)
 {
-	return ((size_t)fds_with_flag_[i].connected_server_.client_max_body_size_);
+	size_t max_body_size = (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_;
+	
+	return (max_body_size == 0//)
+		? 4096 : max_body_size)
+		;
 };
 
 void		Poll::setMaxBodyLen(size_t i, int bytes)
@@ -267,7 +296,7 @@ void		Poll::setMaxBodyLen(size_t i, int bytes)
 		if (fds_with_flag_[i].state_ == FIRST_TIME && bytes > 0)
 		{
 			int port = fds_with_flag_[i].req_.getPort();
-			for(ServerInfo& s : config_.servers_)
+			for(ServerInfo& s : config_.active_servers_)
 				if (s.listen_ == port)
 					fds_with_flag_[i].setRealMaxBodySizeLn((size_t)s.client_max_body_size_);
 			fds_with_flag_[i].state_ = NOT_FIRST_TIME;
@@ -284,12 +313,27 @@ void		Poll::definingRequest(size_t i)
 
 void		Poll::disconecting(size_t& i, std::string str)
 {
+	size_t fd_of_server = fds_with_flag_[i].connected_fds_[0];
 	close(fds_with_flag_[i].pollfd_.fd);
 	std::cout << "Client : " << fds_with_flag_[i].pollfd_.fd << 
 	" " << str << "Disconnection from Server" << 
-	fds_with_flag_[i].connected_fds_[0] <<std::endl;
+	fd_of_server <<std::endl;
 	fds_with_flag_.erase(fds_with_flag_.begin() + i);
 	i--;
+	// //here
+	// for (size_t j = 0; j != fds_with_flag_.size(); j++)
+	// {
+	// 	if ((size_t)fds_with_flag_[j].pollfd_.fd == fd_of_server)
+	// 	{
+	// 		std::cout << "Server:" << 
+	// 		fd_of_server <<std::endl;
+	// 		close(fds_with_flag_[j].pollfd_.fd);
+	// 		fds_with_flag_.erase(fds_with_flag_.begin() + j);
+	// 		i--;
+	// 		break;
+	// 	}
+	// }
+	// //here
 }
 
 //===================OUTER HELPER FUNCTIONS ==========================================
@@ -330,7 +374,9 @@ std::string safeNullTermination(int bytes, size_t max_body_ln, std::string buffe
 int			Poll::eAgainAndEWouldblock(size_t i, int bytes)
 {
 	if (bytes == 0)
+	{
 		disconecting(i, "(EOF)");
+	}
 	else
 	{
 		if (errno == EAGAIN || errno == EWOULDBLOCK)

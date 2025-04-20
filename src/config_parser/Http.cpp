@@ -2,12 +2,13 @@
 //===============DEFAULT CONSTRUCTORS ===========================================
 
 Http::Http() : 
-	servers_(), 
+	servers_(),
+	active_servers_(),
 	executable_root_http_(""), 
 	lines(), 
 	lines_without_semicolons_(), 
 	server_indexes_(), 
-	valid_config_(YES)
+	valid_config_(NO)
 {
 };
 Http::Http(const Http& other)
@@ -15,6 +16,9 @@ Http::Http(const Http& other)
 	if (other.servers_.empty() != 1)
 		for (ServerInfo s : other.servers_)
 			servers_.push_back(s);
+	if (other.active_servers_.empty() != 1)
+		for (ServerInfo s : other.active_servers_)
+				active_servers_.push_back(s);
 	executable_root_http_ = other.executable_root_http_;
 	lines = other.lines;
 	lines_without_semicolons_ = other.lines_without_semicolons_;
@@ -26,8 +30,11 @@ Http& Http::operator=(const Http& other)
 	if (this != &other)
 	{
 		if (other.servers_.empty() != 1)
-		for (ServerInfo s : other.servers_)
-			servers_.push_back(s);
+			for (ServerInfo s : other.servers_)
+				servers_.push_back(s);
+		if (other.active_servers_.empty() != 1)
+				for (ServerInfo s : other.active_servers_)
+						active_servers_.push_back(s);
 		executable_root_http_ = other.executable_root_http_;
 		lines = other.lines;
 		lines_without_semicolons_ = other.lines_without_semicolons_;
@@ -79,19 +86,14 @@ void Http::configLines(std::filesystem::path config_path)
 void	Http::configLinesWithoutSemicolons()
 {
 	std::vector<std::string> lines_w_semicolons;
-	for (std::string l : lines)
-	{
-		if (l.find(';') == l.size() - 1)
-		{
-			std::string l_without_semicolon = l.substr(0, l.size() - 1);
-			lines_w_semicolons.push_back(l_without_semicolon);
-		}
-		else
-			lines_w_semicolons.push_back(l);
+	// for every valid server I'm going to take out the semicolons
 
+	for (ServerInfo& s : servers_)
+	{
+		for (std::string& l : s.lines_of_server_)
+			while (l.find(';') == l.size() - 1)
+				l = l.substr(0, l.size() - 1);
 	}
-	for (std::string l : lines_w_semicolons)
-		lines_without_semicolons_.push_back(l);
 };
 
 void	Http::serverIndexes()
@@ -109,15 +111,13 @@ void	Http::serverIndexes()
 	server_indexes_.push_back(i);
 };
 //-------------VALIDATORS------------------
-int		Http::validFormatForOneServer(size_t start, size_t end)
+int		Http::validFormatForOneServer(size_t server_index)
 {
 	size_t index = 0;
 	int open_curly_from_location = NO;
 	int location_found = -2;
-	std::vector<std::string> current_lines;
-	for (size_t i = start; i != end + 1; i++)
-		current_lines.push_back(lines[i]);
-	for (std::string l : current_lines)
+	std::vector<std::string> temp_server_lines = servers_[server_index].lines_of_server_;
+	for (std::string l : temp_server_lines)
 	{
 		std::string key, equals, value;
 		std::stringstream ss(l);
@@ -146,7 +146,7 @@ int		Http::validFormatForOneServer(size_t start, size_t end)
 			if (key[key.size() - 1] != '/' && spaceTrimmer(equals) != "" && spaceTrimmer(equals) != "/" )
 				return NO;
 		}
-		if ( index != current_lines.size() - 1 && 
+		if ( index != temp_server_lines.size() - 1 && 
 			key != "server" && 
 			key != "location" && 
 			key != "{" && 
@@ -177,12 +177,12 @@ int		Http::validFormatForOneServer(size_t start, size_t end)
 				return NO;
 
 		}
-		if (index != current_lines.size() - 1 && location_found > 0 && key == "}")
+		if (index != temp_server_lines.size() - 1 && location_found > 0 && key == "}")
 		{
 			location_found = -2;
 			open_curly_from_location = NO;
 		}
-		if (index == current_lines.size() - 1 && 
+		if (index == temp_server_lines.size() - 1 && 
 			key == "}" && 
 			open_curly_from_location == NO 
 			&& location_found == -2)
@@ -194,18 +194,12 @@ int		Http::validFormatForOneServer(size_t start, size_t end)
 
 void	Http::validServersFormat()
 {
-	for (size_t i = 0; i + 1!= server_indexes_.size(); i++)
+	int i = 0;
+	for (ServerInfo& s : servers_)
 	{
-		std::vector<std::string> current_lines;
-		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
-			current_lines.push_back(lines[j]);
-		if (validFormatForOneServer(server_indexes_[i], server_indexes_[i + 1] - 1) == NO)
-		{
-			valid_config_ = NO;
-			return ;
-		}
+		s.valid_server_ = validFormatForOneServer(i);
+		i++;
 	}
-	valid_config_ = YES;
 };
 //-------------PARSING---------------------
 void Http::preparingAndValidatingConfig(int argc, char* argv[])
@@ -221,25 +215,26 @@ void Http::preparingAndValidatingConfig(int argc, char* argv[])
 	else if (argc == 2)
 		config_path = executable_root_http_ / "src/config" / argv[1];
 	configLines(config_path);
-	if (valid_config_ == YES)
+	serverIndexes();
+	// creating the servers pushing the lines
+	for (size_t i = 0; i + 1!= server_indexes_.size(); i++)
 	{
-		serverIndexes();
-		validServersFormat();
-		if (valid_config_ == YES)
-			configLinesWithoutSemicolons();
+		std::vector<std::string> temp_lines;
+		for(size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
+			temp_lines.push_back(lines[j]);
+		ServerInfo s;
+		s.lines_of_server_ = temp_lines;
+		servers_.push_back(s);
 	}
+	validServersFormat();
+	configLinesWithoutSemicolons();
 }
 
 void Http::parsingServers()
 {
-	for (size_t i = 0; i != server_indexes_.size() - 1; i++)
+	for (ServerInfo& s : servers_)
 	{
-		std::vector<std::string> current_non_semi;
-		for (size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
-			current_non_semi.push_back(lines_without_semicolons_[j]);
-		ServerInfo s(executable_root_http_);
-		s.valid_server_ = YES;
-		s.lines_of_server_ = current_non_semi;
+		s.updatePaths(executable_root_http_);
 		s.before_locations_ = YES;
 		for (std::string l : s.lines_of_server_)
 		{
@@ -266,13 +261,13 @@ void Http::parsingServers()
 					s.setClientMaxBodySize(l);
 				else if (k == "error_pages")
 					s.pushToErrors(l);
-				else
-					;
 			}
 		}
 		s.locationIndexes();
 		s.pushLocationsLines();
 		s.parsingLocations();
-		servers_.push_back(s);
 	}
+	for (ServerInfo& s : servers_)
+		if(s.valid_server_ == YES)
+			active_servers_.push_back(s);
 };

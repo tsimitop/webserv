@@ -30,7 +30,6 @@ struct ServerInfo
 	int										before_locations_;
 	//=============DEFAULT CONTRUCTORS ============================================
 	ServerInfo();
-	ServerInfo(std::filesystem::path absolute_path);
 	ServerInfo(const ServerInfo& other);
 	ServerInfo& operator=(const ServerInfo& other);
 	~ServerInfo();
@@ -55,6 +54,7 @@ struct ServerInfo
 	void									setIndex(std::string line);
 	void									setClientMaxBodySize(std::string line);
 	//=============HELPER METHODS =================================================
+	void 									updatePaths(std::filesystem::path absolute_path);
 	void									pushToErrors(std::string line);
 	void									locationIndexes();
 	void									pushLocationsLines();

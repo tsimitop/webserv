@@ -9,7 +9,7 @@ ServerInfo::ServerInfo() :
 	listen_(-1), 
 	server_name_(""), 
 	index(""), 
-	client_max_body_size_(-1), 
+	client_max_body_size_(0), 
 	errors(),
 	locations_(),
 	executable_root_server_(""),
@@ -19,15 +19,6 @@ ServerInfo::ServerInfo() :
 	valid_server_(YES),
 	before_locations_(YES)
 {
-};
-ServerInfo::ServerInfo(std::filesystem::path absolute_path)
-{
-	executable_root_server_ = absolute_path;
-	www_path_ = absolute_path / "src/www";
-	errors_path_ = www_path_ / "errors";
-	uploads_dir_ = www_path_ / "uploads";
-	defaultErrorSetting();
-
 };
 ServerInfo::ServerInfo(const ServerInfo& other)
 {
@@ -255,6 +246,15 @@ void						ServerInfo::setClientMaxBodySize(std::string line)
 		if (valid_server_ != NO)
 			client_max_body_size_ = std::stol(value);
 	}
+};
+void 						ServerInfo::updatePaths(std::filesystem::path absolute_path)
+{
+	executable_root_server_ = absolute_path;
+	www_path_ = absolute_path / "src/www";
+	errors_path_ = www_path_ / "errors";
+	uploads_dir_ = www_path_ / "uploads";
+	defaultErrorSetting();
+
 };
 void						ServerInfo::pushToErrors(std::string line)
 {

@@ -17,16 +17,18 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	c.preparingAndValidatingConfig(argc , argv);
-
 	c.parsingServers();
 	for (ServerInfo s : c.servers_)
 	{
-		if (s.valid_server_ == NO)
-			c.valid_config_ = NO;
+		if (s.valid_server_ == YES)
+		{
+			c.valid_config_ = YES;
+			break;
+		}
 	}
 	if(c.valid_config_ == NO)
 	{
-		std::cerr << "Error: Non valid config!\n";
+		std::cerr << "Error: You need atleast one valid server!\n";
 		return (1);
 	}
 	Poll poll_one;
