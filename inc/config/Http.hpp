@@ -28,6 +28,7 @@ struct Http
 	//-------------VALIDATORS------------------
 	int							validFormatForOneServer(size_t server_index);
 	void						validServersFormat();
+	void						validPostParsing();
 	//-------------PARSING---------------------
 	void						preparingAndValidatingConfig(int argc, char* argv[]);
 	void						parsingServers();

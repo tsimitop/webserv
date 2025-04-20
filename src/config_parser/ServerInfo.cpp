@@ -5,8 +5,8 @@ ServerInfo::ServerInfo() :
 	location_indexes_(),
 	keep_alive_timeout_(-1),
 	send_timeout_(-1),
-	server_timeout_(-1), 
-	listen_(-1), 
+	server_timeout_(0), 
+	listen_(0), 
 	server_name_(""), 
 	index(""), 
 	client_max_body_size_(0), 
@@ -125,7 +125,7 @@ void						ServerInfo::validIndex(std::string value)
 		std::ifstream path(www_path_ / value);
 		if (!path)
 		{
-			std::cerr << www_path_ / value << "didn't open\n";
+			std::cerr << RED << www_path_ / value << "didn't open\n" << QUIT;
 			valid_server_ = NO;
 		}
 };
@@ -339,20 +339,8 @@ void	ServerInfo::parsingLocations()
 				location.setPath(line, location.redir_);
 			else if(key == "cgi_extension")
 				location.pushCgiMap(line);
-			else
-				;
+			if (location.valid_location_ == NO)
+				break;
 		}
 	}
 };
-// void						ServerInfo::validLocation(std::string value)
-// {
-
-// };
-// void						ServerInfo::allLocationValid(std::string value)
-// {
-
-// };
-// void						ServerInfo::allServerInputsValid(std::string value)
-// {
-
-// };

@@ -23,7 +23,7 @@ catch(...)
 request.extractPortFromHost(); //verify it's the expected behaviour
 request.printRequest();
 request.printHeaders();
-request.printBody();
+// request.printBody();
 std::string res = response.respond(request);
 std::cout << YELLOW << res << QUIT << std::endl;
 return (0);

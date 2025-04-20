@@ -56,7 +56,7 @@ void Http::configLines(std::filesystem::path config_path)
 	std::ifstream config(config_path);
 	if (!config)
 	{
-		std::cerr << "Error: File" << config_path << "is not opening\n";
+		std::cerr << RED <<  "Error: File" << config_path << "is not opening\n" <<QUIT;
 		return ;
 	}
 	while (std::getline(config, temp))
@@ -77,7 +77,7 @@ void Http::configLines(std::filesystem::path config_path)
 	}
 	if (clean_res.empty() || (!clean_res.empty() &&clean_res[0].empty()))
 	{
-		std::cerr << "Error: File is empty\n";
+		std::cerr <<RED << "Error: File is empty\n" << QUIT;
 		return ;
 	}
 	for (std::string l : clean_res)
@@ -86,7 +86,6 @@ void Http::configLines(std::filesystem::path config_path)
 void	Http::configLinesWithoutSemicolons()
 {
 	std::vector<std::string> lines_w_semicolons;
-	// for every valid server I'm going to take out the semicolons
 
 	for (ServerInfo& s : servers_)
 	{
@@ -201,6 +200,37 @@ void	Http::validServersFormat()
 		i++;
 	}
 };
+void						Http::validPostParsing()
+{
+	for (ServerInfo& s : servers_)
+		if (s.listen_ == 0 || s.server_name_ == "" || s.client_max_body_size_ == 0)
+			s.valid_server_ = NO;
+	for (ServerInfo& s : servers_)
+		if (s.valid_server_ == NO)
+		{
+			std::cout << "//==================================================================================================\n";
+			std::cout << "\\-/_\\-/-\\-/_\\-/-\\-/_\\-                              ________|||<------------------------------" << std::endl;
+			std::cout << "/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\    /--------\\\\\\<----------------------/--------\\" << std::endl;
+			std::cout << "\\-/_\\-/-\\-/_\\-/-\\-/_\\-/-\\-/_\\-/-\\                 | ^  -  ^ |||<----------------------|---------|" << std::endl;
+			std::cout << RED<< "Error: "<< QUIT << (s.listen_ == 0 ? "????" : std::to_string(s.listen_))<< RED <<" >----SERVER- -IS- -[[=NOT==]]VALID->"<< QUIT <<" (|"<< RED <<"<8>"<< QUIT <<" | "<< RED <<"<*>"<< QUIT <<"|)))<--------------------(-----------)" << std::endl;
+			std::cout << "/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_/-\\_                  \\  <\\_/>  ///<----------------------\\---------/" << std::endl;
+			std::cout << "\\-\\_\\-\\-\\-\\_\\-\\-\\-\\_\\-\\-\\-\\_\\-\\-\\-\\_\\-\\-\\-\\_\\-\\-   \\ -[-]- ///<------------------------\\-------/" << std::endl;
+			std::cout << " /-\\_/-\\_/-\\_/-\\_/-\\_/                              \\__v__///<--------------------------\\-----/" << std::endl;
+			std::cout << "//==================================================================================================\n";
+		}
+		else
+		{
+			std::cout << GREEN << "Success: "<< s.listen_<< " server is valid!" << QUIT <<std::endl;
+		}
+	for (ServerInfo s : servers_)
+	{
+		if (s.valid_server_ == YES)
+		{
+			valid_config_ = YES;
+			break;
+		}
+	}
+};
 //-------------PARSING---------------------
 void Http::preparingAndValidatingConfig(int argc, char* argv[])
 {
@@ -245,16 +275,16 @@ void Http::parsingServers()
 				s.before_locations_ = NO;
 			if (s.before_locations_ == YES)
 			{
-				if (k == "keepalive_timeout")
-					s.setServerTimeOut(l, s.keep_alive_timeout_);
-				else if (k == "send_timeout")
-					s.setServerTimeOut(l, s.send_timeout_);
-				else if (k == "server_timeout")
-					s.setServerTimeOut(l, s.server_timeout_);
-				else if(k == "listen")
+				if(k == "listen")
 					s.setListen(l);
 				else if (k == "server_name")
 					s.setServerName(l);
+				else if (k == "server_timeout")
+					s.setServerTimeOut(l, s.server_timeout_);
+				else if (k == "keepalive_timeout")
+					s.setServerTimeOut(l, s.keep_alive_timeout_);
+				else if (k == "send_timeout")
+					s.setServerTimeOut(l, s.send_timeout_);
 				else if (k == "index")
 					s.setIndex(l);
 				else if (k == "client_max_body_size")
@@ -266,6 +296,11 @@ void Http::parsingServers()
 		s.locationIndexes();
 		s.pushLocationsLines();
 		s.parsingLocations();
+		for (Location l : s.locations_)
+		{
+			if (l.valid_location_ == NO)
+				s.valid_server_ = NO;
+		}
 	}
 	for (ServerInfo& s : servers_)
 		if(s.valid_server_ == YES)

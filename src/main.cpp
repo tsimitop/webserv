@@ -18,14 +18,8 @@ int main(int argc, char **argv)
 	}
 	c.preparingAndValidatingConfig(argc , argv);
 	c.parsingServers();
-	for (ServerInfo s : c.servers_)
-	{
-		if (s.valid_server_ == YES)
-		{
-			c.valid_config_ = YES;
-			break;
-		}
-	}
+	// we need to check if all the necessayry atributes are serred localhost, max bodylen and timeout
+	c.validPostParsing();
 	if(c.valid_config_ == NO)
 	{
 		std::cerr << "Error: You need atleast one valid server!\n";

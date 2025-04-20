@@ -4,7 +4,7 @@ Location::Location() :
 location_lines_(), 
 executable_root_location_(),
 valid_location_(YES),
-client_max_body_size_(-1),
+client_max_body_size_(0),
 allowed_methods_(), 
 location_html_(""), 
 uploads_dir_(""), 
@@ -126,6 +126,8 @@ void		Location::setClientMaxBodySize(std::string line)
 		validClientMaxBodySize(value);
 		if (valid_location_ != NO)
 			client_max_body_size_ = std::stol(value);
+		else
+			printError("client_max_body_size", line);
 	}
 };
 
@@ -141,13 +143,15 @@ void	Location::setAllowedMethods(std::string line)
 			allowed_methods_.insert(allowed_methods_.begin(), value);
 
 	}
+	else
+		printError("allowed method", line);
 };
 void	Location::settingTheRightPath(std::string value, std::filesystem::path& p)
 {
 	if (value[0] == '.')
-		p = executable_root_location_ / value.substr(2);
+		p = executable_root_location_ / "src" / value.substr(2);
 	else
-		p = value;
+		p = executable_root_location_ / "src" / value.substr(1);
 }
 
 void	Location::setPath (std::string line, std::filesystem::path& attribute)
@@ -158,7 +162,10 @@ void	Location::setPath (std::string line, std::filesystem::path& attribute)
 	l >> key >> eq >> value;
 	if (valid_location_ != NO)
 		settingTheRightPath(value, attribute);
+	else
+		printError("path", line);
 };
+
 void	Location::pushCgiMap(std::string line)
 {
 	validPath(line);
@@ -173,6 +180,13 @@ void	Location::pushCgiMap(std::string line)
 		std::string cgi_key =	value[0] == '/' ? 
 									value.substr(1, value.find_first_of('/', 1)) : 
 									value.substr(2, value.find_first_of('/', 2));
+		std::ifstream cgi_path(p);
+		if (!cgi_path)
+		{
+			std::cerr << "Error CGI: File" << p << " is not opening\n";
+			valid_location_ = NO;
+			return ;
+		}
 		cgi_map_[cgi_key] = p;
 	}
 
@@ -219,4 +233,9 @@ int		strIsAlphaOr(std::string str, char extraChar)
 		if (!isalpha(s) && s != extraChar)
 			return NO;
 	return YES;
+};
+
+void							printError(std::string type, std::string line)
+{
+	std::cerr << RED << "Error " << type <<": " << line << " is not valid!" << QUIT <<std::endl;
 };

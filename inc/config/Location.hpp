@@ -8,6 +8,14 @@
 #include <filesystem>
 #include <vector>
 
+#define RED "\033[31m"
+#define GREEN "\033[32m"
+#define YELLOW "\033[33m"
+#define BLUE "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN "\033[36m"
+#define QUIT "\033[0m"
+
 enum answer{YES = 1, NO = 0};
 enum methods{GET = 1, POST = 2, DELETE = 4};
 const std::map<int, std::string> all_posible_errors 
@@ -109,6 +117,7 @@ std::string 					spaceTrimmer(std::string str);
 int								countWords(std::string line);
 int								strIsNumber(std::string str);
 int								strIsAlphaOr(std::string str, char extraChar);
+void							printError(std::string type, std::string line);
 
 template <typename T>
 	std::ostream& operator<<(std::ostream& os, std::vector<T>& vec)
