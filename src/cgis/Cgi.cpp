@@ -1,5 +1,6 @@
 #include "../../inc/cgis/Cgi.hpp"
 #include "vector"
+#include <signal.h>
 
 Cgi::Cgi(const Cgi& other)
 : available_errors_(other.available_errors_),
@@ -54,16 +55,14 @@ void Cgi::check_timeout()
 	{
 		timed_out_ = true;
 		exec_complete_ = true;
+		kill(pid_, SIGKILL);
 	}
 }
 
 Cgi::Cgi(int poll_fd, const HttpRequest& request)
 : status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request), exec_complete_(false)
 {
-	// std::cout << "CHECKING= " << cgi_request_.getAvailableErrors().size() <<std::endl;
 	available_errors_ = cgi_request_.getAvailableErrors();
-	// std::cout << "request available_errors_: " << request.getAvailableErrors().size() << std::endl;
-	// std::cout << "available_errors_ size: " << available_errors_.size() << std::endl;
 	www_path_ = request.getPathW();
 	url_ = request.getUrl();
 	path_of_program_to_execute_ = www_path_ += url_;
@@ -73,35 +72,31 @@ Cgi::Cgi(int poll_fd, const HttpRequest& request)
 	if (pipe(pipe_fd_) == -1)
 		std::cout << "Error creating pipe\n"; // Change that!
 	procces_start_ = std::chrono::high_resolution_clock::now();
-	pid_  = fork();
-	if (pid_ == -1)
-		std::cout << "Error forking\n"; // Change that!
 }
 
 void Cgi::execute()
 {
-std::cout << "Execute python script path: " << path_of_program_to_execute_.string() <<std::endl;
-
+// std::cout << "Execute python script path: " << path_of_program_to_execute_.string() <<std::endl;
 	std::vector<char *> args;
-	// std::string language = "/usr/bin/python3"; // DOCKER
-	std::string language = "/usr/local/bin/python3"; // Mac from config file
-// std::cout << "Programme to be executed: " << path_of_program_to_execute_.string() << std::endl;
-	args.push_back(const_cast<char *>(language.c_str()));
+	language_ = "/usr/bin/python3"; // DOCKER
+	// language_ = "/usr/local/bin/python3"; // Mac from config file
+	args.push_back(const_cast<char *>(language_.c_str()));
 	args.push_back(const_cast<char *>(path_of_program_to_execute_.c_str()));
+	args.push_back(nullptr);
 	
 	std::string script_method = "REQUEST_METHOD=" + cgi_request_.getMethod();
 
 	std::string name = "NAME=" + cgi_request_.getBody().substr(cgi_request_.getBody().find_first_of("=") + 1); // do not proccess here, do it in the .py
-	// std::cout << "name = " << name <<std::endl;
-	std::string script_filename = "SCRIPT_FILENAME=" + path_of_program_to_execute_.string();
-	std::string content_length = "CONTENT_LENGTH=7"; //change to custom
-	char* envp[] = {
-		const_cast<char*>(script_method.c_str()),
-		const_cast<char*>(content_length.c_str()),
-		const_cast<char*>(script_filename.c_str()),
-		const_cast<char*>(name.c_str()),
-		NULL
-	};
+	std::string content_length = "CONTENT_LENGTH=" + cgi_request_.getContentLength(); //change to custom
+	std::vector<char *> envp;
+	envp.push_back(const_cast<char*>(script_method.c_str()));
+	envp.push_back(const_cast<char*>(content_length.c_str()));
+	envp.push_back(const_cast<char*>(name.c_str()));
+	envp.push_back(nullptr);
+	// std::cout << "LENGTH = " << cgi_request_.getContentLength() << std::endl;
+	// std::cout << "script_method = " << script_method << std::endl;
+	// std::cout << "content_length = " << content_length << std::endl;
+	// std::cout << "name = " << name << std::endl;
 	int null_fd = open("/dev/null", O_WRONLY);
 	if (!null_fd)
 		std::cout << "failed to create fd\n";
@@ -111,8 +106,10 @@ std::cout << "Execute python script path: " << path_of_program_to_execute_.strin
 	dup2(pipe_fd_[0], STDIN_FILENO);
 	close(pipe_fd_[0]);
 	close(pipe_fd_[1]);
-	execve(language.c_str(), args.data(), envp);
-	exit (EXIT_FAILURE);
+	unsigned char resp = execve(language_.c_str(), args.data(), envp.data());
+	std::cout << strerror(errno) << std::endl;
+	std::cout << errno << std::endl;
+	exit(resp);
 }
 
 bool Cgi::cgiPidDone() const
@@ -166,15 +163,10 @@ bool Cgi::performed_wait()
 		std::cout<<"Error in waitpid\n";
 	}
 	else if (ret == 0)
-	{
 		check_timeout();
-		// std::cout << "Process has timed out: " << std::boolalpha << hasTimedOut() <<std::endl;
-		// std::cout<<"Process not finished\n";
-	}
-	else if (ret > 0)
+	else if (ret == pid_)
 	{
 		exec_complete_ = true;
-		std::cout<<"Process finished\n";
 		if (WIFEXITED(status_))
 			status_ = WEXITSTATUS(status_);
 		else
@@ -221,7 +213,6 @@ bool Cgi::read_pipe()
 
 HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 {
-	std::cout << "Status: " << this->getStatus() << std::endl;
 	if (this->hasTimedOut() == true)
 	{
 		std::cout<<YELLOW << "Timeout\n" << QUIT;
@@ -230,8 +221,13 @@ HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 	}
 	if (this->getStatus() != 0)
 	{
+		// char buffer[4096] = {0};
+		// int read_bytes = read(pipe_fd_[0], buffer, 4096);
+		// std::cout << "Found bytes: " << read_bytes << std::endl;
+		// std::cout << buffer << std::endl;
 		std::cout<<YELLOW << "Proccess exit number = " << this->getStatus() << "\n" << QUIT;
 		resp.createResponse(500, available_errors_[500]);
+		// close(pipe_fd_[0]);
 		return resp;
 	}
 	if(this->read_pipe())
@@ -249,6 +245,9 @@ HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 
 void Cgi::execution_close()
 {
+	pid_ = fork();
+	if (pid_ == -1)
+		std::cout << "Error forking\n"; // Change that!
 	has_forked_ = true;
 	if (this->getPid() == 0)
 		this->execute();

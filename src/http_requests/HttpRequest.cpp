@@ -18,12 +18,11 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 		this->url_ = other.url_;
 		this->version_ = other.version_;
 		this->port_ = other.port_;
+		this->content_length_ = other.content_length_;
 		this->basePath_ = other.basePath_;
 		this->filename_ = other.filename_;
 		this->available_errors_ = other.available_errors_;
-	// std::cout << "other.HttpRequest CHECKING= " << other.available_errors_.size() <<std::endl;
-	// std::cout << "this->HttpRequest CHECKING= " << available_errors_.size() <<std::endl;
-
+		this->executed_ = other.executed_;
 		this->current_www_path_ = other.current_www_path_;
 	}
 	return (*this);
@@ -39,7 +38,11 @@ HttpRequest::HttpRequest(const std::string& request, const ServerInfo& server_in
 	current_server_ = server_info;
 	available_errors_ = this->current_server_.errors;
 	current_www_path_ = this->current_server_.www_path_;
+	executed_ = false;
 }
+
+bool HttpRequest::wasExecuted()
+{return executed_;}
 
 // Getters
 const std::map<int, std::filesystem::path>&	HttpRequest::getAvailableErrors() const
@@ -75,12 +78,18 @@ std::string	HttpRequest::getPathW(void) const
 int HttpRequest::getPort(void) const
 {return (port_);}
 
+std::string HttpRequest::getContentLength(void) const
+{return (content_length_);}
+
 ServerInfo	HttpRequest::getCurrentServer() const
 {return current_server_;}
 
 // Setters
 void	HttpRequest::setCurrentServer(const ServerInfo& server)
 {current_server_ = server;}
+
+void	HttpRequest::setExecuted(bool val)
+{executed_ = val;}
 
 void HttpRequest::setHttpRequest(std::string req)
 {httpRequest_ = req;}
@@ -276,6 +285,7 @@ bool	HttpRequest::validatePost(void) // what about Connection → Optional; defa
 			try
 			{
 				i = stoi(it->second);
+				content_length_ = it->second;
 			}
 			catch (const std::invalid_argument& e)
 			{
@@ -438,8 +448,6 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 	if (this->url_ == "/" || this->url_ == current_index || this->url_ == "/" + current_index)
 	{
 		std::filesystem::path target_path = "src/www/" + current_index;
-		std::cout << "Path of index: " << target_path.string() << std::endl;
-		std::cout << "Path of current_www_path_: " << current_www_path_ << std::endl;
 		std::ifstream input_file(target_path.string());
 		if (!input_file.is_open())
 			resp.createResponse(404, available_errors_[404]);

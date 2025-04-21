@@ -37,9 +37,12 @@ private:
 	std::string										url_; //target resource path
 	std::string										version_;
 	int												port_;
+	std::string										content_length_;
 	std::string										basePath_;
 	std::string										filename_;
 	ServerInfo										current_server_;
+	bool											executed_;
+	std::filesystem::path							python_path_;
 public:
 	// Orthodox Canonical Class Form
 	HttpRequest();
@@ -63,9 +66,13 @@ public:
 	int												getPort(void) const;
 	ServerInfo										getCurrentServer() const;
 	const std::map<int, std::filesystem::path>&		getAvailableErrors() const;
+	// std::filesystem::path							getPythonPath() const;
+	std::string										getContentLength(void) const;
 
+	bool wasExecuted();
 
 	// Setters
+	void	setExecuted(bool val);
 	void	setHttpRequest(std::string req);
 	void	setMethod(std::string meth);
 	void	setUrl(std::string url);
@@ -96,7 +103,7 @@ public:
 	const HttpResponse	postCase(HttpResponse& resp);
 	const HttpResponse	getCase(HttpResponse& resp);
 	const HttpResponse	deleteCase(HttpResponse& resp);
-	const HttpResponse	cgiCase(int poll_fd, HttpResponse& resp);
+	// const HttpResponse	cgiCase(int poll_fd, HttpResponse& resp);
 
 	// Utils
 	// char **createEnv(std::filesystem::path path_of_program_to_execute);

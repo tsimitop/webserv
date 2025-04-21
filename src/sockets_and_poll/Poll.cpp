@@ -1,6 +1,8 @@
 #include "../../inc/sockets_and_poll/Poll.hpp"
 
 #define MAX_BUFFER 4096
+#define DOCKER 1
+
 //===============DEFAULTS========================================================
 Poll::Poll():
 socket_success_flag_(YES), 
@@ -57,8 +59,9 @@ int Poll::binding()
 		temp.ai_family = AF_UNSPEC;
 		temp.ai_socktype = SOCK_STREAM;
 		temp.ai_flags = AI_PASSIVE;
-// // Run with docker
-// s.server_name_ = "0.0.0.0";
+		// Run with docker
+		if (DOCKER)
+			s.server_name_ = "0.0.0.0";
 		if (!s.server_name_.empty() && !port_char_pointer.empty())
 		{
 			if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
@@ -111,8 +114,6 @@ int Poll::binding()
 //===============POLL CALL ======================================================
 int Poll::polling()
 {
-	// std::cout << "entered polling()\n";
-
 	fds_.clear();
 		// is running the pollfds
 		for (size_t i = 0; i != fds_with_flag_.size(); i++)
@@ -130,7 +131,6 @@ int Poll::polling()
 
 void	Poll::connecting()
 {
-	// std::cout << "connecting()\n";
 	for (size_t i = 0; i != config_.servers_.size(); i++)
 	{
 		// struct here
@@ -155,14 +155,13 @@ void Poll::synchroIO()
 {
 	while(YES)
 	{
-		// std::cout << "synchroIO loop\n";
 		for (size_t i = config_.servers_.size(); i != fds_with_flag_.size(); i++)
 			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd) && CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd)->cgiPidDone())
 					fds_with_flag_[i].fd_.events |= POLLOUT;
 		if (polling() == -1)
 			break;
 		connecting();
-		for (size_t i = config_.servers_.size(); i != fds_with_flag_.size(); i++)
+		for (size_t i = config_.servers_.size(); i < fds_with_flag_.size(); i++)
 		{
 			pollhup(i);
 			if (pollin(i) == NO)
@@ -175,35 +174,28 @@ void Poll::synchroIO()
 //===============POLL STATES ====================================================
 void		Poll::pollhup(size_t& i)
 {
-	// std::cout << "pollhup()\n";
-	// std::cout<<"SIZE: "<<fds_with_flag_.size()<<std::endl;
-	// std::cout<<"I: "<<i<<std::endl;
-	// std::cout<<"entered pollhup() of "<<fds_with_flag_[i].fd_.fd<<std::endl;
-	// if (i < fds_with_flag_.size())
-	// {
+	if (i < fds_with_flag_.size())
+	{
 		if (fds_with_flag_[i].fd_.revents & (POLLERR | POLLHUP))
 		{
 			std::cout << RED << "\n" << fds_with_flag_[i].fd_.fd << ": hanging up()\n" <<QUIT;
 			disconecting(i, "(POLLERR | POLLHUP)");
 		}
-	// }
-	// else
-	// 	exit(EXIT_FAILURE);
+	}
+	else
+	{
+		std::cout << "EXEEEDED LIMIIIT\n";
+		exit(EXIT_FAILURE);
+	}
 };
 
 int	Poll::pollin(size_t i)
 {
-// std::cout << "entered pollin()\n";
 	int answer = YES;
-	// if (i >= fds_with_flag_.size())
-	// 	return answer = NO;
 	if (fds_with_flag_[i].fd_.revents & (POLLIN))
 	{
-		// char buffer[lengthProt(i) + 1];
-		// memset(buffer, 0, lengthProt(i) + 1); // It had garbage
 		char buffer[MAX_BUFFER + 1];
-		memset(buffer, 0, MAX_BUFFER + 1); // It had garbage
-		//struct here
+		memset(buffer, 0, MAX_BUFFER + 1);
 		int bytes = recv(fds_with_flag_[i].fd_.fd, buffer, lengthProt(i), 0);
 		std::cout << YELLOW<<buffer<<QUIT<<std::endl;
 		size_t l = 0;
@@ -241,7 +233,6 @@ int	Poll::pollin(size_t i)
 
 void		Poll::pollout(size_t i)
 {
-// std::cout << "entered pollout()\n";
 	HttpResponse response;
 	if(fds_with_flag_[i].fd_.events & POLLOUT)
 	{
@@ -250,12 +241,9 @@ void		Poll::pollout(size_t i)
 		{
 			response = fds_with_flag_[i].req_.performMethod();
 			response_str = response.respond(fds_with_flag_[i].req_);
-			std::cout << GREEN << response_str << std::endl << QUIT;
 			send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
-			// fds_with_flag_[i].fd_.events = POLLHUP;
-			// std::cout <<fds_with_flag_[i].fd_.fd << ": should be hung up\n";
 		}
-		else if (fds_with_flag_[i].req_.isCgi())
+		else
 		{
 			std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
 			if (cgi == nullptr)
@@ -264,29 +252,31 @@ void		Poll::pollout(size_t i)
 				return;
 			}
 			response_str = cgi->getRespBody();
+			std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
+
 			send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
 			fds_with_flag_[i].fd_.events = POLLHUP;
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].fd_.fd);
 		}
 	}
-	else if (fds_with_flag_[i].req_.isCgi())
+	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
 	{
 		std::string response_str;
 
 		if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd) == nullptr)
+		{
+			std::cout << YELLOW << "ADDING EVENT:" << fds_with_flag_[i].fd_.fd << QUIT<< std::endl;
 			CgiSingleton::getInstance().add_event(fds_with_flag_[i].fd_.fd, std::make_shared<Cgi>(fds_with_flag_[i].fd_.fd, fds_with_flag_[i].req_));
+		}
 		std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].fd_.fd);
 		if (!cgi->hasForked())
 			cgi->execution_close();
 		if (cgi->performed_wait())
 		{
+			fds_with_flag_[i].req_.setExecuted(true);
 			response = cgi->response_of_cgi(response);
 			response_str = response.respond(fds_with_flag_[i].req_);
 			cgi->setResponseBody(response_str);
-			std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
-			// send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
-			// fds_with_flag_[i].fd_.events = POLLHUP;
-			// CgiSingleton::getInstance().remove_event(fds_with_flag_[i].fd_.fd);
 		}
 	}
 };
@@ -313,7 +303,6 @@ void		Poll::setMaxBodyLen(size_t i,char buffer[], int bytes)
 		if (fds_with_flag_[i].state_ == FIRST_TIME && bytes > 0)
 		{
 			std::string temp;
-			// HttpRequest temp_req;
 			for (size_t i = 0; i != (size_t)bytes; i++)
 				temp.push_back(buffer[i]);
 			size_t here = temp.find("Host: localhost:") + 16;
@@ -338,6 +327,8 @@ void		Poll::findingPort(size_t l, size_t i, int bytes, char buffer[])
 	for (size_t j = 0; j!=fds_with_flag_[i].final_buffer_.size(); j++)
 		request += fds_with_flag_[i].final_buffer_[j];
 	fds_with_flag_[i].req_.readRequest(request);
+	if(!fds_with_flag_[i].req_.isValid())
+		std::cout << RED << "Request could not be validated.\n";
 	for (ServerInfo& s : config_.servers_)
 		if (fds_with_flag_[i].req_.getPort() == (s).listen_)
 			fds_with_flag_[i].req_.setCurrentServer(s);

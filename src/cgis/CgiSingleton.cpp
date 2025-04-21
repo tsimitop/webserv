@@ -34,6 +34,11 @@ CgiSingleton& CgiSingleton::getInstance()
 	return instance;
 }
 
+size_t CgiSingleton::singleton_size()
+{
+	return (running_cgis_.size());
+}
+
 std::shared_ptr<Cgi> CgiSingleton::access_cgi(int poll_fd)
 {
     auto it = running_cgis_.find(poll_fd);

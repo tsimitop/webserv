@@ -9,6 +9,7 @@ allowed_methods_(),
 location_html_(""), 
 uploads_dir_(""), 
 uploads_html_(""), 
+python_path_(""), 
 redir_(""),
 cgi_map_()
 {
@@ -25,6 +26,7 @@ Location::Location(const Location& other)
 	uploads_dir_ = other.uploads_dir_;
 	location_html_ = other.location_html_;
 	uploads_html_ = other.uploads_html_;
+	python_path_ = other.python_path_;
 	client_max_body_size_ = other.client_max_body_size_;
 	allowed_methods_ = other.allowed_methods_;
 	redir_ = other.redir_;
@@ -41,6 +43,7 @@ Location& Location::operator=(const Location& other)
 		valid_inputs_ = other.valid_inputs_;
 		uploads_dir_ = other.uploads_dir_;
 		uploads_html_ = other.uploads_html_;
+		python_path_ = other.python_path_;
 		client_max_body_size_ = other.client_max_body_size_;
 		allowed_methods_ = other.allowed_methods_;
 		redir_ = other.redir_;

@@ -23,6 +23,7 @@ private:
 	std::string										url_;
 	std::filesystem::path							path_of_program_to_execute_;
 	std::string										executable_;
+	std::string										language_;
 	pid_t											pid_;
 	std::string										response_body_;
 	std::chrono::milliseconds									timeout_total_;

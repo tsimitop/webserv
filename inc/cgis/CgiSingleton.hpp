@@ -24,5 +24,6 @@ public:
 	void remove_event(int poll_fd);
 	std::unordered_map<int, std::shared_ptr<Cgi>> getRunningCgis() const;
 	std::shared_ptr<Cgi> access_cgi(int poll_fd);
+	size_t singleton_size();
 
 };

@@ -85,6 +85,7 @@ struct Location
 	std::filesystem::path 		location_html_;
 	std::filesystem::path 		uploads_dir_;
 	std::filesystem::path 		uploads_html_;
+	std::filesystem::path 		python_path_;
 	std::filesystem::path 		redir_;
 	std::map <std::string, std::filesystem::path> cgi_map_;
 	//--------methods------------------------------------------
