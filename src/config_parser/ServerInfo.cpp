@@ -93,6 +93,7 @@ std::string 				ServerInfo::spaceTrimmer(std::string str)
 void						ServerInfo::validServerTimeOut(std::string value)
 {
 	// string has only digits
+	(void)value;
 		if (strIsNumber(value) == NO || (strIsNumber(value) == YES && std::stol(value) > 100000))
 			valid_server_ = NO;
 };

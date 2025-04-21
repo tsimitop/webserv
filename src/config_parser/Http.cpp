@@ -203,7 +203,7 @@ void	Http::validServersFormat()
 void						Http::validPostParsing()
 {
 	for (ServerInfo& s : servers_)
-		if (s.listen_ == 0 || s.server_name_ == "" || s.client_max_body_size_ == 0)
+		if (s.listen_ == 0 || s.server_name_ == "")
 			s.valid_server_ = NO;
 	for (ServerInfo& s : servers_)
 		if (s.valid_server_ == NO)
