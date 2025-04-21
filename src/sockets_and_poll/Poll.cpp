@@ -275,7 +275,10 @@ void		Poll::closingServers()
 
 size_t		Poll::lengthProt(size_t i)
 {
-	size_t max_body_size = (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_;
+	(void)i;
+	// size_t max_body_size = (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_;
+	size_t max_body_size = 0;
+	// size_t max_body_size = -1;
 	
 	return (max_body_size);
 };
