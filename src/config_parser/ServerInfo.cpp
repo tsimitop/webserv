@@ -102,6 +102,7 @@ void						ServerInfo::validListen(std::string value)
 	if(strIsNumber(value) == NO || (strIsNumber(value) == YES && std::stol(value) > 9999))
 		valid_server_ = NO;
 };
+// I need to start from here handling non localhost names timeout and invalid max body client
 void						ServerInfo::validServerName(std::string value)
 {
 	if (value != "127.0.0.1" && value != "localhost")
