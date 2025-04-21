@@ -49,7 +49,7 @@ void Poll::setConfig(const Http& new_config)
 //===============BINDING && SYNCHRONUS I/O ======================================
 int Poll::binding()
 {
-	int poll_success_flag_ = YES;
+	int poll_success_flag_ = NO;
 	for (ServerInfo& s : config_.active_servers_)
 	{
 			addrinfo temp, *res;
@@ -64,6 +64,7 @@ int Poll::binding()
 				if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
 				{
 					std::cerr << RED << "Error: Get Address Info Failed!" << QUIT<<std::endl;
+					poll_success_flag_ += NO;
 					freeaddrinfo(res);
 					continue;
 				};
@@ -71,7 +72,7 @@ int Poll::binding()
 			else
 			{
 				std::cerr << RED << "The port or host_name is empty!" << QUIT<<std::endl;
-				poll_success_flag_ = NO;
+				poll_success_flag_ += NO;
 				continue;
 			}
 			server_fd_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -79,6 +80,7 @@ int Poll::binding()
 			{
 				std::cerr << RED << "Error: Socket Failed!" << QUIT<<std::endl;
 				freeaddrinfo(res);
+				poll_success_flag_ += NO;
 				continue;
 			}
 			setNonBlockingFd(server_fd_);
@@ -87,12 +89,14 @@ int Poll::binding()
 			{
 				std::cerr << RED << "Error: SockOpt failed!" << QUIT<<std::endl;
 				freeaddrinfo(res);
+				poll_success_flag_ += NO;
 				continue;
 			};
 			if (bind(server_fd_,res->ai_addr,res->ai_addrlen) == -1)
 			{
 				std::cerr << RED << "Error: Bind failed!" << QUIT<<std::endl;
 				freeaddrinfo(res);
+				poll_success_flag_ += NO;
 				continue;
 			};
 			listen(server_fd_, max_queued_clients_);
@@ -108,6 +112,7 @@ int Poll::binding()
 			// freeing the addrinfo
 			freeaddrinfo(res);
 			number_of_active_servers_++;
+			poll_success_flag_ +=YES;
 		}
 	return poll_success_flag_;
 };
@@ -121,7 +126,7 @@ int Poll::polling()
 		int activity = poll(
 							fds_.data(),
 							fds_.size(), 
-							config_.active_servers_[0].server_timeout_
+							-1
 						);
 		if (activity == 0)
 		{
@@ -161,6 +166,7 @@ void	Poll::connecting()
 
 void Poll::synchroIO()
 {
+	//--------- testing the invalid host and timeout and max bodylength
 	while(YES)
 	{
 		int activity = polling();
@@ -179,6 +185,8 @@ void Poll::synchroIO()
 		connecting();
 		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 		{
+			int er = errno;
+			(void)er;
 			pollhup(i);
 			if (pollin(i) == NO)
 				continue;
@@ -275,9 +283,8 @@ void		Poll::closingServers()
 
 size_t		Poll::lengthProt(size_t i)
 {
-	(void)i;
-	// size_t max_body_size = (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_;
-	size_t max_body_size = 0;
+	size_t max_body_size = (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_;
+	// size_t max_body_size = 0;
 	// size_t max_body_size = -1;
 	
 	return (max_body_size);
@@ -353,7 +360,8 @@ int			Poll::eAgainAndEWouldblock(size_t i, int bytes)
 {
 	if (bytes == 0)
 	{
-		// The request is empty!
+		std::cout << "This string is empty!\n";
+		close(fds_with_flag_[i].pollfd_.fd);
 		fds_with_flag_[i].pollfd_.events = POLLOUT;
 		// disconecting(i, "(EOF)");
 	}
@@ -362,7 +370,10 @@ int			Poll::eAgainAndEWouldblock(size_t i, int bytes)
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 			return NO;
 		else if (errno == EINVAL)
-			fds_with_flag_[i].pollfd_.events = POLLERR;
+		{
+			close(fds_with_flag_[i].pollfd_.fd);
+			fds_with_flag_[i].pollfd_.events = POLLOUT;
+		}
 	}
 			// disconecting(i, "(recv)"); // EINVAL ECONNECTRESET ENOTCONN
 	return NO;

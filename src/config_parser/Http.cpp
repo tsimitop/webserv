@@ -265,14 +265,11 @@ void Http::parsingServers()
 	for (ServerInfo& s : servers_)
 	{
 		s.updatePaths(executable_root_http_);
-		s.before_locations_ = YES;
 		for (std::string l : s.lines_of_server_)
 		{
 			std::stringstream line(l);
 			std::string k;
 			line >> k;
-			if (k == "location/" || k == "location")
-				s.before_locations_ = NO;
 			if (s.before_locations_ == YES)
 			{
 				if(k == "listen")
@@ -291,6 +288,8 @@ void Http::parsingServers()
 					s.setClientMaxBodySize(l);
 				else if (k == "error_pages")
 					s.pushToErrors(l);
+				else if (k == "location/" || k == "location")
+					break;
 			}
 		}
 		s.locationIndexes();

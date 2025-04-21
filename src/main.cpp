@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 	}
 	Poll poll_one;
 	poll_one.setConfig(c);
-	if (poll_one.binding() == YES)
+	if (poll_one.binding() != NO)
 		poll_one.synchroIO();
 	return (0);
 }
