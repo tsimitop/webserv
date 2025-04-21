@@ -222,7 +222,7 @@ void						Http::validPostParsing()
 		{
 			std::cout << GREEN << "Success: "<< s.listen_<< " server is valid!" << QUIT <<std::endl;
 		}
-	for (size_t i = 0; i + 1!= servers_.size(); i++)
+	for (size_t i = 0; i!= servers_.size(); i++)
 	{
 		if (servers_[i].valid_server_ == YES)
 		{
