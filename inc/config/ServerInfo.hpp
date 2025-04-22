@@ -13,6 +13,7 @@ struct ServerInfo
 	int										send_timeout_;
 	int										server_timeout_;
 	int										listen_;
+	std::string								root_;
 	std::string								server_name_;
 	std::string								index;
 	long long								client_max_body_size_;

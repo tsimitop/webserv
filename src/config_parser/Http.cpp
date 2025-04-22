@@ -35,12 +35,8 @@ Http::Http() :
 };
 Http::Http(const Http& other)
 {
-	if (other.servers_.empty() != 1)
-		for (ServerInfo s : other.servers_)
-			servers_.push_back(s);
-	if (other.active_servers_.empty() != 1)
-		for (ServerInfo s : other.active_servers_)
-				active_servers_.push_back(s);
+	servers_ = other.servers_;
+	active_servers_ = other.active_servers_;
 	executable_root_http_ = other.executable_root_http_;
 	lines = other.lines;
 	lines_without_semicolons_ = other.lines_without_semicolons_;
@@ -51,12 +47,8 @@ Http& Http::operator=(const Http& other)
 {
 	if (this != &other)
 	{
-		if (other.servers_.empty() != 1)
-			for (ServerInfo s : other.servers_)
-				servers_.push_back(s);
-		if (other.active_servers_.empty() != 1)
-				for (ServerInfo s : other.active_servers_)
-						active_servers_.push_back(s);
+		servers_ = other.servers_;
+		active_servers_ = other.active_servers_;
 		executable_root_http_ = other.executable_root_http_;
 		lines = other.lines;
 		lines_without_semicolons_ = other.lines_without_semicolons_;
@@ -347,7 +339,13 @@ void Http::parsingServers()
 			line >> k;
 			if (s.before_locations_ == YES)
 			{
-				if(k == "listen")
+				if (k == "root")
+				{
+					line >> k;
+					s.root_ = k;
+					s.updatePaths(executable_root_http_);
+				}
+				else if(k == "listen")
 					s.setListen(l);
 				else if (k == "server_name")
 					s.setServerName(l);

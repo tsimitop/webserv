@@ -6,7 +6,8 @@ ServerInfo::ServerInfo() :
 	keep_alive_timeout_(-1),
 	send_timeout_(-1),
 	server_timeout_(0), 
-	listen_(0), 
+	listen_(0),
+	root_(""),
 	server_name_(""), 
 	index(""), 
 	client_max_body_size_(0), 
@@ -25,14 +26,13 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 	keep_alive_timeout_= other.keep_alive_timeout_;
 	send_timeout_ = other.send_timeout_;
 	server_timeout_ = other.server_timeout_; 
-	listen_ = other.listen_ ; 
+	listen_ = other.listen_ ;
+	root_ = other.root_;
 	server_name_ = other.server_name_; 
 	index = other.index; 
 	client_max_body_size_ = other.client_max_body_size_;
 	errors = other.errors;
-	if (other.locations_.empty() != 1)
-		for (Location l : other.locations_)
-			locations_.push_back(l);
+	locations_ = other.locations_;
 	lines_of_server_ = other.lines_of_server_;
 	location_indexes_ = other.location_indexes_;
 	executable_root_server_ = other.executable_root_server_;
@@ -49,14 +49,13 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 		keep_alive_timeout_= other.keep_alive_timeout_;
 		send_timeout_ = other.send_timeout_;
 		server_timeout_ = other.server_timeout_; 
-		listen_ = other.listen_ ; 
+		listen_ = other.listen_ ;
+		root_ = other.root_; 
 		server_name_ = other.server_name_; 
 		index = other.index; 
 		client_max_body_size_ = other.client_max_body_size_;
 		errors = other.errors;
-		if (other.locations_.empty() != 1)
-			for (Location l : other.locations_)
-				locations_.push_back(l);
+		locations_ = other.locations_;
 		lines_of_server_ = other.lines_of_server_;
 		location_indexes_ = other.location_indexes_;
 		executable_root_server_ = other.executable_root_server_;
@@ -251,12 +250,22 @@ void						ServerInfo::setClientMaxBodySize(std::string line)
 };
 void 						ServerInfo::updatePaths(std::filesystem::path absolute_path)
 {
-	executable_root_server_ = absolute_path;
-	www_path_ = absolute_path / "src/www";
-	errors_path_ = www_path_ / "errors";
-	uploads_dir_ = www_path_ / "uploads";
-	defaultErrorSetting();
-
+	root_ = (root_ == "") ? "www" : root_;
+	std::filesystem::path checking_path = absolute_path / "src" / root_;
+	std::ifstream check(checking_path);
+	if	(
+				std::filesystem::is_directory(checking_path) &&
+				(std::filesystem::exists(checking_path))
+		)
+	{
+		executable_root_server_ = absolute_path;
+		www_path_ = checking_path;
+		errors_path_ = www_path_ / "errors";
+		uploads_dir_ = www_path_ / "uploads";
+		defaultErrorSetting();
+	}
+	else
+		valid_server_ = 0;
 };
 void						ServerInfo::pushToErrors(std::string line)
 {

@@ -64,7 +64,6 @@ int Poll::binding()
 				if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
 				{
 					std::cerr << RED << "Error: Get Address Info Failed!" << QUIT<<std::endl;
-					poll_success_flag_ += NO;
 					freeaddrinfo(res);
 					continue;
 				};
@@ -72,7 +71,6 @@ int Poll::binding()
 			else
 			{
 				std::cerr << RED << "The port or host_name is empty!" << QUIT<<std::endl;
-				poll_success_flag_ += NO;
 				continue;
 			}
 			server_fd_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -80,7 +78,6 @@ int Poll::binding()
 			{
 				std::cerr << RED << "Error: Socket Failed!" << QUIT<<std::endl;
 				freeaddrinfo(res);
-				poll_success_flag_ += NO;
 				continue;
 			}
 			setNonBlockingFd(server_fd_);
@@ -89,14 +86,12 @@ int Poll::binding()
 			{
 				std::cerr << RED << "Error: SockOpt failed!" << QUIT<<std::endl;
 				freeaddrinfo(res);
-				poll_success_flag_ += NO;
 				continue;
 			};
 			if (bind(server_fd_,res->ai_addr,res->ai_addrlen) == -1)
 			{
 				std::cerr << RED << "Error: Bind failed!" << QUIT<<std::endl;
 				freeaddrinfo(res);
-				poll_success_flag_ += NO;
 				continue;
 			};
 			listen(server_fd_, max_queued_clients_);

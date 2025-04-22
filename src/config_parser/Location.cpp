@@ -1,5 +1,4 @@
 #include "../../inc/config/Location.hpp"
-
 Location::Location() : 
 location_lines_(), 
 executable_root_location_(),
