@@ -6,6 +6,7 @@
 struct ServerInfo;
 struct Http
 {
+	std::map<std::string, int> accepted_keys;
 	std::vector <ServerInfo>	servers_;
 	std::vector <ServerInfo>	active_servers_;
 	std::filesystem::path		executable_root_http_;
@@ -23,10 +24,12 @@ struct Http
 	//===============METHODS ========================================================
 	//-------------LINES & INDEXES-------------
 	void						configLines(std::filesystem::path config_path);
+	int							acceptedAttributes();
 	void						configLinesWithoutSemicolons();
 	void						serverIndexes();
+	void						pushLinesToServers();
 	//-------------VALIDATORS------------------
-	int							validFormatForOneServer(size_t server_index);
+	int							curliesAndSemicollonsForOneServer(size_t server_index);
 	void						validServersFormat();
 	void						validPostParsing();
 	//-------------PARSING---------------------

@@ -72,7 +72,6 @@ const std::map<int, std::string> all_posible_errors
 	{507, "Insufficient Storage"},
 	{511, "Network Authentication Required"}
 };
-
 struct Location
 {
 	//===============ATTRIBUTES =====================================================

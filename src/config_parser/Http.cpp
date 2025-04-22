@@ -8,8 +8,30 @@ Http::Http() :
 	lines(), 
 	lines_without_semicolons_(), 
 	server_indexes_(), 
-	valid_config_(NO)
+	valid_config_(YES)
 {
+	accepted_keys =
+	{
+		{"server",1}, 
+		{"location/", 2}, 
+		{"location", 3},
+		{"{", 1}, 
+		{"}", 1}, 
+		{"server_timeout", 3}, 
+		{"listen", 3}, 
+		{"keepalive_timeout", 3}, 
+		{"send_timeout", 3}, 
+		{"server_name", 3}, 
+		{"index",3}, 
+		{"error_pages", 3},
+		{"allow_methods", 6},
+		{"location_html", 3},
+		{ "upload_html", 3},
+		{"uploads_dir", 3},
+		{"redir", 3},
+		{"cgi_extension", 3},
+		{"client_max_body_size", 3}
+	};
 };
 Http::Http(const Http& other)
 {
@@ -69,7 +91,7 @@ void Http::configLines(std::filesystem::path config_path)
 	for(std::string l : res)
 	{
 		size_t index_of_hash = std::min(l.find("#", 0), l.find("//", 0));
-		if (index_of_hash != std::string::npos)
+		if (index_of_hash != std::string::npos && !spaceTrimmer(l.substr(0,index_of_hash)).empty())
 			clean_res.push_back(spaceTrimmer(l.substr(0,index_of_hash)));
 		else
 			clean_res.push_back(l);
@@ -109,8 +131,21 @@ void	Http::serverIndexes()
 	}
 	server_indexes_.push_back(i);
 };
+
+void	Http::pushLinesToServers()
+{
+	for (size_t i = 0; i + 1!= server_indexes_.size(); i++)
+		{
+			std::vector<std::string> temp_lines;
+			for(size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
+				temp_lines.push_back(lines[j]);
+			ServerInfo s;
+			s.lines_of_server_ = temp_lines;
+			servers_.push_back(s);
+		}
+};
 //-------------VALIDATORS------------------
-int		Http::validFormatForOneServer(size_t server_index)
+int		Http::curliesAndSemicollonsForOneServer(size_t server_index)
 {
 	size_t index = 0;
 	int open_curly_from_location = NO;
@@ -191,12 +226,57 @@ int		Http::validFormatForOneServer(size_t server_index)
 	return NO;
 };
 
+int	Http::acceptedAttributes()
+{
+	int all_lines_are_valid = 1;
+	std::string key;
+	for (std::string l : lines)
+	{
+		std::stringstream ss(l);
+		int	numberOfWords = countWords(l);
+		ss >> key;
+		int check_the_key = 0;
+		for (auto accepted : accepted_keys)
+		{
+			if (accepted.second == numberOfWords && accepted.first == key)
+			{
+				check_the_key = 1;
+				break;
+			}
+			if ((key == "location" && numberOfWords == 2) || (key == "location/" && numberOfWords == 1))
+			{
+				check_the_key = 1;
+				break;
+			}
+			if (numberOfWords == 3 && key == "location")
+			{
+				std::string eq; 
+				ss >> eq;
+				if (eq != "/")
+					check_the_key = 0;
+				else
+					check_the_key = 1;
+				break;
+			}
+			if (key == "allow_methods" && numberOfWords >= 3)
+			{
+				check_the_key = 1;
+				break;
+			}	
+
+		}
+		key = "";
+		if ((all_lines_are_valid *= check_the_key) == 0)
+			break;
+	}
+	return all_lines_are_valid;
+}
 void	Http::validServersFormat()
 {
 	int i = 0;
 	for (ServerInfo& s : servers_)
 	{
-		s.valid_server_ = validFormatForOneServer(i);
+		s.valid_server_ = curliesAndSemicollonsForOneServer(i);
 		i++;
 	}
 };
@@ -222,14 +302,7 @@ void						Http::validPostParsing()
 		{
 			std::cout << GREEN << "Success: "<< s.listen_<< " server is valid!" << QUIT <<std::endl;
 		}
-	for (size_t i = 0; i!= servers_.size(); i++)
-	{
-		if (servers_[i].valid_server_ == YES)
-		{
-			valid_config_ = YES;
-			break;
-		}
-	}
+		valid_config_ = active_servers_.size();
 };
 //-------------PARSING---------------------
 void Http::preparingAndValidatingConfig(int argc, char* argv[])
@@ -243,21 +316,23 @@ void Http::preparingAndValidatingConfig(int argc, char* argv[])
 	if (argc == 1)
 		config_path = executable_root_http_ / "src/config/default.conf";
 	else if (argc == 2)
-		config_path = executable_root_http_ / "src/config" / argv[1];
-	configLines(config_path);
-	serverIndexes();
-	// creating the servers pushing the lines
-	for (size_t i = 0; i + 1!= server_indexes_.size(); i++)
 	{
-		std::vector<std::string> temp_lines;
-		for(size_t j = server_indexes_[i]; j != server_indexes_[i + 1]; j++)
-			temp_lines.push_back(lines[j]);
-		ServerInfo s;
-		s.lines_of_server_ = temp_lines;
-		servers_.push_back(s);
+		config_path = executable_root_http_ / "src/config" / argv[1];
+		std::ifstream checking_argvOne(config_path);
+		if (!checking_argvOne)
+		{
+			valid_config_ = 0;
+			return ;
+		}
 	}
-	validServersFormat();
-	configLinesWithoutSemicolons();
+	configLines(config_path);
+	if ((valid_config_ = acceptedAttributes()))
+	{
+		serverIndexes();
+		pushLinesToServers();
+		validServersFormat();
+		configLinesWithoutSemicolons();
+	}
 }
 
 void Http::parsingServers()
