@@ -168,7 +168,7 @@ void						ServerInfo::validErrorPath(std::string value)
 	}
 };
 
-void						ServerInfo::validErrorType(std::string value)
+void				ServerInfo::validErrorType(std::string value)
 {
 	size_t the_last_backslash = value.find_last_of('/');
 	std::string error_type = value.substr(the_last_backslash + 1, 3);
@@ -186,6 +186,23 @@ void 					ServerInfo::defaultErrorSetting()
 	errors[405] = errors_path_ / "405.html";
 	errors[500] = errors_path_ / "500.html";
 	errors[505] = errors_path_ / "505.html";
+};
+
+int		ServerInfo::validErrorRoot (std::string value)
+{
+	size_t the_first_backslash = value.find_first_of('/');
+	size_t the_second_backslash = value.substr(value.find_first_of('/') + 1, value.size()).find_first_of('/'); // I m finding the ./ | <checking_root> | / errors / 404.html
+
+	if (the_first_backslash == the_second_backslash)
+		return NO;
+	//------------DEBUGGING-------------------------
+	std::string config_root = root_;
+	(void)config_root;
+	//----------------------------------------------
+	std::string checking_root = value.substr(the_first_backslash + 1, the_second_backslash);
+	if (checking_root != root_)
+		return NO;
+	return YES;
 };
 
 void						ServerInfo::setServerTimeOut(std::string line, int& attribute)
@@ -270,29 +287,31 @@ void 						ServerInfo::updatePaths(std::filesystem::path absolute_path)
 void						ServerInfo::pushToErrors(std::string line)
 {
 	std::stringstream current_line(line);
-	if (countWords(line) == 3)
+	if (countWords(line) != 3)
 	{
-		std::string key, eq, value;
-		current_line >>key >> eq >> value;
-		validErrorPath(value);
-		validErrorType(value);
-		size_t the_last_backslash = value.find_last_of('/');
-		std::string error_type = value.substr(the_last_backslash + 1, 3);
-		if (valid_server_ != NO)
-		{
-			if (all_posible_errors.find(std::stoi(error_type)) != all_posible_errors.end())
-			{
-				if (errors.find(std::stoi(error_type)) == errors.end())
-					errors[std::stoi(error_type)] = value[0] == '.' ? 
-													executable_root_server_ / value.substr(2) : 
-													(std::filesystem::path)value;
-				
-			}
-			else
-				valid_server_ = NO;
-		}
-			
+		valid_server_ = NO;
+		return ;
 	}
+	std::string key, eq, value;
+	current_line >>key >> eq >> value;
+	validErrorPath(value);
+	validErrorType(value);
+	size_t the_last_backslash = value.find_last_of('/');
+	std::string error_type = value.substr(the_last_backslash + 1, 3);
+	if (!(valid_server_ = validErrorRoot(value)))
+		return ;
+	if (
+			std::stoll(error_type) > 511 || std::stoll(error_type) < 100  || 
+			all_posible_errors.find(std::stoi(error_type)) == all_posible_errors.end()
+		)
+	{
+		valid_server_ = NO;
+		return ;
+	}
+	if ( errors.find(std::stoi(error_type)) == errors.end())
+		errors[std::stoi(error_type)] = value[0] == '.' ? 
+										executable_root_server_ / value.substr(2) : 
+										(std::filesystem::path)value;
 };
 void			ServerInfo::locationIndexes()
 {
