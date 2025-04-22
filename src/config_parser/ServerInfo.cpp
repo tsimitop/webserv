@@ -360,13 +360,13 @@ void	ServerInfo::parsingLocations()
 			else if (key == "allow_methods")
 				location.setAllowedMethods(line);
 			else if(key == "location_html")
-				location.setPath(line, location.location_html_);
+				location.setPath(line, location.location_html_, root_);
 			else if(key == "uploads_dir")
-				location.setPath(line, location.uploads_dir_);
+				location.setPath(line, location.uploads_dir_, root_);
 			else if(key == "upload_html")
-				location.setPath(line, location.uploads_html_);
+				location.setPath(line, location.uploads_html_, root_);
 			else if(key == "redir")
-				location.setPath(line, location.redir_);
+				location.setPath(line, location.redir_, root_);
 			else if(key == "cgi_extension")
 				location.pushCgiMap(line);
 			if (location.valid_location_ == NO)

@@ -114,6 +114,23 @@ int						Location::validLocation()
 {
 	return (valid_location_);
 };
+
+int		Location::validErrorRoot (std::string value, std::string root)
+{
+	size_t the_first_backslash = value.find_first_of('/');
+	size_t the_second_backslash = value.substr(value.find_first_of('/') + 1, value.size()).find_first_of('/'); // I m finding the ./ | <checking_root> | / errors / 404.html
+
+	if (the_first_backslash == the_second_backslash)
+		return NO;
+	//------------DEBUGGING-------------------------
+	std::string config_root = root;
+	(void)config_root;
+	//----------------------------------------------
+	std::string checking_root = value.substr(the_first_backslash + 1, the_second_backslash);
+	if (checking_root != root)
+		return NO;
+	return YES;
+};
 //===================Setting Methods================================================
 void		Location::setClientMaxBodySize(std::string line)
 {
@@ -153,16 +170,18 @@ void	Location::settingTheRightPath(std::string value, std::filesystem::path& p)
 		p = executable_root_location_ / "src" / value.substr(1);
 }
 
-void	Location::setPath (std::string line, std::filesystem::path& attribute)
+void	Location::setPath (std::string line, std::filesystem::path& attribute, std::string root)
 {
 	validPath(line);
 	std::stringstream l(line);
 	std::string key, eq, value;
 	l >> key >> eq >> value;
-	if (valid_location_ != NO)
-		settingTheRightPath(value, attribute);
-	else
+	if (!(valid_location_ = validErrorRoot(value, root)))
+	{
 		printError("path", line);
+		return ;
+	}
+	settingTheRightPath(value, attribute);
 };
 
 void	Location::pushCgiMap(std::string line)

@@ -102,11 +102,12 @@ struct Location
 	void						validClientMaxBodySize(std::string& value);
 	void						validMethods(std::string line);
 	int							validLocation();
+	int							validErrorRoot (std::string value, std::string root);
 	//--------setters--------------------------
 	void						settingTheRightPath(std::string value, std::filesystem::path& p);
 	void						setClientMaxBodySize(std::string line);
 	void						setAllowedMethods(std::string line);
-	void						setPath (std::string line, std::filesystem::path& attribute);
+	void						setPath (std::string line, std::filesystem::path& attribute, std::string root);
 	void						pushCgiMap(std::string line);
 };
 //===================OUTER FUNCTIONS ================================================

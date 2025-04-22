@@ -47,7 +47,7 @@ struct ServerInfo
 	int										allSimpleInputsValid();
 	void									validErrorPath(std::string value);
 	void									validErrorType(std::string value);
-	int									validErrorRoot (std::string value);
+	int										validErrorRoot (std::string value);
 	void									defaultErrorSetting();
 	//=============SETTERS ========================================================
 	void									setServerTimeOut(std::string line, int& attribute);
