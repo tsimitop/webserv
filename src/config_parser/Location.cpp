@@ -257,3 +257,22 @@ void							printError(std::string type, std::string line)
 {
 	std::cerr << RED << "Error " << type <<": " << line << " is not valid!" << QUIT <<std::endl;
 };
+
+std::string							decodingHexToAscii(std::string filename)
+{
+	std::ostringstream d;
+	for (size_t i = 0; i != filename.length(); i++)
+	{
+		if (filename[i] == '%' && i + 2 < filename.length()) //distinctively lower than the 2
+		{
+			std::string hex = filename.substr(i + 1, 2);
+			int c = std::stoi(hex, nullptr, 16);
+			d << (char)c;
+			i += 2;
+		}
+		else
+			d << filename[i];
+	}
+	(void)d.str();
+	return d.str();
+}

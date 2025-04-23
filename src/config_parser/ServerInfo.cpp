@@ -362,7 +362,11 @@ void	ServerInfo::parsingLocations()
 			else if(key == "location_html")
 				location.setPath(line, location.location_html_, root_);
 			else if(key == "uploads_dir")
+			{
 				location.setPath(line, location.uploads_dir_, root_);
+				if (location.valid_location_ == YES)
+					uploads_dir_ = location.uploads_dir_;
+			}
 			else if(key == "upload_html")
 				location.setPath(line, location.uploads_html_, root_);
 			else if(key == "redir")
