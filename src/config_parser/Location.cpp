@@ -11,6 +11,7 @@ uploads_dir_(""),
 uploads_html_(""), 
 python_path_(""), 
 redir_(""),
+redir_status_(0),
 cgi_map_()
 {
 };
@@ -30,6 +31,10 @@ Location::Location(const Location& other)
 	client_max_body_size_ = other.client_max_body_size_;
 	allowed_methods_ = other.allowed_methods_;
 	redir_ = other.redir_;
+	redir_status_ = other.redir_status_;
+	redir_location_ = other.redir_location_;
+	is_redir_ = other.is_redir_;
+	name_ = other.name_;
 	//-----map of cgis-----------------------
 	cgi_map_ = other.cgi_map_;
 
@@ -47,6 +52,10 @@ Location& Location::operator=(const Location& other)
 		client_max_body_size_ = other.client_max_body_size_;
 		allowed_methods_ = other.allowed_methods_;
 		redir_ = other.redir_;
+		redir_status_ = other.redir_status_;
+		redir_location_ = other.redir_location_;
+		is_redir_ = other.is_redir_;
+		name_ = other.name_;
 		//-----map of cgis-----------------------
 		cgi_map_ = other.cgi_map_;
 	}
@@ -222,4 +231,18 @@ int		strIsAlphaOr(std::string str, char extraChar)
 		if (!isalpha(s) && s != extraChar)
 			return NO;
 	return YES;
+};
+
+void	Location::setRedir (std::string line, std::string& attribute)
+{
+	(void)attribute;
+	is_redir_ = true;
+	std::stringstream l(line);
+	std::string key, eq, status_code, new_location;
+	l >> key >> eq >> status_code >> new_location;
+	std::cout << "status code = " << status_code << "\n"
+	<< "new_location = " << new_location << std::endl;
+	redir_status_ = stoi(status_code);
+	redir_location_ = new_location;
+	std::cout << redir_status_ << " is redir status\n";
 };

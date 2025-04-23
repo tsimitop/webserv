@@ -86,7 +86,11 @@ struct Location
 	std::filesystem::path 		uploads_dir_;
 	std::filesystem::path 		uploads_html_;
 	std::filesystem::path 		python_path_;
-	std::filesystem::path 		redir_;
+	std::string					redir_;
+	std::string					name_;
+	int redir_status_;
+	bool is_redir_;
+	std::string redir_location_;
 	std::map <std::string, std::filesystem::path> cgi_map_;
 	//--------methods------------------------------------------
 	//--------validators---------------------------------------
@@ -100,6 +104,7 @@ struct Location
 	void						setAllowedMethods(std::string line);
 	void						setPath (std::string line, std::filesystem::path& attribute);
 	void						pushCgiMap(std::string line);
+	void						setRedir(std::string line, std::string& attribute);
 };
 //----------------------------Fuction that needs to bedefined--
 //----------------- and being used form all the other Structs--

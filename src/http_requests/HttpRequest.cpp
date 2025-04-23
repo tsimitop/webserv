@@ -24,6 +24,7 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 		this->available_errors_ = other.available_errors_;
 		this->executed_ = other.executed_;
 		this->current_www_path_ = other.current_www_path_;
+		this->is_redir_ = other.is_redir_;
 	}
 	return (*this);
 }
@@ -39,12 +40,24 @@ HttpRequest::HttpRequest(const std::string& request, const ServerInfo& server_in
 	available_errors_ = this->current_server_.errors;
 	current_www_path_ = this->current_server_.www_path_;
 	executed_ = false;
+	// for (Location& location : this->current_server_.locations_)
+	// {
+	// 	std::cout << RED << location.name_ << " = locations name\n" << QUIT;
+	// 	std::cout << RED << location.redir_status_ << " = locations redir_status_\n" << QUIT;
+	// 	std::cout << RED << location.redir_location_ << " = locations redir_location_\n" << QUIT;
+	// 	std::cout << RED << std::boolalpha << location.is_redir_ << " = locations is_redir_\n" << QUIT;
+
+	// }
+	// std::cout << this->current_server_.locations_[0].path;
 }
 
 bool HttpRequest::wasExecuted()
 {return executed_;}
 
 // Getters
+bool HttpRequest::isRedirection() const
+{return is_redir_;}
+
 const std::map<int, std::filesystem::path>&	HttpRequest::getAvailableErrors() const
 {return available_errors_;}
 
@@ -506,6 +519,21 @@ const HttpResponse	HttpRequest::performMethod()
 
 	if (this->getMethod() == "GET")
 	{
+		// std::cout << this->current_server_.locations_.size() << " = SiZE\n";
+		for (Location& location : this->current_server_.locations_)
+		{
+			// std::cout << location.name_ << " is it's name\n";
+			if (location.is_redir_ && location.name_ == url_.substr(1) && url_.length() > 0)
+			{
+				std::cout << url_ << " = url of redirection\n";
+				// std::cout << std::boolalpha << location.is_redir_ << " that the location is redirection\n";
+				is_redir_ = true;
+				std::cout << "URL is REDIR\n";
+				// std::cout << location.name_ << " = location name\n";
+				resp.redirResponse(location);
+				return resp;
+			}
+		}
 		resp = getCase(resp);
 	}
 	else if (this->getMethod() == "POST")

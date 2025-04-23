@@ -78,8 +78,8 @@ void Cgi::execute()
 {
 // std::cout << "Execute python script path: " << path_of_program_to_execute_.string() <<std::endl;
 	std::vector<char *> args;
-	language_ = "/usr/bin/python3"; // DOCKER
-	// language_ = "/usr/local/bin/python3"; // Mac from config file
+	// language_ = "/usr/bin/python3"; // DOCKER
+	language_ = "/usr/local/bin/python3"; // Mac from config file
 	args.push_back(const_cast<char *>(language_.c_str()));
 	args.push_back(const_cast<char *>(path_of_program_to_execute_.c_str()));
 	args.push_back(nullptr);

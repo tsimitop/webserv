@@ -303,10 +303,15 @@ void			ServerInfo::locationIndexes()
 	for (size_t index = 0; index != lines_of_server_.size(); index++)
 	{
 		std::stringstream	line(lines_of_server_[index]);
-		std::string k;
+		// std::cout << "Location line = " << line.str() << std::endl;
+		std::string k, name;
 		line >> k;
+		line >> name >> name;
+		
 		if (k == "location" || k == "location/")
 		{
+			// std::cout << "Location index = " << index << std::endl;
+			// std::cout << "Location name = " << name << std::endl;
 			location_indexes_.push_back(index);
 			inside_location = YES;
 		}
@@ -325,21 +330,34 @@ void						ServerInfo::pushLocationsLines()
 		Location location(executable_root_server_);
 		location.valid_inputs_ = 1;
 		for (size_t j = location_indexes_[i]; j != location_indexes_[i + 1] + 1; j++)
+		{
 			location.location_lines_.push_back(lines_of_server_[j]);
+			// std::cout << "lines_of_server_[j] = ";
+			// std::cout << lines_of_server_[j] << std::endl;
+		}
 		locations_.push_back(location);
 	}
 };
 
 void	ServerInfo::parsingLocations()
 {
+	// std::cout << "parsingLocations LOOP\n";
 	for (Location& location : locations_)
 	{
+		location.redir_status_ = 0;
+		location.is_redir_ = false;
 		for (std::string line : location.location_lines_)
 		{
+	// std::cout << "Line = " << line << "\n";
 			std::stringstream l(line);
-			std::string key, eq, value;
-			l >> key >> eq;
-			if (key == "client_max_body_size")
+			std::string key, eq;
+			l >> key >> eq >> eq;
+			if (key == "location" || key == "location/")
+			{
+				// std::cout << eq << " = EQ\n";
+				location.name_ = eq;
+			}
+			else if (key == "client_max_body_size")
 				location.setClientMaxBodySize(line);
 			else if (key == "allow_methods")
 				location.setAllowedMethods(line);
@@ -349,10 +367,16 @@ void	ServerInfo::parsingLocations()
 				location.setPath(line, location.uploads_dir_);
 			else if(key == "upload_html")
 				location.setPath(line, location.uploads_html_);
-			else if(key == "redir")
-				location.setPath(line, location.redir_);
+			// else if(key == "redir")
+			// 	location.setPath(line, location.redir_);
 			else if(key == "cgi_extension")
 				location.pushCgiMap(line);
+			else if(key == "redirect")
+			{
+				std::cout << key << " IS IT REDIRECTION?\n";
+				std::cout << line << " is the line of the key\n";
+				location.setRedir(line, location.redir_);
+			}
 			// else
 			// 	;
 		}

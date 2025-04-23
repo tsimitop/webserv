@@ -42,6 +42,7 @@ private:
 	std::string										filename_;
 	ServerInfo										current_server_;
 	bool											executed_;
+	bool											is_redir_;
 	std::filesystem::path							python_path_;
 public:
 	// Orthodox Canonical Class Form
@@ -54,6 +55,7 @@ public:
 	HttpRequest(const std::string& request, const ServerInfo& server_info);
 	
 	// Getters
+	bool											isRedirection() const;
 	std::unordered_map<std::string, std::string>	getHeaders(void) const;
 	std::string										getHttpRequest(void) const;
 	std::string										getMethod(void) const;

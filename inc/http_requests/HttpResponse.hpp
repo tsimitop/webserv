@@ -7,6 +7,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <filesystem>
+#include "../config/Location.hpp"
 #define RED "\033[31m"
 #define GREEN "\033[32m"
 #define YELLOW "\033[33m"
@@ -52,5 +53,6 @@ public:
 	void	createResponse(int status_code, std::filesystem::path file);
 	void	createCgiResponse(int status_code, std::string content);
 
-	const std::string respond(const HttpRequest& req);
+	const	std::string respond(const HttpRequest& req);
+	void	redirResponse(Location& location);
 };

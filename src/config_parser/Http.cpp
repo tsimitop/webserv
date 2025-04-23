@@ -60,7 +60,7 @@ void Http::configLines(std::filesystem::path config_path)
 	config.close();
 	for(std::string l : res)
 	{
-		size_t index_of_hash = std::min(l.find("#", 0), l.find("//", 0));
+		size_t index_of_hash = l.find("#", 0);
 		if (index_of_hash != std::string::npos)
 			clean_res.push_back(spaceTrimmer(l.substr(0,index_of_hash)));
 		else

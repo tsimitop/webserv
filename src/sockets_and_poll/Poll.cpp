@@ -118,7 +118,7 @@ int Poll::polling()
 		// is running the pollfds
 		for (size_t i = 0; i != fds_with_flag_.size(); i++)
 			fds_.push_back(fds_with_flag_[i].fd_);
-		int activity = poll(fds_.data(),fds_.size(), 0);
+		int activity = poll(fds_.data(),fds_.size(), config_.servers_[0].server_timeout_);
 		if (activity == -1)
 		{
 			std::cerr << "Error: Poll failed or Timed out!\n";
@@ -191,6 +191,7 @@ void		Poll::pollhup(size_t& i)
 
 int	Poll::pollin(size_t i)
 {
+std::cout << "I'm in pollin\n";
 	int answer = YES;
 	if (fds_with_flag_[i].fd_.revents & (POLLIN))
 	{
@@ -241,6 +242,7 @@ void		Poll::pollout(size_t i)
 		{
 			response = fds_with_flag_[i].req_.performMethod();
 			response_str = response.respond(fds_with_flag_[i].req_);
+			std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
 			send(fds_with_flag_[i].fd_.fd, response_str.c_str(), response_str.length(), 0);
 		}
 		else
