@@ -4,12 +4,15 @@
 #include "../inc/config/Http.hpp"
 #include "../inc/sockets_and_poll/Poll.hpp"
 
-
 int main(int argc, char **argv)
 {
 	HttpResponse	response;
 	// logToFile("entered main");
 	//---------------------------Config parsing---------------------------
+	// signal(SIGINT, signalHandler);
+	// if (SIGNALS_E)
+	// 	return 1;
+	// if (SIGNALS_E) return 1;
 	Http c;
 	if (argc > 2)
 	{
@@ -30,6 +33,8 @@ int main(int argc, char **argv)
 		std::cerr << "Error: You need atleast one valid server!\n";
 		return (1);
 	}
+	// if (SIGNALS_E) return 1;
+	// signal(SIGINT, signalHandler);
 	Poll poll_one;
 	poll_one.setConfig(c);
 	if (poll_one.binding() != NO)
