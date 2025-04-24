@@ -135,7 +135,7 @@
 
 		const filename = filenameInput.value;
 
-		fetch('/uploads/' + encodeURIComponent(filename), {
+		fetch(encodeURIComponent(filename), {
 			method: "DELETE"
 		})
 		.then(response => {
