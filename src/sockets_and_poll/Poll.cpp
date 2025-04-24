@@ -62,8 +62,8 @@ int Poll::binding()
 			temp.ai_socktype = SOCK_STREAM;
 			temp.ai_flags = AI_PASSIVE;
 			// Run with docker
-			if (DOCKER)
-			s.server_name_ = "0.0.0.0";
+			// if (DOCKER)
+			// 	s.server_name_ = "0.0.0.0";
 			if (!s.server_name_.empty() && !port_char_pointer.empty())
 			{
 				if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
@@ -209,7 +209,7 @@ void Poll::synchroIO()
 			if (pollin_int == NO)
 				continue;
 			else if (pollin_int == SIG)
-				close(fds_with_flag_[i].pollfd_.fd);
+				fds_with_flag_[i].pollfd_.fd = POLLHUP;
 			// else
 			// {
 			// 	fds_with_flag_[i].final_buffer_.push_back((char)0x04);
@@ -224,13 +224,13 @@ void Poll::synchroIO()
 void		Poll::pollhup(size_t& i)
 {
 	std::string poll_err = fds_with_flag_[i].pollfd_.revents & POLLERR ? "POLLERR:" :
-							fds_with_flag_[i].pollfd_.revents & POLLERR ?  "POLLHUP: " :
+							fds_with_flag_[i].pollfd_.revents & POLLHUP ?  "POLLHUP: " :
 							fds_with_flag_[i].pollfd_.revents & POLLNVAL ?  "POLLNVAL: " :
 							fds_with_flag_[i].pollfd_.revents &  POLLWRBAND ? " POLLWRBAND: ":
 							fds_with_flag_[i].pollfd_.revents &  POLLNLINK ? "POLLNLINK" :
 							fds_with_flag_[i].pollfd_.revents & POLLRDNORM ? " POLLRDNORM" :
 							"UNCLASSIFIED POLL HUNG UP: ";
-	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLNLINK | POLLRDNORM))
+	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLNLINK | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
 		disconecting(i, poll_err);
 };
 
@@ -240,10 +240,10 @@ int	Poll::pollin(size_t i)
 	int answer = YES;
 	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
 	{
-		size_t temp_len = lengthProt(i);
-		char* buffer = new char[lengthProt(i) + 1];
+		size_t temp_len = lengthProt(i); // max_body_client
+		char* buffer = new char[lengthProt(i) + 1]; // dynamic allocation for the buffer
 		
-		memset(buffer, 0, lengthProt(i) + 1);
+		memset(buffer, 0, lengthProt(i) + 1); //
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
 		std::cout << MAGENTA << buffer << QUIT << std::endl;
 		if (bytes == 0 || bytes < 0)
@@ -299,8 +299,8 @@ void		Poll::pollout(size_t i)
 				fds_with_flag_[i].pollfd_.events = POLLERR; // operation failed
 			else
 			{
-				close(fds_with_flag_[i].pollfd_.fd);
-				fds_with_flag_[i].pollfd_.events = POLLHUP; //closing the socket
+				// close(fds_with_flag_[i].pollfd_.fd);
+				fds_with_flag_[i].pollfd_.events = POLLHUP ; //closing the socket
 			}
 		}
 		else
@@ -316,11 +316,11 @@ void		Poll::pollout(size_t i)
 
 			int act = send(fds_with_flag_[i].pollfd_.fd, response_str.c_str(), response_str.length(), 0);
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
-			if (act < 0)
+			if (act <= 0)
 				fds_with_flag_[i].pollfd_.events = POLLERR; // operation failed
 			else
 			{
-				close(fds_with_flag_[i].pollfd_.fd);
+				// close(fds_with_flag_[i].pollfd_.fd);
 				fds_with_flag_[i].pollfd_.events = POLLHUP; //closing the socket
 			}
 		}
@@ -401,7 +401,7 @@ void		Poll::definingRequest(size_t i)
 
 void		Poll::disconecting(size_t& i, std::string str)
 {
-	size_t fd_of_server = fds_with_flag_[i].connected_fds_[0];
+	size_t fd_of_server = fds_with_flag_[i].connected_fds_[0]; // fds_with_flag --> server info, request, ..., pollfd(fd, event, revent)
 	close(fds_with_flag_[i].pollfd_.fd);
 	std::cout << BLUE << "Client : " << fds_with_flag_[i].pollfd_.fd << 
 	" " << str << "Disconnection from Server " << 
@@ -464,7 +464,7 @@ int			Poll::eAgainAndEWouldblock(size_t i, int bytes)
 	if (bytes == 0)
 	{
 		std::cout << "This string is empty!\n";
-		close(fds_with_flag_[i].pollfd_.fd);
+		// close(fds_with_flag_[i].pollfd_.fd);
 		fds_with_flag_[i].pollfd_.events = POLLOUT;
 		// disconecting(i, "(EOF)");
 	}
