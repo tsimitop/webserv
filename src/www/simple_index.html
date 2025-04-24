@@ -3,78 +3,6 @@
 <head>
 	<title>Webserv</title>
 	<link rel="icon" type="image/x-icon" href="/favicon.ico">
-	<style>
-		/* Retro Arcade Font */
-		@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-		html, body {
-			margin: 0;
-			padding: 0;
-			font-family: 'Press Start 2P', cursive;
-			color: #00ffcc;
-			background: linear-gradient(#1a1a1a, #0f0f0f);
-			background-attachment: fixed;
-			background-size: cover;
-			overflow-x: hidden;
-		}
-
-		body::before {
-			content: "";
-			position: fixed;
-			top: 0;
-			left: 0;
-			height: 200%;
-			width: 100%;
-			background: linear-gradient(180deg, #2b1055, #7597de, #2b1055);
-			z-index: -1;
-			transform: translateZ(-1px) scale(2);
-			background-attachment: fixed;
-		}
-
-		h1, h2 {
-			text-align: center;
-			text-shadow: 2px 2px 0 #ff00ff, -2px -2px 0 #00ffff;
-		}
-
-		p {
-			text-align: center;
-			margin-bottom: 30px;
-		}
-
-		input, button {
-			display: block;
-			margin: 10px auto;
-			padding: 10px 20px;
-			font-family: 'Press Start 2P', cursive;
-			border: 2px solid #00ffcc;
-			background-color: #000;
-			color: #00ffcc;
-			cursor: pointer;
-			transition: all 0.2s ease-in-out;
-			text-transform: uppercase;
-		}
-
-		input::placeholder {
-			color: #00ffccaa;
-		}
-
-		button:hover {
-			background: #00ffcc;
-			color: #000;
-			box-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
-			transform: scale(1.05);
-		}
-
-		input[type="file"] {
-			color: #00ffcc;
-			cursor: pointer;
-			background-color: #111;
-		}
-
-		br {
-			line-height: 2em;
-		}
-	</style>
 </head>
 <body>
 
@@ -86,15 +14,15 @@
 
 <br><br>
 
-<input type="file" id="fileToDelete">
-<button onclick="deleteFile()">Delete Selected File</button>
+<input type="text" id="filenameToDelete" placeholder="Enter filename to delete">
+<button onclick="deleteFile()">Delete</button>
 
 <br><br>
 
 <h2>CGI</h2>
 
 <button onclick="tryCGI('../cgi/hello.py')">Try working CGI</button><br><br>
-<button onclick="tryCGI('../cgi/loop.py')">Try endless (poetry) CGI</button><br><br>
+<button onclick="tryCGI('../cgi/loop.py')">Try endless CGI</button><br><br>
 <button onclick="tryCGI('../cgi/hell.py')">Try non-existing CGI</button><br><br>
 <button onclick="tryCGI('../cgi/mistake.py')">Try wrong CGI</button><br><br>
 <input type="text" id="nameOfUser" placeholder="Enter your name">
@@ -118,7 +46,7 @@
 				"Content-Type": "application/octet-stream",
 				"Content-Disposition": 'attachment; filename="' + filename + '"',
 			},
-			body: file
+			body: file // Send the raw file
 		}).then(response => console.log("Upload complete"))
 		  .catch(error => console.error("Error:", error));
 	}
@@ -126,31 +54,28 @@
 
 <script>
 	function deleteFile() {
-		const fileInput = document.getElementById("fileToDelete");
-		const file = fileInput.files[0];
-
-		if (!file) {
-			alert("Please select a file to delete.");
+		const filenameInput = document.getElementById("filenameToDelete");
+		
+		if (!filenameInput || !filenameInput.value) {
+			alert("Please enter a filename to delete.");
 			return;
 		}
 
-		const filename = file.name;
+		const filename = filenameInput.value;
 
-		// Send DELETE request to server
-		fetch('/uploads/' + encodeURIComponent(filename), {
+		fetch(encodeURIComponent(filename), {
 			method: "DELETE"
 		})
 		.then(response => {
-			if (response.ok) {
-				console.log("Deleted: " + filename);
+			if(response.ok) {
+				console.log ("Deleted: " + filename);
 			} else {
 				console.error("Failed to delete: " + filename);
 			}
 		})
-		.catch(error => console.error("Error:", error));
+		.catch(error => console.error("Error: ", error));
 	}
 </script>
-
 
 <script>
 	function tryCGI(location) {
@@ -159,7 +84,6 @@
 		.then(data => {
 			history.pushState(data, '', location);
 			document.open();
-			console.log(data);
 			document.write(data);
 			document.close();
 			window.addEventListener('popstate', () => {

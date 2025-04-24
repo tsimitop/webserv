@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <csignal>
 //===================READ & WRITEL=======================================
 #include <unistd.h>
 //===================FILE CONTROL========================================
@@ -19,6 +20,8 @@
 #include "../http_requests/HttpRequest.hpp"
 #include "../http_requests/HttpResponse.hpp"
 //===================ENUMERATORS=========================================
+
+// volatile sig_atomic_t SIGNALS_E = NO;
 enum serverOrClient{NON_SETTED = -1, SERVER = 0, CLIENT = 1};
 enum stateOfPoll{FIRST_TIME, NOT_FIRST_TIME};
 struct PollFdWithFlag

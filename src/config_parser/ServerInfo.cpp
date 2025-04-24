@@ -28,10 +28,13 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 	server_timeout_ = other.server_timeout_; 
 	listen_ = other.listen_ ;
 	root_ = other.root_;
+	listen_ = other.listen_ ;
+	root_ = other.root_;
 	server_name_ = other.server_name_; 
 	index = other.index; 
 	client_max_body_size_ = other.client_max_body_size_;
 	errors = other.errors;
+	locations_ = other.locations_;
 	locations_ = other.locations_;
 	lines_of_server_ = other.lines_of_server_;
 	location_indexes_ = other.location_indexes_;
@@ -51,10 +54,13 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 		server_timeout_ = other.server_timeout_; 
 		listen_ = other.listen_ ;
 		root_ = other.root_; 
+		listen_ = other.listen_ ;
+		root_ = other.root_; 
 		server_name_ = other.server_name_; 
 		index = other.index; 
 		client_max_body_size_ = other.client_max_body_size_;
 		errors = other.errors;
+		locations_ = other.locations_;
 		locations_ = other.locations_;
 		lines_of_server_ = other.lines_of_server_;
 		location_indexes_ = other.location_indexes_;
@@ -388,8 +394,6 @@ void	ServerInfo::parsingLocations()
 			}
 			else if(key == "upload_html")
 				location.setPath(line, location.uploads_html_, root_);
-			// else if(key == "redir")
-			// 	location.setPath(line, location.redir_, root_);
 			else if(key == "cgi_extension")
 				location.pushCgiMap(line);
 			else if(key == "redirect")
@@ -398,8 +402,12 @@ void	ServerInfo::parsingLocations()
 				// std::cout << line << " is the line of the key\n";
 				location.setRedir(line, location.redir_);
 			}
+			// else
+			// 	printError("debug",line);
 			if (location.valid_location_ == NO)
 				break;
+			}
 		}
-	}
-};
+	};
+// else if(key == "redir")
+// 	location.setPath(line, location.redir_, root_);

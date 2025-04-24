@@ -94,7 +94,7 @@
 <h2>CGI</h2>
 
 <button onclick="tryCGI('../cgi/hello.py')">Try working CGI</button><br><br>
-<button onclick="tryCGI('../cgi/loop.py')">Try endless (poetry) CGI</button><br><br>
+<button onclick="tryCGI('../cgi/loop.py')">Try endless CGI</button><br><br>
 <button onclick="tryCGI('../cgi/hell.py')">Try non-existing CGI</button><br><br>
 <button onclick="tryCGI('../cgi/mistake.py')">Try wrong CGI</button><br><br>
 <input type="text" id="nameOfUser" placeholder="Enter your name">
@@ -137,7 +137,7 @@
 		const filename = file.name;
 
 		// Send DELETE request to server
-		fetch('/uploads/' + encodeURIComponent(filename), {
+		fetch(encodeURIComponent(filename), {
 			method: "DELETE"
 		})
 		.then(response => {
@@ -159,7 +159,6 @@
 		.then(data => {
 			history.pushState(data, '', location);
 			document.open();
-			console.log(data);
 			document.write(data);
 			document.close();
 			window.addEventListener('popstate', () => {

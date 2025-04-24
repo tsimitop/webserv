@@ -34,6 +34,29 @@ Http::Http() :
 		{"client_max_body_size", 3},
 		{"root", 3}
 	};
+	accepted_keys =
+	{
+		{"server",1}, 
+		{"location/", 2}, 
+		{"location", 3},
+		{"{", 1}, 
+		{"}", 1}, 
+		{"server_timeout", 3}, 
+		{"listen", 3}, 
+		{"keepalive_timeout", 3}, 
+		{"send_timeout", 3}, 
+		{"server_name", 3}, 
+		{"index",3}, 
+		{"error_pages", 3},
+		{"allow_methods", 6},
+		{"location_html", 3},
+		{ "upload_html", 3},
+		{"uploads_dir", 3},
+		{"redir", 3},
+		{"cgi_extension", 3},
+		{"client_max_body_size", 3},
+		{"root", 3}
+	};
 };
 Http::Http(const Http& other)
 {
@@ -365,7 +388,10 @@ void Http::parsingServers()
 				else if (k == "error_pages")
 					s.pushToErrors(l);
 				else if (k == "location/" || k == "location")
+				{
+					printError("server", l);
 					break;
+				}
 			}
 		}
 		s.locationIndexes();
