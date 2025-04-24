@@ -28,6 +28,33 @@
 <input type="text" id="nameOfUser" placeholder="Enter your name">
 <button onclick="tryCGIpost('../cgi/for_post.py')">Try post CGI</button><br><br>
 
+
+
+<script>
+	function deleteFile() {
+		const filenameInput = document.getElementById("filenameToDelete");
+		
+		if (!filenameInput || !filenameInput.value) {
+			alert("Please enter a filename to delete.");
+			return;
+		}
+
+		const filename = filenameInput.value;
+
+		fetch('/uploads2/' + encodeURIComponent(filename), {
+			method: "DELETE"
+		})
+		.then(response => {
+			if(response.ok) {
+				console.log ("Deleted: " + filename);
+			} else {
+				console.error("Failed to delete: " + filename);
+			}
+		})
+		.catch(error => console.error("Error: ", error));
+	}
+</script>
+
 <script>
 	function uploadFile() {
 		const fileInput = document.getElementById("myFile");
@@ -49,31 +76,6 @@
 			body: file // Send the raw file
 		}).then(response => console.log("Upload complete"))
 		  .catch(error => console.error("Error:", error));
-	}
-</script>
-
-<script>
-	function deleteFile() {
-		const filenameInput = document.getElementById("filenameToDelete");
-		
-		if (!filenameInput || !filenameInput.value) {
-			alert("Please enter a filename to delete.");
-			return;
-		}
-
-		const filename = filenameInput.value;
-
-		fetch('/uploads/' + encodeURIComponent(filename), {
-			method: "DELETE"
-		})
-		.then(response => {
-			if(response.ok) {
-				console.log ("Deleted: " + filename);
-			} else {
-				console.error("Failed to delete: " + filename);
-			}
-		})
-		.catch(error => console.error("Error: ", error));
 	}
 </script>
 
