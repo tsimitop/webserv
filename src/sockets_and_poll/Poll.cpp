@@ -176,9 +176,6 @@ void Poll::synchroIO()
 		// if (SIGNALS_E)
 		// 	break;
 		int activity = polling();
-		// signal(SIGINT, signalHandler);
-		// if (SIGNALS_E)
-		// 	break;
 		if (activity == -1)
 		{
 			if (errno == EINTR)
@@ -205,6 +202,11 @@ void Poll::synchroIO()
 				continue;
 			else if (pollin_int == SIG)
 				close(fds_with_flag_[i].pollfd_.fd);
+			// else
+			// {
+			// 	fds_with_flag_[i].final_buffer_.push_back((char)0x04);
+			// 	fds_with_flag_[i].pollfd_.fd |= POLLOUT;
+			// }
 			pollout(i);
 		}
 	}
@@ -215,9 +217,12 @@ void		Poll::pollhup(size_t& i)
 {
 	std::string poll_err = fds_with_flag_[i].pollfd_.revents & POLLERR ? "POLLERR:" :
 							fds_with_flag_[i].pollfd_.revents & POLLERR ?  "POLLHUP: " :
-							fds_with_flag_[i].pollfd_.revents & POLLNVAL ?  "POLLHUP: " : 
+							fds_with_flag_[i].pollfd_.revents & POLLNVAL ?  "POLLNVAL: " :
+							fds_with_flag_[i].pollfd_.revents &  POLLWRBAND ? " POLLWRBAND: ":
+							fds_with_flag_[i].pollfd_.revents &  POLLNLINK ? "POLLNLINK" :
+							fds_with_flag_[i].pollfd_.revents & POLLRDNORM ? " POLLRDNORM" :
 							"UNCLASSIFIED POLL HUNG UP: ";
-	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLNLINK | POLLRDBAND | POLLRDNORM))
+	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLNLINK | POLLRDNORM))
 		disconecting(i, poll_err);
 };
 
@@ -234,8 +239,11 @@ int	Poll::pollin(size_t i)
 			answer = eAgainAndEWouldblock(i, bytes);
 		else
 		{
-			if (checkingForSignals(buffer, bytes) == SIG)
+			int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
+			if (checking_signals == SIG)
 				return SIG;
+			// else
+			// 	return EOF_FLAG;
 			if ((size_t)bytes > temp_len)
 			{
 				std::cerr << "not valid config or sockets!\n";
@@ -339,18 +347,17 @@ void		Poll::disconecting(size_t& i, std::string str)
 }
 
 //===================OUTER HELPER FUNCTIONS ==========================================
-int		checkingForSignals(const char *buffer, int bytes)
+int		checkingForSignals(const char *buffer, int bytes, const std::string final_buffer)
 {
-	int all_are_BE = 1;
+	(void) final_buffer;
+	// if (bytes == 1 && buffer[0] == 0x04)
+	// 	return EOF_FLAG;
+	for (int i = 0; i < bytes; i++)
+		if (((unsigned char)buffer[i] == 0x04))
+			return SIG;
 	for (int i = 0; i < bytes - 1; ++i)
-	{
-		if((unsigned char)buffer[i] == 0xBE)// It will start when the first time will find the first
-			all_are_BE = ((unsigned char)buffer[i] == 0xBE);
 		if ((unsigned char)buffer[i] == 0xff && (unsigned char)buffer[i + 1] == 0xf4)
 			return SIG;
-	}
-	if (all_are_BE == YES)
-		return SIG;
 	return NO;		
 };
 

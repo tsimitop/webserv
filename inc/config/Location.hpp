@@ -16,7 +16,7 @@
 #define CYAN "\033[36m"
 #define QUIT "\033[0m"
 
-enum answer{YES = 1, NO = 0, SIG = 2};
+enum answer{YES = 1, NO = 0, SIG = 2, EOF_FLAG = 3};
 enum methods{GET = 1, POST = 2, DELETE = 4};
 // int SIGNALS_E = NO;
 const std::map<int, std::string> all_posible_errors 
