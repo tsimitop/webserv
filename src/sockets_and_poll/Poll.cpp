@@ -350,7 +350,7 @@ void		Poll::disconecting(size_t& i, std::string str)
 int		checkingForSignals(const char *buffer, int bytes, const std::string final_buffer)
 {
 	(void) final_buffer;
-	// if (bytes == 1 && buffer[0] == 0x04)
+	// if (bytes == 1 && buffer[0] == 0x04)// ev
 	// 	return EOF_FLAG;
 	for (int i = 0; i < bytes; i++)
 		if (((unsigned char)buffer[i] == 0x04))
