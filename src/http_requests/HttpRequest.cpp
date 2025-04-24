@@ -40,15 +40,15 @@ HttpRequest::HttpRequest(const std::string& request, const ServerInfo& server_in
 	available_errors_ = this->current_server_.errors;
 	current_www_path_ = this->current_server_.www_path_;
 	executed_ = false;
+	is_redir_ = false;
+	// Test for proper location redirs
 	// for (Location& location : this->current_server_.locations_)
 	// {
 	// 	std::cout << RED << location.name_ << " = locations name\n" << QUIT;
 	// 	std::cout << RED << location.redir_status_ << " = locations redir_status_\n" << QUIT;
 	// 	std::cout << RED << location.redir_location_ << " = locations redir_location_\n" << QUIT;
 	// 	std::cout << RED << std::boolalpha << location.is_redir_ << " = locations is_redir_\n" << QUIT;
-
 	// }
-	// std::cout << this->current_server_.locations_[0].path;
 }
 
 bool HttpRequest::wasExecuted()
@@ -469,7 +469,7 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 	}
 	else
 	{
-		std::filesystem::path	target_path = current_www_path_ / this->url_;
+		std::filesystem::path	target_path = current_www_path_ += this->url_;
 		std::ifstream			input_file(target_path.string());
 		if (!input_file)
 			resp.createResponse(404, available_errors_[404]);
@@ -482,7 +482,7 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 {
 	std::filesystem::path	path_of_file_to_delete = current_www_path_ / this->filename_;
-	std::ifstream file(path_of_file_to_delete);
+	std::ifstream			file(path_of_file_to_delete);
 	if (!file)
 		resp.createResponse(404, available_errors_[404]);
 	else
@@ -519,17 +519,11 @@ const HttpResponse	HttpRequest::performMethod()
 
 	if (this->getMethod() == "GET")
 	{
-		// std::cout << this->current_server_.locations_.size() << " = SiZE\n";
 		for (Location& location : this->current_server_.locations_)
 		{
-			// std::cout << location.name_ << " is it's name\n";
-			if (location.is_redir_ && location.name_ == url_.substr(1) && url_.length() > 0)
+			if (location.is_redir_ && (location.name_ == url_.substr(url_.find_last_of("/") + 1)) && url_.length() > 0)
 			{
-				std::cout << url_ << " = url of redirection\n";
-				// std::cout << std::boolalpha << location.is_redir_ << " that the location is redirection\n";
 				is_redir_ = true;
-				std::cout << "URL is REDIR\n";
-				// std::cout << location.name_ << " = location name\n";
 				resp.redirResponse(location);
 				return resp;
 			}

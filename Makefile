@@ -21,8 +21,7 @@ SRCS =	main.cpp \
 		cgis/Cgi.cpp \
 		cgis/CgiSingleton.cpp
 
-
-all: $(NAME)
+all: $(NAME) #log_refresh
 
 SRC:=		$(addprefix $(SOURCE)/,$(SRCS))
 OBJS:=		$(SRC:$(SOURCE)/%.cpp=$(OBJ_DIR)/%.o)
@@ -50,6 +49,9 @@ fclean: clean
 
 superclean: fclean
 	@rm -f *.txt
+
+# log_refresh:
+# 	@rm ./webserv.log
 
 re: fclean all
 

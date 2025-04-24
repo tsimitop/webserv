@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 	c.parsingServers();
 	for (ServerInfo s : c.servers_)
 	{
-		if (s.valid_inputs_ == NO)
+		if (s.valid_server_ == NO)
 			c.valid_config_ = NO;
 	}
 	if(c.valid_config_ == NO)
@@ -25,6 +25,5 @@ int main(int argc, char **argv)
 		std::cerr << "Error: Non valid config!\n";
 		return (1);
 	}
-
 	return (0);
 }

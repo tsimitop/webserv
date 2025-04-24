@@ -1,10 +1,9 @@
 #include "../../inc/config/Location.hpp"
-
 Location::Location() : 
 location_lines_(), 
 executable_root_location_(),
-valid_inputs_(YES),
-client_max_body_size_(-1),
+valid_location_(YES),
+client_max_body_size_(0),
 allowed_methods_(), 
 location_html_(""), 
 uploads_dir_(""), 
@@ -23,7 +22,7 @@ Location::Location(const Location& other)
 {
 	location_lines_ = other.location_lines_;
 	executable_root_location_ = other.executable_root_location_;
-	valid_inputs_ = other.valid_inputs_;
+	valid_location_ = other.valid_location_;
 	uploads_dir_ = other.uploads_dir_;
 	location_html_ = other.location_html_;
 	uploads_html_ = other.uploads_html_;
@@ -45,7 +44,7 @@ Location& Location::operator=(const Location& other)
 	{
 		location_lines_ = other.location_lines_;
 		executable_root_location_ = other.executable_root_location_;
-		valid_inputs_ = other.valid_inputs_;
+		valid_location_ = other.valid_location_;
 		uploads_dir_ = other.uploads_dir_;
 		uploads_html_ = other.uploads_html_;
 		python_path_ = other.python_path_;
@@ -80,7 +79,7 @@ void						Location::validPath(std::string line)
 				!(std::filesystem::exists(checking_path))
 			)
 		)
-		valid_inputs_ = NO;
+		valid_location_ = NO;
 };
 
 void						Location::validClientMaxBodySize(std::string& value)
@@ -99,7 +98,7 @@ void						Location::validClientMaxBodySize(std::string& value)
 		value = sub + "000";
 		return ;
 	}
-	valid_inputs_ = NO;
+	valid_location_ = NO;
 };
 
 void					Location::validMethods(std::string line)
@@ -114,18 +113,35 @@ void					Location::validMethods(std::string line)
 		{
 			if(temp != "POST" && temp != "GET" && temp != "DELETE")
 			{
-				valid_inputs_ = NO;
+				valid_location_ = NO;
 				return;
 			}
 		}
 		return ;
 	}
 	else
-		valid_inputs_ = NO;
+		valid_location_ = NO;
 };
 int						Location::validLocation()
 {
-	return (valid_inputs_);
+	return (valid_location_);
+};
+
+int		Location::validErrorRoot (std::string value, std::string root)
+{
+	size_t the_first_backslash = value.find_first_of('/');
+	size_t the_second_backslash = value.substr(value.find_first_of('/') + 1, value.size()).find_first_of('/'); // I m finding the ./ | <checking_root> | / errors / 404.html
+
+	if (the_first_backslash == the_second_backslash)
+		return NO;
+	//------------DEBUGGING-------------------------
+	std::string config_root = root;
+	(void)config_root;
+	//----------------------------------------------
+	std::string checking_root = value.substr(the_first_backslash + 1, the_second_backslash);
+	if (checking_root != root)
+		return NO;
+	return YES;
 };
 //===================Setting Methods================================================
 void		Location::setClientMaxBodySize(std::string line)
@@ -136,15 +152,17 @@ void		Location::setClientMaxBodySize(std::string line)
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
 		validClientMaxBodySize(value);
-		if (valid_inputs_ != NO)
+		if (valid_location_ != NO)
 			client_max_body_size_ = std::stol(value);
+		else
+			printError("client_max_body_size", line);
 	}
 };
 
 void	Location::setAllowedMethods(std::string line)
 {
 	validMethods(line);
-	if (valid_inputs_ != NO)
+	if (valid_location_ != NO)
 	{
 		std::stringstream l(line);
 		std::string key, eq, value;
@@ -153,24 +171,31 @@ void	Location::setAllowedMethods(std::string line)
 			allowed_methods_.insert(allowed_methods_.begin(), value);
 
 	}
+	else
+		printError("allowed method", line);
 };
 void	Location::settingTheRightPath(std::string value, std::filesystem::path& p)
 {
 	if (value[0] == '.')
-		p = executable_root_location_ / value.substr(2);
+		p = executable_root_location_ / "src" / value.substr(2);
 	else
-		p = value;
+		p = executable_root_location_ / "src" / value.substr(1);
 }
 
-void	Location::setPath (std::string line, std::filesystem::path& attribute)
+void	Location::setPath (std::string line, std::filesystem::path& attribute, std::string root)
 {
 	validPath(line);
 	std::stringstream l(line);
 	std::string key, eq, value;
 	l >> key >> eq >> value;
-	if (valid_inputs_ != NO)
-		settingTheRightPath(value, attribute);
+	if (!(valid_location_ = validErrorRoot(value, root)))
+	{
+		printError("path", line);
+		return ;
+	}
+	settingTheRightPath(value, attribute);
 };
+
 void	Location::pushCgiMap(std::string line)
 {
 	validPath(line);
@@ -178,13 +203,20 @@ void	Location::pushCgiMap(std::string line)
 	std::string key, eq, value;
 	l >> key >> eq >> value;
 	std::filesystem::path p;
-	if (valid_inputs_ != NO)
+	if (valid_location_ != NO)
 		settingTheRightPath(value, p);
 	if (cgi_map_.find(p) == cgi_map_.end())
 	{
 		std::string cgi_key =	value[0] == '/' ? 
 									value.substr(1, value.find_first_of('/', 1)) : 
 									value.substr(2, value.find_first_of('/', 2));
+		std::ifstream cgi_path(p);
+		if (!cgi_path)
+		{
+			std::cerr << "Error CGI: File" << p << " is not opening\n";
+			valid_location_ = NO;
+			return ;
+		}
 		cgi_map_[cgi_key] = p;
 	}
 
@@ -232,6 +264,30 @@ int		strIsAlphaOr(std::string str, char extraChar)
 			return NO;
 	return YES;
 };
+
+void							printError(std::string type, std::string line)
+{
+	std::cerr << RED << "Error " << type <<": " << line << " is not valid!" << QUIT <<std::endl;
+};
+
+std::string							decodingHexToAscii(std::string filename)
+{
+	std::ostringstream d;
+	for (size_t i = 0; i != filename.length(); i++)
+	{
+		if (filename[i] == '%' && i + 2 < filename.length()) //distinctively lower than the 2
+		{
+			std::string hex = filename.substr(i + 1, 2);
+			int c = std::stoi(hex, nullptr, 16);
+			d << (char)c;
+			i += 2;
+		}
+		else
+			d << filename[i];
+	}
+	(void)d.str();
+	return d.str();
+}
 
 void	Location::setRedir (std::string line, std::string& attribute)
 {

@@ -20,7 +20,6 @@ HttpResponse::HttpResponse() : statusCode_(0), reasonPhrase_("Empty")
 		{304, "Not Modified"},
 		{307, "Temporary Redirect"},
 		{308, "Permanent Redirect"},
-		{404, "error on Wikimedia"},
 		{400, "Bad Request"},
 		{401, "Unauthorized"},
 		{402, "Payment Required"},
@@ -39,7 +38,7 @@ HttpResponse::HttpResponse() : statusCode_(0), reasonPhrase_("Empty")
 		{415, "Unsupported Media Type"},
 		{416, "Range Not Satisfiable"},
 		{417, "Expectation Failed"},
-		{418, "I'm a teapot // not applicable but fun to keep"},
+		{418, "I'm a teapot"},
 		{422, "Unprocessable Content"},
 		{426, "Upgrade Required"},
 		{428, "Precondition Required"},
@@ -185,66 +184,33 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 	response += "Server: Webserv\n";
 	response += "Date: ";
 	response += ctime(&timestamp);
-	response += "Content-Type: ";
-	response += this->getContentType();
-	response += "\r\n";
 	response += "Content-Length: ";
 	temp << this->getContentLength();
 	std::string lengthString;
 	temp >> lengthString;
 	response += lengthString;
 	response += "\r\n";
+	if (req.isRedirection())
+	{
+		response += getBody();
+		response += "\r\n";
+		if (this->getStatusCode() == 301)
+			response += "Connection: close\r\n";
+		else
+			response += "Connection: keep-alive\r\n";
+		response += "\r\n";
+		return (response);
+	}
 	response += "Connection: keep-alive\r\n";
+	response += "Content-Type: ";
+	response += this->getContentType();
+	response += "\r\n";
 	response += "\r\n";
 	response += this->getBody();
 	response += "\r\n";
 	response += "\r\n";
 	return (response);
 }
-
-// const std::string HttpResponse::respond(const HttpRequest& req)
-// {
-// 	time_t		timestamp;
-// 	std::stringstream temp;
-// 	std::string response;
-
-// 	time(&timestamp);
-// 	response += req.getVersion();
-// 	response += " ";
-// 	response += std::to_string(this->getStatusCode());
-// 	response += " ";
-// 	response += this->getReasonPhrase();
-// 	response += "\r\n";
-// 	response += "Server: Webserv\n";
-// 	response += "Date: ";
-// 	response += ctime(&timestamp);
-// 	response += "Content-Length: ";
-// 	temp << this->getContentLength();
-// 	std::string lengthString;
-// 	temp >> lengthString;
-// 	response += lengthString;
-// 	response += "\r\n";
-// 	if (req.isRedirection())
-// 	{
-// 		response += getBody();
-// 		response += "\r\n";
-// 		if (this->getContentLength() == 301)
-// 			response += "Connection: close\r\n";
-// 		else
-// 			response += "Connection: keep-alive\r\n";
-// 		response += "\r\n";
-// 		return (response);
-// 	}
-// 	response += "Connection: keep-alive\r\n";
-// 	response += "Content-Type: ";
-// 	response += this->getContentType();
-// 	response += "\r\n";
-// 	response += "\r\n";
-// 	response += this->getBody();
-// 	response += "\r\n";
-// 	response += "\r\n";
-// 	return (response);
-// }
 
 void HttpResponse::createResponse(int status_code, std::filesystem::path file)
 {
@@ -277,8 +243,6 @@ void HttpResponse::createCgiResponse(int status_code, std::string content)
 
 void HttpResponse::redirResponse(Location& location)
 {
-	std::cout << location.name_ << " is the name!\n";
-	std::cout << GREEN << location.redir_status_ << " is location.redir_status_\n" << QUIT;
 	setStatusCode(location.redir_status_);
 	setReasonPhrase(location.redir_status_);
 	setContentLength(0);

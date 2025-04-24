@@ -8,13 +8,21 @@
 #include <filesystem>
 #include <vector>
 
+#define RED "\033[31m"
+#define GREEN "\033[32m"
+#define YELLOW "\033[33m"
+#define BLUE "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN "\033[36m"
+#define QUIT "\033[0m"
+
 enum answer{YES = 1, NO = 0};
 enum methods{GET = 1, POST = 2, DELETE = 4};
 const std::map<int, std::string> all_posible_errors 
 = {
 	{100, "Continue"},
 	{101, "Switching Protocols"},
-	{103, "Early Hints"}, // for preloading resources,
+	{103, "Early Hints"},
 	{200, "OK"},
 	{201, "Created"},
 	{202, "Accepted"},
@@ -64,24 +72,18 @@ const std::map<int, std::string> all_posible_errors
 	{507, "Insufficient Storage"},
 	{511, "Network Authentication Required"}
 };
-
 struct Location
 {
-	//Default
-	Location();
-	Location(std::filesystem::path absolute_path);
-	Location(const Location& other);
-	Location& operator=(const Location& other);
-	~Location();
-	//------------------lines of location----------------------
+	//===============ATTRIBUTES =====================================================
+	//------------------lines of locations-----
 	std::vector<std::string>	location_lines_;
-	//------------------Executable path------------------------
+	//------------------Executable path--------
 	std::filesystem::path 		executable_root_location_;
-	//-------flags---------------------------------------------
-	int							valid_inputs_;
-	//-------attributes----------------------------------------
+	//-------flags-----------------------------
+	int							valid_location_;
+	//-------others-----------------------------
 	long long					client_max_body_size_;
-	std::vector<std::string>	allowed_methods_; // 1 is GET only, 3 is GET POST, 7 is GET POST DELETE
+	std::vector<std::string>	allowed_methods_;
 	std::filesystem::path 		location_html_;
 	std::filesystem::path 		uploads_dir_;
 	std::filesystem::path 		uploads_html_;
@@ -92,27 +94,37 @@ struct Location
 	bool is_redir_;
 	std::string redir_location_;
 	std::map <std::string, std::filesystem::path> cgi_map_;
-	//--------methods------------------------------------------
-	//--------validators---------------------------------------
+	//-------flags-----------------------------
+	//===============DEFAULT CONSTRUCTORS ===========================================
+	Location();
+	Location(std::filesystem::path absolute_path);
+	Location(const Location& other);
+	Location& operator=(const Location& other);
+	~Location();
+	//===============METHODS ========================================================
+	//--------validators-----------------------
 	void						validPath(std::string line);
 	void						validClientMaxBodySize(std::string& value);
 	void						validMethods(std::string line);
 	int							validLocation();
-	//--------setters------------------------------------------
+	int							validErrorRoot (std::string value, std::string root);
+	//--------setters--------------------------
 	void						settingTheRightPath(std::string value, std::filesystem::path& p);
 	void						setClientMaxBodySize(std::string line);
 	void						setAllowedMethods(std::string line);
-	void						setPath (std::string line, std::filesystem::path& attribute);
+	void						setPath (std::string line, std::filesystem::path& attribute, std::string root);
 	void						pushCgiMap(std::string line);
 	void						setRedir(std::string line, std::string& attribute);
 };
-//----------------------------Fuction that needs to bedefined--
-//----------------- and being used form all the other Structs--
+//===================OUTER FUNCTIONS ================================================
+//----------Fuction that needs to bedefined----
+//- and being used form all the other Structs--
 std::string 					spaceTrimmer(std::string str);
 int								countWords(std::string line);
 int								strIsNumber(std::string str);
 int								strIsAlphaOr(std::string str, char extraChar);
-
+void							printError(std::string type, std::string line);
+std::string							decodingHexToAscii(std::string filename);
 template <typename T>
 	std::ostream& operator<<(std::ostream& os, std::vector<T>& vec)
 	{

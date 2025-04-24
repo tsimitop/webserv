@@ -3,41 +3,62 @@
 #include <vector>
 #include <string>
 #include <cstring>
-//--------READ && WRITE-------------------------
+//===================READ & WRITEL=======================================
 #include <unistd.h>
-//--------FILE CONTROL--------------------------
+//===================FILE CONTROL========================================
 #include <fcntl.h>
-//--------POLL && SOCKETS-----------------------
+//===================SOCKETS & POLL======================================
 #include <poll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-//--------NET LIBRARIES------------------------
+//===================NEW LIBRARIES=======================================
 #include <netinet/in.h>
 #include <netdb.h>
-//---------CONFIG | RESPONCE | REQUSET---------
+//===================CONFIG | REPOST | REQUEST===========================
 #include "../config/Http.hpp"
 #include "../http_requests/HttpRequest.hpp"
 #include "../http_requests/HttpResponse.hpp"
-
-enum serverOrClient{SERVER = 0, CLIENT = 1};
+//===================ENUMERATORS=========================================
+enum serverOrClient{NON_SETTED = -1, SERVER = 0, CLIENT = 1};
 enum stateOfPoll{FIRST_TIME, NOT_FIRST_TIME};
 struct PollFdWithFlag
 {
-	pollfd 				fd_;
+	pollfd 				pollfd_;
 	int					state_;
-	std::vector<char> 	final_buffer_;
+	int					type_;
+	std::string 		final_buffer_;
 	HttpRequest			req_;
-	size_t				real_max_body_size_ln_;
 
+	size_t				real_max_body_size_ln_;
+	size_t				content_length_;
+	size_t				timeout_;
+
+	std::vector<size_t> connected_fds_;
+	ServerInfo			connected_server_; 
+//===================DEFAULT CONSTRUCTORS================================
 	PollFdWithFlag() = delete;
 	PollFdWithFlag(const PollFdWithFlag& other);
-	PollFdWithFlag(pollfd temp_fd, int s_or_c, std::vector<char>final_buffer, HttpRequest req, size_t real_max_body_size_ln);
+	PollFdWithFlag(
+		pollfd temp_fd, 
+		int state,
+		int type,
+		std::string final_buffer, 
+		HttpRequest req, 
+		size_t real_max_body_size_ln,	
+		size_t content_length,
+		size_t timeout,
+		std::vector<size_t> connected_fds,
+		ServerInfo connected_server
+	);
 	PollFdWithFlag& operator=(const PollFdWithFlag& other);
 	~PollFdWithFlag();
-	//helping methods
-	void setFinalBuffer(const std::vector<char> & other_final);
+//===================SETTERS==============================================
+	void setFinalBuffer(const std::string& other_final);
 	void setPollFd(const pollfd& other_fd);
 	void setRequest(const HttpRequest req);
 	void setRealMaxBodySizeLn(const size_t& real_max_body_size_ln);
-	//from char vector to string
+	void setContentLength(int bytes, char buffer[]);
+	void setConnectedFds(const std::vector<size_t>& connected_fds);
+	void setConnectedServer(const ServerInfo& connected_server);
+
 };

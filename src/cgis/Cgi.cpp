@@ -76,6 +76,7 @@ Cgi::Cgi(int poll_fd, const HttpRequest& request)
 
 void Cgi::execute()
 {
+	// std::cerr << "EXECEXEC\n";
 // std::cout << "Execute python script path: " << path_of_program_to_execute_.string() <<std::endl;
 	std::vector<char *> args;
 	// language_ = "/usr/bin/python3"; // DOCKER
@@ -87,7 +88,9 @@ void Cgi::execute()
 	std::string script_method = "REQUEST_METHOD=" + cgi_request_.getMethod();
 
 	std::string name = "NAME=" + cgi_request_.getBody().substr(cgi_request_.getBody().find_first_of("=") + 1); // do not proccess here, do it in the .py
+	// std::cout << "stored Content length = " << cgi_request_.getContentLength() << std::endl;
 	std::string content_length = "CONTENT_LENGTH=" + cgi_request_.getContentLength(); //change to custom
+	// std::cout << "Content's length = " << content_length << std::endl;
 	std::vector<char *> envp;
 	envp.push_back(const_cast<char*>(script_method.c_str()));
 	envp.push_back(const_cast<char*>(content_length.c_str()));
@@ -97,16 +100,19 @@ void Cgi::execute()
 	// std::cout << "script_method = " << script_method << std::endl;
 	// std::cout << "content_length = " << content_length << std::endl;
 	// std::cout << "name = " << name << std::endl;
-	int null_fd = open("/dev/null", O_WRONLY);
-	if (!null_fd)
-		std::cout << "failed to create fd\n";
-	dup2(null_fd, STDERR_FILENO);
-	close(null_fd);
+	// int null_fd = open("/dev/null", O_WRONLY);
+	// if (!null_fd)
+	// 	std::cout << "failed to create fd\n";
+	// dup2(null_fd, STDERR_FILENO);
+	// close(null_fd);
 	dup2(pipe_fd_[1], STDOUT_FILENO);
 	dup2(pipe_fd_[0], STDIN_FILENO);
 	close(pipe_fd_[0]);
 	close(pipe_fd_[1]);
+	// std::cerr << "pipe handling\n";
 	unsigned char resp = execve(language_.c_str(), args.data(), envp.data());
+	// std::cerr << "HELLO\n";
+	// std::cerr << resp << " = resp\n";
 	std::cout << strerror(errno) << std::endl;
 	std::cout << errno << std::endl;
 	exit(resp);
@@ -221,23 +227,21 @@ HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 	}
 	if (this->getStatus() != 0)
 	{
-		// char buffer[4096] = {0};
-		// int read_bytes = read(pipe_fd_[0], buffer, 4096);
-		// std::cout << "Found bytes: " << read_bytes << std::endl;
-		// std::cout << buffer << std::endl;
 		std::cout<<YELLOW << "Proccess exit number = " << this->getStatus() << "\n" << QUIT;
-		resp.createResponse(500, available_errors_[500]);
-		// close(pipe_fd_[0]);
+		if (this->getStatus() == 2)
+			resp.createResponse(404, available_errors_[404]);
+		else
+			resp.createResponse(500, available_errors_[500]);
 		return resp;
 	}
 	if(this->read_pipe())
 	{
-		std::cout<<BLUE << "CGI reading is true\n" << QUIT;
+		// std::cout<<BLUE << "CGI reading is true\n" << QUIT;
 		resp.createCgiResponse(200, this->getRespBody());
 	}
 	else
 	{
-		std::cout<<YELLOW << "CGI reading is false\n" << QUIT;
+		// std::cout<<YELLOW << "CGI reading is false\n" << QUIT;
 		resp.createResponse(500, available_errors_[500]);
 	}
 	return (resp);
@@ -245,12 +249,17 @@ HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 
 void Cgi::execution_close()
 {
+	// std::cout << "In execution close\n";
 	pid_ = fork();
 	if (pid_ == -1)
 		std::cout << "Error forking\n"; // Change that!
 	has_forked_ = true;
 	if (this->getPid() == 0)
+	{
+		// std::cout << "Child process\n";
 		this->execute();
+
+	}
 	close(this->getFdOne());
 }
 
