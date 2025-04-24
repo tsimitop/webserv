@@ -251,17 +251,15 @@
 			const musicBtn = document.getElementById("music-toggle");
 			let isPlaying = false;
 	
-			music.loop = false; // We'll manually control the loop
+			music.loop = false;
 	
-			// ⏱️ Check current time every half second and loop at 10 seconds
 			setInterval(() => {
 				if (isPlaying && music.currentTime >= 10) {
 					music.currentTime = 0;
-					music.play(); // retrigger play for seamless looping
+					music.play();
 				}
 			}, 500);
 	
-			// 🔊 Unmute and start music on first user interaction
 			window.addEventListener("click", () => {
 				if (!isPlaying) {
 					music.muted = false;
@@ -271,7 +269,6 @@
 				}
 			}, { once: true });
 	
-			// 🎵 Music toggle button logic
 			if (musicBtn) {
 				musicBtn.addEventListener("click", () => {
 					if (!isPlaying) {
