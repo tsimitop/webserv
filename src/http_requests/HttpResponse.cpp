@@ -1,6 +1,6 @@
 #include "../../inc/http_requests/HttpResponse.hpp"
 
-HttpResponse::HttpResponse() : statusCode_(0), reasonPhrase_("Empty")
+HttpResponse::HttpResponse() : statusCode_(0), reasonPhrase_(""), contentType_(""), contentLength_(0), body_("")
 {
 	statusReason_ = {
 		{100, "Continue"},
