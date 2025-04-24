@@ -13,6 +13,7 @@ struct ServerInfo
 	int										send_timeout_;
 	int										server_timeout_;
 	int										listen_;
+	std::string								root_;
 	std::string								server_name_;
 	std::string								index;
 	long long								client_max_body_size_;
@@ -46,6 +47,7 @@ struct ServerInfo
 	int										allSimpleInputsValid();
 	void									validErrorPath(std::string value);
 	void									validErrorType(std::string value);
+	int										validErrorRoot (std::string value);
 	void									defaultErrorSetting();
 	//=============SETTERS ========================================================
 	void									setServerTimeOut(std::string line, int& attribute);

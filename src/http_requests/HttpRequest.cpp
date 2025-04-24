@@ -475,7 +475,9 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 {
 	std::filesystem::path current_www_path = this->current_server_.www_path_;
 	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
-	std::filesystem::path	path_of_file_to_delete = current_www_path / this->filename_;
+	std::string temp_filename = decodingHexToAscii(this->filename_);
+	
+	std::filesystem::path	path_of_file_to_delete = current_www_path / temp_filename;
 	std::ifstream file(path_of_file_to_delete);
 	if (!file)
 		resp.createResponse(404, available_errors[404]);

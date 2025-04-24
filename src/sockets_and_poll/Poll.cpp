@@ -64,7 +64,6 @@ int Poll::binding()
 				if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
 				{
 					std::cerr << RED << "Error: Get Address Info Failed!" << QUIT<<std::endl;
-					poll_success_flag_ += NO;
 					freeaddrinfo(res);
 					continue;
 				};
@@ -72,7 +71,6 @@ int Poll::binding()
 			else
 			{
 				std::cerr << RED << "The port or host_name is empty!" << QUIT<<std::endl;
-				poll_success_flag_ += NO;
 				continue;
 			}
 			server_fd_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -80,7 +78,6 @@ int Poll::binding()
 			{
 				std::cerr << RED << "Error: Socket Failed!" << QUIT<<std::endl;
 				freeaddrinfo(res);
-				poll_success_flag_ += NO;
 				continue;
 			}
 			setNonBlockingFd(server_fd_);
@@ -89,14 +86,12 @@ int Poll::binding()
 			{
 				std::cerr << RED << "Error: SockOpt failed!" << QUIT<<std::endl;
 				freeaddrinfo(res);
-				poll_success_flag_ += NO;
 				continue;
 			};
 			if (bind(server_fd_,res->ai_addr,res->ai_addrlen) == -1)
 			{
 				std::cerr << RED << "Error: Bind failed!" << QUIT<<std::endl;
 				freeaddrinfo(res);
-				poll_success_flag_ += NO;
 				continue;
 			};
 			listen(server_fd_, max_queued_clients_);
@@ -164,11 +159,22 @@ void	Poll::connecting()
 	}
 };
 
+
+// void signalHandler(int)
+// {
+// 	std::cout << "\ncntl + C was catched and exited respectfully!\n";
+// 	SIGNALS_E = YES;
+// }
 void Poll::synchroIO()
 {
-	//--------- testing the invalid host and timeout and max bodylength
+	// signal(SIGINT, signalHandler);
+	// if (SIGNALS_E) 
+	// return ;
 	while(YES)
 	{
+		// signal(SIGINT, signalHandler);
+		// if (SIGNALS_E)
+		// 	break;
 		int activity = polling();
 		if (activity == -1)
 		{
@@ -183,13 +189,24 @@ void Poll::synchroIO()
 		else if(activity == 0)
 			break;
 		connecting();
+		// signal(SIGINT, signalHandler);
+		// if (SIGNALS_E)
+		// 	break;
 		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 		{
 			int er = errno;
 			(void)er;
 			pollhup(i);
-			if (pollin(i) == NO)
+			int pollin_int = pollin(i);
+			if (pollin_int == NO)
 				continue;
+			else if (pollin_int == SIG)
+				close(fds_with_flag_[i].pollfd_.fd);
+			// else
+			// {
+			// 	fds_with_flag_[i].final_buffer_.push_back((char)0x04);
+			// 	fds_with_flag_[i].pollfd_.fd |= POLLOUT;
+			// }
 			pollout(i);
 		}
 	}
@@ -199,9 +216,13 @@ void Poll::synchroIO()
 void		Poll::pollhup(size_t& i)
 {
 	std::string poll_err = fds_with_flag_[i].pollfd_.revents & POLLERR ? "POLLERR:" :
-							fds_with_flag_[i].pollfd_.revents & POLLERR ?  "POLLHUP: " : 
-							"POLLNVAL: ";
-	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL))
+							fds_with_flag_[i].pollfd_.revents & POLLERR ?  "POLLHUP: " :
+							fds_with_flag_[i].pollfd_.revents & POLLNVAL ?  "POLLNVAL: " :
+							fds_with_flag_[i].pollfd_.revents &  POLLWRBAND ? " POLLWRBAND: ":
+							fds_with_flag_[i].pollfd_.revents &  POLLNLINK ? "POLLNLINK" :
+							fds_with_flag_[i].pollfd_.revents & POLLRDNORM ? " POLLRDNORM" :
+							"UNCLASSIFIED POLL HUNG UP: ";
+	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLNLINK | POLLRDNORM))
 		disconecting(i, poll_err);
 };
 
@@ -213,12 +234,16 @@ int	Poll::pollin(size_t i)
 	{
 		size_t temp_len = lengthProt(i);
 		char* buffer = new char[lengthProt(i) + 1];
-		
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
 		if (bytes == 0 || bytes < 0)
 			answer = eAgainAndEWouldblock(i, bytes);
 		else
 		{
+			int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
+			if (checking_signals == SIG)
+				return SIG;
+			// else
+			// 	return EOF_FLAG;
 			if ((size_t)bytes > temp_len)
 			{
 				std::cerr << "not valid config or sockets!\n";
@@ -322,6 +347,20 @@ void		Poll::disconecting(size_t& i, std::string str)
 }
 
 //===================OUTER HELPER FUNCTIONS ==========================================
+int		checkingForSignals(const char *buffer, int bytes, const std::string final_buffer)
+{
+	(void) final_buffer;
+	// if (bytes == 1 && buffer[0] == 0x04)// ev
+	// 	return EOF_FLAG;
+	for (int i = 0; i < bytes; i++)
+		if (((unsigned char)buffer[i] == 0x04))
+			return SIG;
+	for (int i = 0; i < bytes - 1; ++i)
+		if ((unsigned char)buffer[i] == 0xff && (unsigned char)buffer[i + 1] == 0xf4)
+			return SIG;
+	return NO;		
+};
+
 int setNonBlockingFd(int fd)
 {
 	//not an extra parameter 0
@@ -381,10 +420,13 @@ int			Poll::eAgainAndEWouldblock(size_t i, int bytes)
 int			Poll::updateFinalBuffer(size_t i, int bytes, char buffer[])
 {
 	size_t l = 0;
+	std::string protected_final_buffer;
 	while (l != (size_t)bytes)
 	{
-		fds_with_flag_[i].final_buffer_.push_back(buffer[l]);
+		if (isprint(((unsigned char)buffer[l])) || (isspace((unsigned char)buffer[l])))
+			protected_final_buffer.push_back(buffer[l]);
 		l++;
 	}
+	fds_with_flag_[i].final_buffer_.append(protected_final_buffer);
 	return NO;
 };

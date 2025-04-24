@@ -45,3 +45,5 @@ struct Poll
 int 			setNonBlockingFd(int fd);
 std::string		filteredBuffer(std::string buffer, int& steps_back);
 std::string 	safeNullTermination(int bytes, size_t max_body_ln, std::string buffer);
+int				checkingForSignals(const char *buffer, int bytes, const std::string final_buffer);
+

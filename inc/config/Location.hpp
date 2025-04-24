@@ -16,8 +16,9 @@
 #define CYAN "\033[36m"
 #define QUIT "\033[0m"
 
-enum answer{YES = 1, NO = 0};
+enum answer{YES = 1, NO = 0, SIG = 2, EOF_FLAG = 3};
 enum methods{GET = 1, POST = 2, DELETE = 4};
+// int SIGNALS_E = NO;
 const std::map<int, std::string> all_posible_errors 
 = {
 	{100, "Continue"},
@@ -72,7 +73,6 @@ const std::map<int, std::string> all_posible_errors
 	{507, "Insufficient Storage"},
 	{511, "Network Authentication Required"}
 };
-
 struct Location
 {
 	//===============ATTRIBUTES =====================================================
@@ -103,11 +103,12 @@ struct Location
 	void						validClientMaxBodySize(std::string& value);
 	void						validMethods(std::string line);
 	int							validLocation();
+	int							validErrorRoot (std::string value, std::string root);
 	//--------setters--------------------------
 	void						settingTheRightPath(std::string value, std::filesystem::path& p);
 	void						setClientMaxBodySize(std::string line);
 	void						setAllowedMethods(std::string line);
-	void						setPath (std::string line, std::filesystem::path& attribute);
+	void						setPath (std::string line, std::filesystem::path& attribute, std::string root);
 	void						pushCgiMap(std::string line);
 };
 //===================OUTER FUNCTIONS ================================================
@@ -118,9 +119,9 @@ int								countWords(std::string line);
 int								strIsNumber(std::string str);
 int								strIsAlphaOr(std::string str, char extraChar);
 void							printError(std::string type, std::string line);
-
+std::string						decodingHexToAscii(std::string filename);
 template <typename T>
-	std::ostream& operator<<(std::ostream& os, std::vector<T>& vec)
+std::ostream& 					operator<<(std::ostream& os, std::vector<T>& vec)
 	{
 		os << "[\n";
 		for (T t : vec)
