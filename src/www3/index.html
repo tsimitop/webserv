@@ -3,6 +3,78 @@
 <head>
 	<title>Webserv</title>
 	<link rel="icon" type="image/x-icon" href="/favicon.ico">
+	<style>
+		/* Retro Arcade Font */
+		@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+		html, body {
+			margin: 0;
+			padding: 0;
+			font-family: 'Press Start 2P', cursive;
+			color: #00ffcc;
+			background: linear-gradient(#1a1a1a, #0f0f0f);
+			background-attachment: fixed;
+			background-size: cover;
+			overflow-x: hidden;
+		}
+
+		body::before {
+			content: "";
+			position: fixed;
+			top: 0;
+			left: 0;
+			height: 200%;
+			width: 100%;
+			background: linear-gradient(180deg, #2b1055, #7597de, #2b1055);
+			z-index: -1;
+			transform: translateZ(-1px) scale(2);
+			background-attachment: fixed;
+		}
+
+		h1, h2 {
+			text-align: center;
+			text-shadow: 2px 2px 0 #ff00ff, -2px -2px 0 #00ffff;
+		}
+
+		p {
+			text-align: center;
+			margin-bottom: 30px;
+		}
+
+		input, button {
+			display: block;
+			margin: 10px auto;
+			padding: 10px 20px;
+			font-family: 'Press Start 2P', cursive;
+			border: 2px solid #00ffcc;
+			background-color: #000;
+			color: #00ffcc;
+			cursor: pointer;
+			transition: all 0.2s ease-in-out;
+			text-transform: uppercase;
+		}
+
+		input::placeholder {
+			color: #00ffccaa;
+		}
+
+		button:hover {
+			background: #00ffcc;
+			color: #000;
+			box-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+			transform: scale(1.05);
+		}
+
+		input[type="file"] {
+			color: #00ffcc;
+			cursor: pointer;
+			background-color: #111;
+		}
+
+		br {
+			line-height: 2em;
+		}
+	</style>
 </head>
 <body>
 
@@ -46,7 +118,7 @@
 				"Content-Type": "application/octet-stream",
 				"Content-Disposition": 'attachment; filename="' + filename + '"',
 			},
-			body: file // Send the raw file
+			body: file
 		}).then(response => console.log("Upload complete"))
 		  .catch(error => console.error("Error:", error));
 	}
@@ -63,7 +135,7 @@
 
 		const filename = filenameInput.value;
 
-		fetch('/uploads2/' + encodeURIComponent(filename), {
+		fetch('/uploads/' + encodeURIComponent(filename), {
 			method: "DELETE"
 		})
 		.then(response => {
@@ -126,7 +198,8 @@
 
 </body>
 </html>
-<!-- <p>
+
+<p>
 	Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.  
 
 	Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.  
@@ -170,4 +243,4 @@
 	Consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus.  
 	
 	Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus
-</p> -->
+</p>
