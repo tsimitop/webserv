@@ -97,7 +97,7 @@
 	Your browser does not support the audio element.
 </audio>
 
-<h1>🚀 Retro Webserv Arcade 🚀</h1>
+<h1>Retro Webserv Arcade </h1>
 <p>Upload. Delete. Play. Hack the Web.</p>
 
 <input type="file" id="myFile">
@@ -110,15 +110,15 @@
 
 <br><br>
 
-<h2>💾 CGI Playground</h2>
+<h2>CGI Playground</h2>
 
-<button onclick="tryCGI('../cgi/hello.py')">🎮 Try Working CGI</button><br>
-<button onclick="tryCGI('../cgi/loop.py')">♾️ Endless CGI</button><br>
-<button onclick="tryCGI('../cgi/hell.py')">❌ Non-existing CGI</button><br>
-<button onclick="tryCGI('../cgi/mistake.py')">⚠️ Wrong CGI</button><br><br>
+<button onclick="tryCGI('../cgi/hello.py')"> Try Working CGI</button><br>
+<button onclick="tryCGI('../cgi/loop.py')">Endless CGI</button><br>
+<button onclick="tryCGI('../cgi/hell.py')">Non-existing CGI</button><br>
+<button onclick="tryCGI('../cgi/mistake.py')">Wrong CGI</button><br><br>
 
 <input type="text" id="nameOfUser" placeholder="Enter your name">
-<button onclick="tryCGIpost('../cgi/for_post.py')">📨 Try POST CGI</button><br><br>
+<button onclick="tryCGIpost('../cgi/for_post.py')"> Try POST CGI</button><br><br>
 
 <script>
 	function uploadFile() {
@@ -151,7 +151,7 @@
 			return;
 		}
 		const filename = file.name;
-		fetch('/uploads/' + encodeURIComponent(filename), {
+		fetch(encodeURIComponent(filename), {
 			method: "DELETE"
 		})
 		.then(response => {
