@@ -296,9 +296,6 @@ void	Location::setRedir (std::string line, std::string& attribute)
 	std::stringstream l(line);
 	std::string key, eq, status_code, new_location;
 	l >> key >> eq >> status_code >> new_location;
-	std::cout << "status code = " << status_code << "\n"
-	<< "new_location = " << new_location << std::endl;
 	redir_status_ = stoi(status_code);
 	redir_location_ = new_location;
-	std::cout << redir_status_ << " is redir status\n";
 };

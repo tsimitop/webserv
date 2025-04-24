@@ -29,6 +29,7 @@ Http::Http() :
 		{ "upload_html", 3},
 		{"uploads_dir", 3},
 		{"redir", 3},
+		{"redirect", 4},
 		{"cgi_extension", 3},
 		{"client_max_body_size", 3},
 		{"root", 3}
@@ -228,7 +229,7 @@ int	Http::acceptedAttributes()
 		std::stringstream ss(l);
 		int	numberOfWords = countWords(l);
 		ss >> key;
-		int check_the_key = 1; // Not sure what you wanted from this but it was invalidating valid things
+		int check_the_key = 0;
 		for (auto accepted : accepted_keys)
 		{
 			if (accepted.second == numberOfWords && accepted.first == key)
