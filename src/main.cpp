@@ -7,7 +7,7 @@
 int main(int argc, char **argv)
 {
 	HttpResponse	response;
-	std::cout << "STARTING WEB SERVER: you will be informed on the sockets listening soon.\n";
+	std::cout << YELLOW <<  "STARTING WEB SERVER: you will be informed on the sockets listening soon.\n" << QUIT;
 	// logToFile("entered main");
 	//---------------------------Config parsing---------------------------
 	// signal(SIGINT, signalHandler);
