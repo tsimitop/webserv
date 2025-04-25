@@ -180,7 +180,7 @@ void Poll::synchroIO()
 		// signal(SIGINT, signalHandler);
 		// if (SIGNALS_E)
 		// 	break;
-		for (size_t i = config_.servers_.size(); i != fds_with_flag_.size(); i++)
+		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd) && CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd)->cgiPidDone())
 					fds_with_flag_[i].pollfd_.events |= POLLOUT;
 		int activity = polling();

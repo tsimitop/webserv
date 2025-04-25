@@ -296,6 +296,11 @@ void	Location::setRedir (std::string line, std::string& attribute)
 	std::stringstream l(line);
 	std::string key, eq, status_code, new_location;
 	l >> key >> eq >> status_code >> new_location;
+	for (size_t i = 0; i < status_code.length(); i++)
+		if (!std::isdigit(status_code[i]))
+			valid_location_ = NO;
 	redir_status_ = stoi(status_code);
+	if (redir_status_ < 300 || redir_status_ > 399)
+		valid_location_ = NO;
 	redir_location_ = new_location;
 };
