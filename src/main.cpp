@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 	c.validPostParsing();
 	if(c.valid_config_ == NO)
 	{
-		std::cerr << "Error: You need atleast one valid server!\n";
+		std::cerr << "Error: You need atleast one valid server!\n"; //
 		return (1);
 	}
 	// if (SIGNALS_E) return 1;
