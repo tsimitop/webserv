@@ -8,7 +8,8 @@
 	<link rel="icon" type="image/x-icon" href="/favicon.ico">
 	<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 	<style>
-		/* CRAZY RETRO STYLE */
+		@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+	
 		body, html {
 			margin: 0;
 			padding: 0;
@@ -16,14 +17,15 @@
 			color: #00ffe0;
 			background: #000;
 			overflow-x: hidden;
-			background-image: url('https://www.transparenttextures.com/patterns/pixel-weave.png');
-			background-size: 100px;
-			animation: bgScroll 20s linear infinite;
+			background-image: url('https://www.transparenttextures.com/patterns/8-bit.png');
+			background-size: 80px;
+			animation: bgScroll 30s linear infinite;
+			cursor: url('https://cur.cursors-4u.net/games/gam-16/gam1586.cur'), auto;
 		}
 	
 		@keyframes bgScroll {
 			from { background-position: 0 0; }
-			to { background-position: 1000px 0; }
+			to { background-position: 1600px 0; }
 		}
 	
 		body::before {
@@ -33,72 +35,75 @@
 			left: 0;
 			height: 100%;
 			width: 100%;
-			background: linear-gradient(180deg, #2b1055, #7597de, #2b1055);
+			background: radial-gradient(circle, rgba(255,0,255,0.2), transparent 70%);
 			z-index: -1;
-			transform: scale(1.2);
-			opacity: 0.2;
-			animation: float 6s ease-in-out infinite;
+			animation: pulse 5s infinite;
 		}
 	
-		@keyframes float {
-			0%, 100% { transform: translateY(0) scale(1.2); }
-			50% { transform: translateY(-10px) scale(1.25); }
+		@keyframes pulse {
+			0%, 100% { opacity: 0.2; transform: scale(1); }
+			50% { opacity: 0.35; transform: scale(1.03); }
 		}
 	
 		h1, h2 {
 			text-align: center;
-			text-shadow: 0 0 5px #ff00ff, 0 0 10px #00ffff;
-			animation: glitch 1s infinite;
+			text-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff, 0 0 30px #ff00ff;
+			animation: glitch 1.5s infinite;
+			color: #ffffff;
 		}
 	
 		@keyframes glitch {
-			0% { text-shadow: 2px 0 red, -2px 0 cyan; }
-			25% { text-shadow: -2px 0 red, 2px 0 cyan; }
-			50% { text-shadow: 2px 2px red, -2px -2px cyan; }
-			75% { text-shadow: -2px -2px red, 2px 2px cyan; }
-			100% { text-shadow: 2px 0 red, -2px 0 cyan; }
+			0% { transform: translate(0); }
+			20% { transform: translate(-2px, 2px); }
+			40% { transform: translate(2px, -2px); }
+			60% { transform: translate(-1px, 1px); }
+			80% { transform: translate(1px, -1px); }
+			100% { transform: translate(0); }
 		}
 	
 		input, button {
 			display: block;
-			margin: 10px auto;
-			padding: 10px 20px;
+			margin: 15px auto;
+			padding: 12px 24px;
 			font-family: 'Press Start 2P', cursive;
-			border: 3px dashed #00ffcc;
+			border: 3px double #00ffcc;
 			background-color: #000;
 			color: #00ffcc;
 			cursor: pointer;
-			transition: all 0.2s ease-in-out;
 			text-transform: uppercase;
-			box-shadow: 0 0 8px #00ffcc;
+			box-shadow: 0 0 8px #00ffcc, 0 0 16px #ff00ff;
+			transition: all 0.2s ease-in-out;
 		}
 	
 		button:hover {
-			background: #00ffcc;
+			background: #ff00ff;
 			color: #000;
-			box-shadow: 0 0 20px #00ffcc, 0 0 30px #00ffff;
-			transform: scale(1.1) rotate(-1deg);
+			box-shadow: 0 0 20px #00ffcc, 0 0 40px #00ffff;
+			transform: scale(1.1) rotate(1deg);
 		}
 	
 		input::placeholder {
 			color: #00ffccaa;
+			text-shadow: 1px 1px #ff00ff;
 		}
 	
 		input[type="file"] {
 			color: #00ffcc;
 			background-color: #111;
-			border: 2px solid #ff00ff;
+			border: 2px dotted #ff00ff;
 		}
 	
 		p {
 			text-align: center;
 			font-size: 12px;
 			color: #fff;
+			text-shadow: 1px 1px #00ffff;
 		}
 	
 		br {
 			line-height: 2em;
 		}
+	
 		#music-toggle {
 			position: fixed;
 			top: 20px;
@@ -111,15 +116,31 @@
 			box-shadow: 0 0 8px #00ffff;
 			padding: 10px 15px;
 			transition: all 0.3s ease;
+			animation: wiggle 1.5s infinite;
 		}
-
+	
 		#music-toggle:hover {
 			background-color: #00ffcc;
 			color: #000;
-			transform: scale(1.05);
-			box-shadow: 0 0 12px #ff00ff;
+			transform: scale(1.1) rotate(-2deg);
+			box-shadow: 0 0 15px #ff00ff;
 		}
-
+	
+		@keyframes wiggle {
+			0%, 100% { transform: rotate(0); }
+			25% { transform: rotate(1deg); }
+			50% { transform: rotate(-1deg); }
+			75% { transform: rotate(1deg); }
+		}
+	
+		/* Bonus: Glowing border on focus */
+		input:focus, button:focus {
+			outline: none;
+			box-shadow: 0 0 10px #00ffcc, 0 0 20px #ff00ff;
+			border-color: #fff;
+		}
+	</style>
+	
 	</style>
 </head>
 <body>
@@ -241,10 +262,6 @@
 			});
 		}
 	</script>
-	<audio id="bg-music" autoplay loop muted>
-		<source src="ai_gen_8_bit.mp3" type="audio/mp3">
-		Your browser does not support the audio element.
-	</audio>
 	<script>
 		document.addEventListener("DOMContentLoaded", () => {
 			const music = document.getElementById("bg-music");
@@ -254,7 +271,7 @@
 			music.loop = false;
 	
 			setInterval(() => {
-				if (isPlaying && music.currentTime >= 15) {
+				if (isPlaying && music.currentTime >= 10) {
 					music.currentTime = 0;
 					music.play();
 				}
@@ -268,7 +285,6 @@
 					if (musicBtn) musicBtn.textContent = 'Pause Music';
 				}
 			}, { once: true });
-	
 			if (musicBtn) {
 				musicBtn.addEventListener("click", () => {
 					if (!isPlaying) {
