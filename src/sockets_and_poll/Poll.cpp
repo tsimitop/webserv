@@ -295,7 +295,7 @@ void		Poll::pollout(size_t i)
 		{
 			response = fds_with_flag_[i].req_.performMethod();
 			response_str = response.respond(fds_with_flag_[i].req_);
-			std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
+			// std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
 			int act = send(fds_with_flag_[i].pollfd_.fd, response_str.c_str(), response_str.length(), 0);
 			if (act < 0)
 				fds_with_flag_[i].pollfd_.events = POLLERR; // operation failed
