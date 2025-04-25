@@ -468,7 +468,6 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 	//--------------Thomas addition start----------------------------
 	// std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
 	// std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
-	std::string length = headers_["Content-Length"];
 	//--------------Thomas addition end----------------------------
 	if (this->url_ == "/" || this->url_ == current_index || this->url_ == "/" + current_index)
 	{
