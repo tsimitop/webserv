@@ -43,6 +43,7 @@ private:
 	ServerInfo										current_server_;
 	bool											executed_;
 	bool											is_redir_;
+	bool											req_is_invalid_;
 	std::filesystem::path							python_path_;
 public:
 	// Orthodox Canonical Class Form
@@ -56,6 +57,7 @@ public:
 	
 	// Getters
 	bool											isRedirection() const;
+	bool											isInvalid() const;
 	std::unordered_map<std::string, std::string>	getHeaders(void) const;
 	std::string										getHttpRequest(void) const;
 	std::string										getMethod(void) const;

@@ -25,6 +25,7 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 		this->executed_ = other.executed_;
 		this->current_www_path_ = other.current_www_path_;
 		this->is_redir_ = other.is_redir_;
+		this->req_is_invalid_ = other.req_is_invalid_;
 	}
 	return (*this);
 }
@@ -41,6 +42,7 @@ HttpRequest::HttpRequest(const std::string& request, const ServerInfo& server_in
 	current_www_path_ = this->current_server_.www_path_;
 	executed_ = false;
 	is_redir_ = false;
+	req_is_invalid_ = false;
 	// Test for proper location redirs
 	// for (Location& location : this->current_server_.locations_)
 	// {
@@ -55,6 +57,9 @@ bool HttpRequest::wasExecuted()
 {return executed_;}
 
 // Getters
+bool	 HttpRequest::isInvalid() const
+{return req_is_invalid_;}
+
 bool HttpRequest::isRedirection() const
 {return is_redir_;}
 
@@ -323,12 +328,20 @@ bool	HttpRequest::isValid()
 	if (method_ == "UKNOWN" || url_.empty() || version_.empty())
 	{
 		if (method_ == "UKNOWN")
+		{
+			req_is_invalid_ = true;
 			std::cout << RED << "Can't handle uknown method->400 Bad Request" << QUIT << std::endl;
+		}
 		if (url_.empty())
+		{
+			req_is_invalid_ = true;
 			std::cout << RED << "No url->server should be closed by foreign host" << QUIT << std::endl;
+		}
 		if (version_.empty())
+		{
+			req_is_invalid_ = true;
 			std::cout << RED << "No HTTP version->server should be closed by foreign host" << QUIT << std::endl;
-		std::cout << RED << "Remove the above after debugging" << QUIT << std::endl;
+		}
 		return (false);
 	}
 	auto it = headers_.begin();
@@ -338,10 +351,12 @@ bool	HttpRequest::isValid()
 	if (it == headers_.end() || (it->second).empty() || isOnlyWhitespace(it->second))
 	{
 		std::cout << RED << "Didn't find Host" << QUIT << std::endl;
+		req_is_invalid_ = true;
 		return (false);
 	}
 	if (method_ == "POST" && !validatePost())
 	{
+		req_is_invalid_ = true;
 		std::cout << RED << "Post could not be validated" << QUIT << std::endl;
 		return (false);
 	}
@@ -521,7 +536,9 @@ const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
-	if (this->getMethod() == "GET")
+	if (this->isInvalid())
+		resp.createResponse(400, available_errors_[400]);
+	else if (this->getMethod() == "GET")
 	{
 		for (Location& location : this->current_server_.locations_)
 		{
@@ -535,12 +552,8 @@ const HttpResponse	HttpRequest::performMethod()
 		resp = getCase(resp);
 	}
 	else if (this->getMethod() == "POST")
-	{
 		resp = postCase(resp);
-	}
 	else if (this->getMethod() == "DELETE")
-	{
 		resp = deleteCase(resp);
-	}
 	return resp;
 }

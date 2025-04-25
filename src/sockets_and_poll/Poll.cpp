@@ -289,7 +289,7 @@ void		Poll::pollout(size_t i)
 	if(fds_with_flag_[i].pollfd_.events & POLLOUT)
 	{
 		std::string response_str;
-		if (!fds_with_flag_[i].req_.isCgi())
+		if (!fds_with_flag_[i].req_.isCgi() || (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.isInvalid()))
 		{
 			response = fds_with_flag_[i].req_.performMethod();
 			response_str = response.respond(fds_with_flag_[i].req_);
