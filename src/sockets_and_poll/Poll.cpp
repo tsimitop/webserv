@@ -264,7 +264,7 @@ int	Poll::pollin(size_t i)
 				fds_with_flag_[i].setContentLength(bytes,buffer);
 			size_t final_buffer_len = fds_with_flag_[i].final_buffer_.length();
 			size_t content_len = fds_with_flag_[i].content_length_;
-			//-------------
+			//-------------Thomas addition
 			if ((size_t)fds_with_flag_[i].content_length_  > (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_)
 			{
 				fds_with_flag_[i].pollfd_.events |= POLLOUT;
@@ -273,7 +273,7 @@ int	Poll::pollin(size_t i)
 				definingRequest(i);
 				return YES;
 			}
-			//------------
+			//------------Thomas addition
 			if(temp_len ==(size_t)bytes || (content_len > (size_t)bytes + final_buffer_len && content_len !=0))
 				{
 					answer = updateFinalBuffer(i, bytes, buffer);
