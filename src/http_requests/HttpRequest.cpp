@@ -508,13 +508,24 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
 	std::string temp_filename = decodingHexToAscii(this->filename_);
 	std::filesystem::path	path_of_file_to_delete = current_www_path_ / temp_filename;
+
 	std::ifstream file(path_of_file_to_delete);
 	if (!file)
 		resp.createResponse(404, available_errors_[404]);
 	else
 	{
+		if (path_of_file_to_delete.string().find("../") != std::string::npos || 
+		path_of_file_to_delete.string().find("uplaods") == std::string::npos || 
+		path_of_file_to_delete.string().find("errors") != std::string::npos ||
+		path_of_file_to_delete.string().find("cgi") != std::string::npos ||
+		path_of_file_to_delete.string().find(".html") != std::string::npos ||
+		path_of_file_to_delete.string().find(".mp3") != std::string::npos ||
+		path_of_file_to_delete.string().find(".ico") != std::string::npos)
+		{
+			resp.createResponse(401, available_errors_[401]);
+			return (resp);
+		}
 		file.close();
-	
 		int removed = remove(path_of_file_to_delete.c_str());
 		if (removed == 0)
 		{
