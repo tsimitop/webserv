@@ -262,10 +262,18 @@ int	Poll::pollin(size_t i)
 			}
 			if (fds_with_flag_[i].content_length_ == 0 && bytes > 0)
 				fds_with_flag_[i].setContentLength(bytes,buffer);
-			//------------
 			size_t final_buffer_len = fds_with_flag_[i].final_buffer_.length();
 			size_t content_len = fds_with_flag_[i].content_length_;
 			//-------------
+			if ((size_t)fds_with_flag_[i].content_length_  > (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_)
+			{
+				fds_with_flag_[i].pollfd_.events |= POLLOUT;
+				buffer[bytes] = '\0';
+				updateFinalBuffer(i, bytes, buffer);
+				definingRequest(i);
+				return YES;
+			}
+			//------------
 			if(temp_len ==(size_t)bytes || (content_len > (size_t)bytes + final_buffer_len && content_len !=0))
 				{
 					answer = updateFinalBuffer(i, bytes, buffer);
@@ -363,10 +371,17 @@ void		Poll::closingServers()
 
 size_t		Poll::lengthProt(size_t i)
 {
-	size_t max_body_size = (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_;
-	// size_t max_body_size = 0;
-	// size_t max_body_size = -1;
-	
+	size_t max_body_size 
+		= std::max((size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_, (size_t)1024);
+	if (max_body_size < 1024)
+	{
+		max_body_size = 1025; // protecting for logical contadictions
+	}
+	if ((size_t)max_body_size > (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_)
+	{
+		fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_ 
+		= fds_with_flag_[i].connected_server_.client_max_body_size_ - 1;// need come back here again
+	}
 	return (max_body_size);
 };
 

@@ -304,3 +304,9 @@ void	Location::setRedir (std::string line, std::string& attribute)
 		valid_location_ = NO;
 	redir_location_ = new_location;
 };
+
+size_t			findTheSizeOfAgivenFile(const std::filesystem::path& file)
+{
+std::ifstream check(file, std::ios::binary | std::ios::ate);
+return (size_t)check.tellg();
+};

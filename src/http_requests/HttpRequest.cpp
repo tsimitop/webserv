@@ -452,6 +452,13 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
 	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
 	std::string length = headers_["Content-Length"];
+	//Thomas additional cond start
+	if ((size_t)this->current_server_.client_max_body_size_ < (size_t)stoul(length))
+	{
+		resp.createResponse(413, available_errors_[413]);
+		return resp;
+	}
+	//Thomas additional cond end
 	if ((int)(this->getBody().length()) != stoi(length)) // remove most of this if statement after debugging
 	{
 		std::cout << RED << "Body length is not correct\n" << QUIT;
@@ -485,6 +492,11 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 {
 	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
 	std::string current_index = this->current_server_.index;
+	//--------------Thomas addition start----------------------------
+	// std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
+	// std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
+	std::string length = headers_["Content-Length"];
+	//--------------Thomas addition end----------------------------
 	if (this->url_ == "/" || this->url_ == current_index || this->url_ == "/" + current_index)
 	{
 		std::filesystem::path target_path = "src/www/" + current_index;
@@ -492,7 +504,18 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 		if (!input_file.is_open())
 			resp.createResponse(404, available_errors_[404]);
 		else
+		{
+			//--------------Thomas addition start----------------------------
+			size_t client_max_body_size = this->current_server_.client_max_body_size_;
+			size_t server_index_length = findTheSizeOfAgivenFile(target_path);
+			if (client_max_body_size < server_index_length)
+			{
+				resp.createResponse(413, available_errors_[413]);
+				return resp;
+			}
+			//--------------Thomas addition end------------------------------
 			resp.createResponse(200, target_path);
+		}
 	}
 	else
 	{
