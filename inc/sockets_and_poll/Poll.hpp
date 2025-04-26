@@ -11,10 +11,11 @@ struct Poll
 	int 		max_queued_clients_;
 	std::vector<pollfd> fds_;
 	std::vector<PollFdWithFlag> fds_with_flag_;
+	std::vector<ServerInfo> active_servers;
 	int 		server_fd_;
 	sockaddr_in addr_;
 	Http		config_;
-	size_t		number_of_active_servers_;
+	size_t		number_of_config_valid_servers_;
 	
 	//===============DEFAULTS========================================================
 	Poll();
