@@ -257,12 +257,16 @@ int	Poll::pollin(size_t i)
 		{
 			int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
 			if (checking_signals == SIG)
+			{
+				delete[] buffer;
 				return SIG;
+			}
 			// else
 			// 	return EOF_FLAG;
 			if ((size_t)bytes > temp_len)
 			{
 				std::cerr << "not valid config or sockets!\n";
+				delete[] buffer;
 				fds_with_flag_[i].pollfd_.events = POLLERR;
 			}
 			if (fds_with_flag_[i].content_length_ == 0 && bytes > 0)
