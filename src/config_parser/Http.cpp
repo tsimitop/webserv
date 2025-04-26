@@ -304,7 +304,7 @@ void						Http::validPostParsing()
 		{
 			std::cout << GREEN << "Success: "<< s.listen_<< " server is valid!" << QUIT <<std::endl;
 		}
-		valid_config_ = config_valid_servers_.size();git 
+		valid_config_ = config_valid_servers_.size();
 	}
 };
 //-------------PARSING---------------------
