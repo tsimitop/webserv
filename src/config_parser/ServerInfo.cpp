@@ -262,19 +262,6 @@ void						ServerInfo::setIndex(std::string line)
 			index = value;
 	}
 };
-// void						ServerInfo::setClientMaxBodySize(std::string line)
-// {
-// 	std::stringstream current_line(line);
-// 	if (countWords(line) == 3)
-// 	{
-// 		std::string key, eq, value;
-// 		current_line >>key >> eq >> value;
-// 		validClientMaxBodySize(value);
-// 		if (valid_server_ != NO)
-// 			client_max_body_size_ = std::stol(value);
-// 	}
-// };
-
 void						ServerInfo::setClientMaxBodySize(std::string line)
 {
 	std::stringstream current_line(line);
@@ -282,19 +269,13 @@ void						ServerInfo::setClientMaxBodySize(std::string line)
 	{
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
-		// std::cout << value << " = value of client_max_body_size\n";
 		validClientMaxBodySize(value);
 		if (valid_server_ != NO)
 			client_max_body_size_ = std::stol(value);
-		// std::cout << "HELLLLLLOOOOOOO\n";
 		try
 		{
-			std::cout << stoi(value) << " = string to int\n";
 			if (stoi(value) < 1025)
-			{
-				std::cout << stoi(value) << " = string to int\n";
 				valid_server_ = NO;
-			}
 		}
 		catch(const std::invalid_argument& e)
 		{
