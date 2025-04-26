@@ -287,6 +287,7 @@ void						Http::validPostParsing()
 		if (s.listen_ == 0 || s.server_name_ == "")
 			s.valid_server_ = NO;
 	for (ServerInfo& s : servers_)
+	{
 		if (s.valid_server_ == NO)
 		{
 			std::cout << "//==================================================================================================\n";
@@ -303,7 +304,8 @@ void						Http::validPostParsing()
 		{
 			std::cout << GREEN << "Success: "<< s.listen_<< " server is valid!" << QUIT <<std::endl;
 		}
-		valid_config_ = config_valid_servers_.size();
+		valid_config_ = config_valid_servers_.size();git 
+	}
 };
 //-------------PARSING---------------------
 void Http::preparingAndValidatingConfig(int argc, char* argv[])
