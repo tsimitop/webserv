@@ -366,14 +366,12 @@ void						ServerInfo::pushLocationsLines()
 
 void	ServerInfo::parsingLocations()
 {
-	// std::cout << "parsingLocations LOOP\n";
 	for (Location& location : locations_)
 	{
 		location.redir_status_ = 0;
 		location.is_redir_ = false;
 		for (std::string line : location.location_lines_)
 		{
-	// std::cout << "Line = " << line << "\n";
 			std::stringstream l(line);
 			std::string key, eq;
 			l >> key >> eq >> eq;
@@ -400,16 +398,12 @@ void	ServerInfo::parsingLocations()
 				location.pushCgiMap(line);
 			else if(key == "redirect")
 			{
-				// std::cout << key << " IS IT REDIRECTION?\n";
-				// std::cout << line << " is the line of the key\n";
 				location.setRedir(line, location.redir_);
 			}
 			// else
 			// 	printError("debug",line);
 			if (location.valid_location_ == NO)
 				break;
-			}
 		}
-	};
-// else if(key == "redir")
-// 	location.setPath(line, location.redir_, root_);
+	}
+};

@@ -180,7 +180,7 @@ void Poll::synchroIO()
 		// signal(SIGINT, signalHandler);
 		// if (SIGNALS_E)
 		// 	break;
-		for (size_t i = config_.servers_.size(); i != fds_with_flag_.size(); i++)
+		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd) && CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd)->cgiPidDone())
 					fds_with_flag_[i].pollfd_.events |= POLLOUT;
 		int activity = polling();
@@ -297,11 +297,13 @@ void		Poll::pollout(size_t i)
 	if(fds_with_flag_[i].pollfd_.events & POLLOUT)
 	{
 		std::string response_str;
-		if (!fds_with_flag_[i].req_.isCgi())
+		if (!fds_with_flag_[i].req_.isCgi() \
+		 || (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.isInvalid()) \
+		 || (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.isForbidden()))
 		{
 			response = fds_with_flag_[i].req_.performMethod();
 			response_str = response.respond(fds_with_flag_[i].req_);
-			std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
+			// std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
 			int act = send(fds_with_flag_[i].pollfd_.fd, response_str.c_str(), response_str.length(), 0);
 			if (act < 0)
 				fds_with_flag_[i].pollfd_.events = POLLERR; // operation failed
@@ -397,7 +399,7 @@ void		Poll::setMaxBodyLen(size_t i, int bytes)
 
 void		Poll::definingRequest(size_t i)
 {
-	fds_with_flag_[i].req_.readRequest(fds_with_flag_[i].final_buffer_);
+	fds_with_flag_[i].req_.readRequest(fds_with_flag_[i].final_buffer_, 1);
 	try
 	{
 		fds_with_flag_[i].req_.isValid();

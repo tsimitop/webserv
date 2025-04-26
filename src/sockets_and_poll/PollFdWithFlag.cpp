@@ -96,7 +96,7 @@ void PollFdWithFlag::setContentLength(int bytes, char buffer[])
 			for (size_t i = 0; i != (size_t)bytes; i++)
 				temp.push_back(buffer[i]);
 		HttpRequest r;
-		r.readRequest(temp);
+		r.readRequest(temp, 0);
 		std::unordered_map<std::string, std::string> headers = r.getHeaders();
 		if (headers.find("sec-ch-ua-platform") != headers.end() && headers.find("Content-Length") != headers.end())
 			content_length_ = std::stoul(headers["Content-Length"]);

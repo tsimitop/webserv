@@ -43,6 +43,8 @@ private:
 	ServerInfo										current_server_;
 	bool											executed_;
 	bool											is_redir_;
+	bool											req_is_invalid_;
+	bool											forbidden_meth_;
 	std::filesystem::path							python_path_;
 public:
 	// Orthodox Canonical Class Form
@@ -55,7 +57,9 @@ public:
 	HttpRequest(const std::string& request, const ServerInfo& server_info);
 	
 	// Getters
+	bool											isForbidden() const;
 	bool											isRedirection() const;
+	bool											isInvalid() const;
 	std::unordered_map<std::string, std::string>	getHeaders(void) const;
 	std::string										getHttpRequest(void) const;
 	std::string										getMethod(void) const;
@@ -82,8 +86,8 @@ public:
 	void	setCurrentServer(const ServerInfo& server);
 
 	// Parse
-	void	readRequest(const std::string& req); //throws exception
-	void	parseRequestLine(std::string& line);
+	void	readRequest(const std::string& req, int seg_flag_safe); //throws exception
+	void	parseRequestLine(std::string& line, int seg_flag_safe);
 	void	parseLine(std::string line);
 	void	extractPortFromHost();
 	bool	isValid();

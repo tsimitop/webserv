@@ -10,6 +10,7 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 {
 	if (this != &other)
 	{
+		this->current_server_ = other.current_server_;
 		this->headers_ = other.headers_;
 		this->bodyVector_ = other.bodyVector_;
 		this->bodyComplete_ = other.bodyComplete_;
@@ -25,6 +26,8 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 		this->executed_ = other.executed_;
 		this->current_www_path_ = other.current_www_path_;
 		this->is_redir_ = other.is_redir_;
+		this->req_is_invalid_ = other.req_is_invalid_;
+		this->forbidden_meth_ = other.forbidden_meth_;
 	}
 	return (*this);
 }
@@ -41,6 +44,8 @@ HttpRequest::HttpRequest(const std::string& request, const ServerInfo& server_in
 	current_www_path_ = this->current_server_.www_path_;
 	executed_ = false;
 	is_redir_ = false;
+	req_is_invalid_ = false;
+	forbidden_meth_ = false;
 	// Test for proper location redirs
 	// for (Location& location : this->current_server_.locations_)
 	// {
@@ -55,6 +60,12 @@ bool HttpRequest::wasExecuted()
 {return executed_;}
 
 // Getters
+bool	 HttpRequest::isInvalid() const
+{return req_is_invalid_;}
+
+bool	 HttpRequest::isForbidden() const
+{return forbidden_meth_;}
+
 bool HttpRequest::isRedirection() const
 {return is_redir_;}
 
@@ -183,11 +194,17 @@ void	HttpRequest::parseHttpVersion(std::string& line)
 		version_ = version;
 }
 
-void	HttpRequest::parseRequestLine(std::string& line)
+void	HttpRequest::parseRequestLine(std::string& line, int seg_flag_safe)
 {
 	parseMethod(line);
 	parseUrl(line);
 	parseHttpVersion(line);
+	if (seg_flag_safe)
+	{
+		std::vector<std::string> allowed =  current_server_.locations_[0].allowed_methods_;
+		if (std::find(allowed.begin(), allowed.end(), method_) == allowed.end())
+			forbidden_meth_ = true;
+	}
 }
 
 void	HttpRequest::parseLine(std::string line)
@@ -226,7 +243,7 @@ void	HttpRequest::updateFilename()
 	}
 }
 
-void	HttpRequest::readRequest(const std::string& req)
+void	HttpRequest::readRequest(const std::string& req, int seg_flag_safe)
 {
 	std::string requestLine = req;
 	int body = 0;
@@ -234,7 +251,7 @@ void	HttpRequest::readRequest(const std::string& req)
 	std::string	line = requestLine.substr(0, requestLine.find("\r\n"));
 
 	if (!line.empty() && line.size() > 0)
-		parseRequestLine(line);
+		parseRequestLine(line, seg_flag_safe);
 	requestLine = requestLine.substr(requestLine.find("\r\n") + 2);
 	line = requestLine.substr(0, requestLine.find("\r\n"));
 
@@ -323,12 +340,20 @@ bool	HttpRequest::isValid()
 	if (method_ == "UKNOWN" || url_.empty() || version_.empty())
 	{
 		if (method_ == "UKNOWN")
+		{
+			req_is_invalid_ = true;
 			std::cout << RED << "Can't handle uknown method->400 Bad Request" << QUIT << std::endl;
+		}
 		if (url_.empty())
+		{
+			req_is_invalid_ = true;
 			std::cout << RED << "No url->server should be closed by foreign host" << QUIT << std::endl;
+		}
 		if (version_.empty())
+		{
+			req_is_invalid_ = true;
 			std::cout << RED << "No HTTP version->server should be closed by foreign host" << QUIT << std::endl;
-		std::cout << RED << "Remove the above after debugging" << QUIT << std::endl;
+		}
 		return (false);
 	}
 	auto it = headers_.begin();
@@ -338,10 +363,12 @@ bool	HttpRequest::isValid()
 	if (it == headers_.end() || (it->second).empty() || isOnlyWhitespace(it->second))
 	{
 		std::cout << RED << "Didn't find Host" << QUIT << std::endl;
+		req_is_invalid_ = true;
 		return (false);
 	}
 	if (method_ == "POST" && !validatePost())
 	{
+		req_is_invalid_ = true;
 		std::cout << RED << "Post could not be validated" << QUIT << std::endl;
 		return (false);
 	}
@@ -556,7 +583,11 @@ const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
-	if (this->getMethod() == "GET")
+	if (this->isInvalid())
+		resp.createResponse(400, available_errors_[400]);
+	else if (this->isForbidden())
+		resp.createResponse(405, available_errors_[405]);
+	else if (this->getMethod() == "GET")
 	{
 		for (Location& location : this->current_server_.locations_)
 		{
@@ -570,12 +601,8 @@ const HttpResponse	HttpRequest::performMethod()
 		resp = getCase(resp);
 	}
 	else if (this->getMethod() == "POST")
-	{
 		resp = postCase(resp);
-	}
 	else if (this->getMethod() == "DELETE")
-	{
 		resp = deleteCase(resp);
-	}
 	return resp;
 }
