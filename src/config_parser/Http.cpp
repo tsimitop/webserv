@@ -94,6 +94,7 @@ void Http::configLines(std::filesystem::path config_path)
 	if (clean_res.empty() || (!clean_res.empty() &&clean_res[0].empty()))
 	{
 		std::cerr <<RED << "Error: File is empty\n" << QUIT;
+		valid_config_ = NO;
 		return ;
 	}
 	for (std::string l : clean_res)
@@ -222,24 +223,24 @@ int		Http::curliesAndSemicollonsForOneServer(size_t server_index)
 
 int	Http::acceptedAttributes()
 {
-	int all_lines_are_valid = 1;
+	int all_lines_are_valid = YES;
 	std::string key;
 	for (std::string l : lines)
 	{
 		std::stringstream ss(l);
 		int	numberOfWords = countWords(l);
 		ss >> key;
-		int check_the_key = 0;
+		int check_the_key = NO;
 		for (auto accepted : accepted_keys)
 		{
 			if (accepted.second == numberOfWords && accepted.first == key)
 			{
-				check_the_key = 1;
+				check_the_key = YES;
 				break;
 			}
 			if ((key == "location" && numberOfWords == 2) || (key == "location/" && numberOfWords == 1))
 			{
-				check_the_key = 1;
+				check_the_key = YES;
 				break;
 			}
 			if (numberOfWords == 3 && key == "location")
@@ -247,21 +248,24 @@ int	Http::acceptedAttributes()
 				std::string eq; 
 				ss >> eq;
 				if (eq != "/")
-					check_the_key = 0;
+					check_the_key = NO;
 				else
-					check_the_key = 1;
+					check_the_key = YES;
 				break;
 			}
 			if (key == "allow_methods" && numberOfWords >= 3)
 			{
-				check_the_key = 1;
+				check_the_key = YES;
 				break;
 			}	
 
 		}
 		key = "";
-		if ((all_lines_are_valid *= check_the_key) == 0)
+		if ((all_lines_are_valid *= check_the_key) == NO)
+		{
+			std::cout << RED << "Error: not accepted attributes | existing typos!" << QUIT << std::endl;
 			break;
+		}
 	}
 	return all_lines_are_valid;
 }
@@ -320,7 +324,7 @@ void Http::preparingAndValidatingConfig(int argc, char* argv[])
 		}
 	}
 	configLines(config_path);
-	if ((valid_config_ = acceptedAttributes()))
+	if (valid_config_ == YES && (valid_config_ = acceptedAttributes()))
 	{
 		serverIndexes();
 		pushLinesToServers();

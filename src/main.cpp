@@ -23,7 +23,6 @@ int main(int argc, char **argv)
 	c.preparingAndValidatingConfig(argc , argv);
 	if (c.valid_config_ == NO)
 	{
-		std::cerr << "Error: Passing non existing | wrong config | config with typos!\n";
 		return 1;
 	}
 	c.parsingServers();
