@@ -263,7 +263,7 @@ int	Http::acceptedAttributes()
 		key = "";
 		if ((all_lines_are_valid *= check_the_key) == NO)
 		{
-			std::cout << RED << "Error: not accepted attributes | existing typos!" << QUIT << std::endl;
+			std::cout << RED << "Error: not accepted attributes | existing typos |uninisialised values!" << QUIT << std::endl;
 			break;
 		}
 	}
