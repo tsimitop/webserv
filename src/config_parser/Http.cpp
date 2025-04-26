@@ -296,7 +296,7 @@ void						Http::validPostParsing()
 		{
 			std::cout << GREEN << "Success: "<< s.listen_<< " server is valid!" << QUIT <<std::endl;
 		}
-		valid_config_ = active_servers_.size();
+	valid_config_ = active_servers_.size();
 };
 //-------------PARSING---------------------
 void Http::preparingAndValidatingConfig(int argc, char* argv[])
