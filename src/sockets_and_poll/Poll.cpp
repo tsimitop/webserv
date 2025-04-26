@@ -6,7 +6,7 @@
 //===============DEFAULTS========================================================
 Poll::Poll():
 poll_success_flag_(YES), 
-max_queued_clients_(5), 
+max_queued_clients_(128), 
 fds_(),
 fds_with_flag_(),
 server_fd_(0), 

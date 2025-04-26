@@ -523,7 +523,11 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 		if (!input_file)
 			resp.createResponse(404, available_errors_[404]);
 		else
+		{
+			if (this->url_.substr(this->url_.find_last_of(".")) == ".ico")
+				resp.setContentType("image/vnd");
 			resp.createResponse(200, target_path);
+		}
 	}
 	return resp;
 }
