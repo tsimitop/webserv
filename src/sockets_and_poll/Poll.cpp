@@ -232,10 +232,9 @@ void		Poll::pollhup(size_t& i)
 							fds_with_flag_[i].pollfd_.revents & POLLHUP ?  "POLLHUP: " :
 							fds_with_flag_[i].pollfd_.revents & POLLNVAL ?  "POLLNVAL: " :
 							fds_with_flag_[i].pollfd_.revents &  POLLWRBAND ? " POLLWRBAND: ":
-							fds_with_flag_[i].pollfd_.revents &  POLLNLINK ? "POLLNLINK" :
 							fds_with_flag_[i].pollfd_.revents & POLLRDNORM ? " POLLRDNORM" :
 							"UNCLASSIFIED POLL HUNG UP: ";
-	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLNLINK | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
+	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
 		disconecting(i, poll_err);
 };
 
