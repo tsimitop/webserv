@@ -514,13 +514,15 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 		resp.createResponse(404, available_errors_[404]);
 	else
 	{
-		if (path_of_file_to_delete.string().find("../") != std::string::npos || 
-		path_of_file_to_delete.string().find("uplaods") == std::string::npos || 
-		path_of_file_to_delete.string().find("errors") != std::string::npos ||
-		path_of_file_to_delete.string().find("cgi") != std::string::npos ||
-		path_of_file_to_delete.string().find(".html") != std::string::npos ||
-		path_of_file_to_delete.string().find(".mp3") != std::string::npos ||
-		path_of_file_to_delete.string().find(".ico") != std::string::npos)
+		if (
+				std::filesystem::is_directory(path_of_file_to_delete) ||
+				path_of_file_to_delete.string().find("../") != std::string::npos ||
+				path_of_file_to_delete.string().find(".html") != std::string::npos ||
+				path_of_file_to_delete.string().find(".mp3") != std::string::npos ||
+				path_of_file_to_delete.string().find(".ico") != std::string::npos ||
+				path_of_file_to_delete.string().find(".cpp") != std::string::npos ||
+				path_of_file_to_delete.string().find(".hpp") != std::string::npos
+			)
 		{
 			resp.createResponse(401, available_errors_[401]);
 			return (resp);

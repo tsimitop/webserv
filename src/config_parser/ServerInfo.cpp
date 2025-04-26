@@ -188,7 +188,7 @@ void 					ServerInfo::defaultErrorSetting()
 	errors[300] = errors_path_ / "300.html";
 	errors[301] = errors_path_ / "301.html";
 	errors[400] = errors_path_ / "400.html";
-	errors[400] = errors_path_ / "401.html";
+	errors[401] = errors_path_ / "401.html";
 	errors[404] = errors_path_ / "404.html";
 	errors[405] = errors_path_ / "405.html";
 	errors[413] = errors_path_ / "413.html";
