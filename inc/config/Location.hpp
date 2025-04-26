@@ -126,6 +126,7 @@ int								strIsNumber(std::string str);
 int								strIsAlphaOr(std::string str, char extraChar);
 void							printError(std::string type, std::string line);
 std::string						decodingHexToAscii(std::string filename);
+size_t							findTheSizeOfAgivenFile(const std::filesystem::path& file);
 template <typename T>
 std::ostream& 					operator<<(std::ostream& os, std::vector<T>& vec)
 	{
