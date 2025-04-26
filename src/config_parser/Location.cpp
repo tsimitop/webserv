@@ -299,7 +299,14 @@ void	Location::setRedir (std::string line, std::string& attribute)
 	for (size_t i = 0; i < status_code.length(); i++)
 		if (!std::isdigit(status_code[i]))
 			valid_location_ = NO;
-	redir_status_ = stoi(status_code);
+	try
+	{
+		redir_status_ = stoi(status_code);
+	}
+	catch(const std::invalid_argument& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
 	if (redir_status_ < 300 || redir_status_ > 399)
 		valid_location_ = NO;
 	redir_location_ = new_location;
