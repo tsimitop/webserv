@@ -3,6 +3,7 @@
 
 Http::Http() : 
 	servers_(),
+	config_valid_servers_(),
 	active_servers_(),
 	executable_root_http_(""), 
 	lines(), 
@@ -38,6 +39,7 @@ Http::Http() :
 Http::Http(const Http& other)
 {
 	servers_ = other.servers_;
+	config_valid_servers_ = other.config_valid_servers_;
 	active_servers_ = other.active_servers_;
 	executable_root_http_ = other.executable_root_http_;
 	lines = other.lines;
@@ -50,6 +52,7 @@ Http& Http::operator=(const Http& other)
 	if (this != &other)
 	{
 		servers_ = other.servers_;
+		config_valid_servers_ = other.config_valid_servers_;
 		active_servers_ = other.active_servers_;
 		executable_root_http_ = other.executable_root_http_;
 		lines = other.lines;
@@ -284,6 +287,7 @@ void						Http::validPostParsing()
 		if (s.listen_ == 0 || s.server_name_ == "")
 			s.valid_server_ = NO;
 	for (ServerInfo& s : servers_)
+	{
 		if (s.valid_server_ == NO)
 		{
 			std::cout << "//==================================================================================================\n";
@@ -300,7 +304,8 @@ void						Http::validPostParsing()
 		{
 			std::cout << GREEN << "Success: "<< s.listen_<< " server is valid!" << QUIT <<std::endl;
 		}
-		valid_config_ = active_servers_.size();
+		valid_config_ = config_valid_servers_.size();git 
+	}
 };
 //-------------PARSING---------------------
 void Http::preparingAndValidatingConfig(int argc, char* argv[])
@@ -370,6 +375,8 @@ void Http::parsingServers()
 					s.pushToErrors(l);
 				else if (k == "location/" || k == "location")
 					break;
+				if (s.valid_server_ == NO)
+					break;
 			}
 		}
 		s.locationIndexes();
@@ -389,5 +396,5 @@ void Http::parsingServers()
 	}
 	for (ServerInfo& s : servers_)
 		if(s.valid_server_ == YES)
-			active_servers_.push_back(s);
+			config_valid_servers_.push_back(s);
 };

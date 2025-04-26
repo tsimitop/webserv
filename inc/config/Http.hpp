@@ -8,7 +8,8 @@ struct Http
 {
 	std::map<std::string, int> accepted_keys;
 	std::vector <ServerInfo>	servers_;
-	std::vector <ServerInfo>	active_servers_;
+	std::vector <ServerInfo>	config_valid_servers_;
+	std::vector<ServerInfo> 	active_servers_;
 	std::filesystem::path		executable_root_http_;
 	//===============PARSING ATTRIBUTES START =======================================
 	std::vector<std::string>	lines;
