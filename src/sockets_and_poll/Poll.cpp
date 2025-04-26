@@ -12,7 +12,7 @@ fds_with_flag_(),
 server_fd_(0), 
 addr_(),
 config_(),
-number_of_active_servers_(0)
+number_of_config_valid_servers_(0)
 {};
 
 Poll::Poll(const Poll& other)
@@ -24,7 +24,7 @@ Poll::Poll(const Poll& other)
 	server_fd_ = other.server_fd_;
 	addr_ = other.addr_;
 	config_ = other.config_;
-	number_of_active_servers_ = other.number_of_active_servers_;
+	number_of_config_valid_servers_ = other.number_of_config_valid_servers_;
 };
 
 Poll& Poll::operator=(const Poll& other)
@@ -38,7 +38,7 @@ Poll& Poll::operator=(const Poll& other)
 		server_fd_ = other.server_fd_;
 		addr_ = other.addr_;
 		config_ = other.config_;
-		number_of_active_servers_ = other.number_of_active_servers_;
+		number_of_config_valid_servers_ = other.number_of_config_valid_servers_;
 	}
 	return *this;
 };
@@ -53,9 +53,9 @@ void Poll::setConfig(const Http& new_config)
 int Poll::binding()
 {
 	int poll_success_flag_ = NO;
-	for (ServerInfo& s : config_.active_servers_)
+	for (ServerInfo& s : config_.config_valid_servers_)
 	{
-			addrinfo temp, *res;
+			addrinfo temp, *res = nullptr;
 			memset(&temp, 0, sizeof(temp));
 			std::string port_char_pointer = std::to_string(s.listen_);
 			temp.ai_family = AF_UNSPEC;
@@ -69,6 +69,7 @@ int Poll::binding()
 				if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
 				{
 					std::cerr << RED << "Error: Get Address Info Failed!" << QUIT<<std::endl;
+					s.valid_server_ = NO;
 					freeaddrinfo(res);
 					continue;
 				};
@@ -76,12 +77,14 @@ int Poll::binding()
 			else
 			{
 				std::cerr << RED << "The port or host_name is empty!" << QUIT<<std::endl;
+				s.valid_server_ = NO;
 				continue;
 			}
 			server_fd_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 			if (server_fd_ == -1)
 			{
 				std::cerr << RED << "Error: Socket Failed!" << QUIT<<std::endl;
+				s.valid_server_ = NO;
 				freeaddrinfo(res);
 				continue;
 			}
@@ -90,16 +93,19 @@ int Poll::binding()
 			if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 			{
 				std::cerr << RED << "Error: SockOpt failed!" << QUIT<<std::endl;
+				s.valid_server_ = NO;
 				freeaddrinfo(res);
 				continue;
 			};
 			if (bind(server_fd_,res->ai_addr,res->ai_addrlen) == -1)
 			{
 				std::cerr << RED << "Error: Bind failed!" << QUIT<<std::endl;
+				s.valid_server_ = NO;
 				freeaddrinfo(res);
 				continue;
 			};
 			listen(server_fd_, max_queued_clients_);
+			config_.active_servers_.push_back(s);
 			fds_with_flag_.push_back(
 				(PollFdWithFlag){{server_fd_, POLLIN, 0}, 
 				FIRST_TIME,
@@ -111,7 +117,6 @@ int Poll::binding()
 			std::cout << CYAN << "Server: fd[" << server_fd_ << "] port: " << s.listen_ << QUIT << std::endl;
 			// freeing the addrinfo
 			freeaddrinfo(res);
-			number_of_active_servers_++;
 			poll_success_flag_ +=YES;
 		}
 	return poll_success_flag_;
@@ -180,9 +185,11 @@ void Poll::synchroIO()
 		// signal(SIGINT, signalHandler);
 		// if (SIGNALS_E)
 		// 	break;
-		for (size_t i = config_.servers_.size(); i != fds_with_flag_.size(); i++)
+		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
+		{
 			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd) && CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd)->cgiPidDone())
 					fds_with_flag_[i].pollfd_.events |= POLLOUT;
+		}
 		int activity = polling();
 		if (activity == -1)
 		{
