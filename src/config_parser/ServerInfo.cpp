@@ -177,7 +177,8 @@ void						ServerInfo::validErrorPath(std::string value)
 void				ServerInfo::validErrorType(std::string value)
 {
 	size_t the_last_backslash = value.find_last_of('/');
-	std::string error_type = value.substr(the_last_backslash + 1, 3);
+	size_t dot_of_html= value.find_last_of('.');
+	std::string error_type = value.substr(the_last_backslash + 1, dot_of_html - (the_last_backslash + 1));
 	if (strIsNumber(error_type) && 
 	all_posible_errors.find(std::stol(error_type)) != all_posible_errors.end())
 		return ;
@@ -316,17 +317,12 @@ void						ServerInfo::pushToErrors(std::string line)
 	validErrorPath(value);
 	validErrorType(value);
 	size_t the_last_backslash = value.find_last_of('/');
-	std::string error_type = value.substr(the_last_backslash + 1, 3);
+	size_t dot_of_html= value.find_last_of('.');
+	std::string error_type = value.substr(the_last_backslash + 1, dot_of_html - (the_last_backslash + 1));
+	if (valid_server_ == NO)
+		return ;
 	if (!(valid_server_ = validErrorRoot(value)))
 		return ;
-	if (
-			std::stoll(error_type) > 511 || std::stoll(error_type) < 100  || 
-			all_posible_errors.find(std::stoi(error_type)) == all_posible_errors.end()
-		)
-	{
-		valid_server_ = NO;
-		return ;
-	}
 	if ( errors.find(std::stoi(error_type)) == errors.end())
 		errors[std::stoi(error_type)] = value[0] == '.' ? 
 										executable_root_server_ / value.substr(2) : 
