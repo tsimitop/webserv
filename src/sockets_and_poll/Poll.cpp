@@ -195,8 +195,9 @@ void Poll::synchroIO()
 				continue;
 			else if (pollin_int == SIG)
 			{
-				disconecting(i, "POLLERR: ");
-				fds_with_flag_[i].pollfd_.fd = POLLHUP | POLLERR;
+				// disconecting(i, "POLLERR: ");
+				close(fds_with_flag_[i].pollfd_.fd);
+				fds_with_flag_[i].pollfd_.events = POLLHUP | POLLERR;
 			}
 			pollout(i);
 		}
@@ -262,7 +263,7 @@ int	Poll::pollin(size_t i)
 				buffer[bytes] = '\0';
 				updateFinalBuffer(i, bytes, buffer);
 				definingRequest(i);
-				if (fds_with_flag_[i].req_.isValid() == NO)
+				if (fds_with_flag_[i].req_.isInvalid() == YES)
 				{
 					return SIG;
 				}
@@ -488,6 +489,9 @@ int			Poll::updateFinalBuffer(size_t i, int bytes, char buffer[])
 			protected_final_buffer.push_back(buffer[l]);
 		l++;
 	}
+	int just_for_filtered = 0;
+	filteredBuffer(protected_final_buffer, just_for_filtered);
+
 	fds_with_flag_[i].final_buffer_.append(protected_final_buffer);
 	return NO;
 };
