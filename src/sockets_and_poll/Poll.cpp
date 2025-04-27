@@ -111,7 +111,7 @@ int Poll::binding()
 				(HttpRequest){"", s}, 
 				0, 0, 0,
 				{}, s});
-			std::cout << CYAN << "Server: fd[" << server_fd_ << "] port: " << s.listen_ << QUIT << std::endl;
+			std::cout << CYAN << "Server: fd[" << server_fd_ << "] | port: " << s.listen_ << " | root: " << s.root_ << " | uploads_dir: "<< s.locations_[0].uploads_dir_ << QUIT << std::endl;
 			freeaddrinfo(res);
 			poll_success_flag_ +=YES;
 		}
@@ -170,11 +170,11 @@ void Poll::synchroIO()
 		if (activity == -1)
 		{
 			if (errno == EINTR)
-				std::cerr<< RED << "Error: poll failed! Interupted signal!" << QUIT << std::endl;
+				std::cerr<< RED << "\nError: poll failed! Interupted signal!" << QUIT << std::endl;
 			if (errno == EINVAL)
-				std::cerr<< RED << "Error: poll failed!File dirrectories exceeding the max fds or wrong time out value!" << QUIT << std::endl;
+				std::cerr<< RED << "\nError: poll failed!File dirrectories exceeding the max fds or wrong time out value!" << QUIT << std::endl;
 			if (errno == ENOMEM)
-				std::cerr << RED << "Error: poll failed! Not allocation enough space!" << QUIT << std::endl;
+				std::cerr << RED << "\nError: poll failed! Not allocation enough space!" << QUIT << std::endl;
 			break;
 		}
 		connecting();
@@ -187,7 +187,10 @@ void Poll::synchroIO()
 			if (pollin_int == NO)
 				continue;
 			else if (pollin_int == SIG)
-				fds_with_flag_[i].pollfd_.fd = POLLHUP;
+			{
+				disconecting(i, "POLLERR: ");
+				fds_with_flag_[i].pollfd_.fd = POLLHUP | POLLERR;
+			}
 			pollout(i);
 		}
 	}
@@ -252,11 +255,13 @@ int	Poll::pollin(size_t i)
 				buffer[bytes] = '\0';
 				updateFinalBuffer(i, bytes, buffer);
 				definingRequest(i);
+				if (fds_with_flag_[i].req_.isValid() == NO)
+				{
+					return SIG;
+				}
 			}
 		}
 	}
-	// if (fds_with_flag_[i].req_.isValid() == NO)
-	// 	fds_with_flag_[i].pollfd_.events |= POLLOUT;
 	return answer;
 };
 
@@ -362,20 +367,22 @@ void		Poll::setMaxBodyLen(size_t i, int bytes)
 void		Poll::definingRequest(size_t i)
 {
 	fds_with_flag_[i].req_.readRequest(fds_with_flag_[i].final_buffer_, 1);
-	try
+	// try
+	// {
+	// 	fds_with_flag_[i].req_.isValid();
+	// }
+	// catch(...)
+	// {
+	// 	std::cerr << "Invalid request\n";
+	// 	return ;
+	// }
+	if (fds_with_flag_[i].req_.isValid() == NO)
 	{
-		fds_with_flag_[i].req_.isValid();
-	}
-	catch(...)
-	{
-		std::cerr << "Invalid request\n";
 		return ;
 	}
-	
 	fds_with_flag_[i].req_.setCurrentServer(fds_with_flag_[i].connected_server_);
 	//------Thomas-------
-	int	valid_req = fds_with_flag_[i].req_.isValid();
-	(void) valid_req;
+	// int	invalid_req = (int)fds_with_flag_[i].req_.isInvalid();
 	//------Thomas-------
 	if (!fds_with_flag_[i].req_.isCgi())
 		fds_with_flag_[i].pollfd_.events |= POLLOUT;
@@ -384,7 +391,10 @@ void		Poll::definingRequest(size_t i)
 void		Poll::disconecting(size_t& i, std::string str)
 {
 	size_t fd_of_server = fds_with_flag_[i].connected_fds_[0];
-	close(fds_with_flag_[i].pollfd_.fd);
+	//---- additional for error handling--------------------
+	if (fds_with_flag_[i].req_.isInvalid() == NO)
+		close(fds_with_flag_[i].pollfd_.fd);
+	//---- additional for error handling--------------------
 	std::cout << BLUE << "Client : " << fds_with_flag_[i].pollfd_.fd << 
 	" " << str << "Disconnection from Server " << 
 	fd_of_server << QUIT << std::endl;

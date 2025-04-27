@@ -92,12 +92,12 @@ void						Location::validClientMaxBodySize(std::string& value)
 	char last_char_value = value[value.size() - 1];
 	if 	((strIsNumber(value) && std::stol(value) <= 10000000 && std::stol(value) > 1024))
 			return ;
-	if 	((strIsNumber(sub) &&  last_char_value == 'm' && stol(sub) <=10))
+	if 	((strIsNumber(sub) &&  last_char_value == 'm' && stol(sub) <=2))
 	{
 		value = sub + "000000";
 		return ;
 	}
-	if 	((strIsNumber(sub) &&  last_char_value == 'k' && stol(sub) <=10000))
+	if 	((strIsNumber(sub) &&  last_char_value == 'k' && stol(sub) <=1000))
 	{
 		value = sub + "000";
 		return ;

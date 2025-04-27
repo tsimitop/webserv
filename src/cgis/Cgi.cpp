@@ -166,7 +166,7 @@ bool Cgi::performed_wait()
 	if (ret == -1)
 	{
 		cgi_is_executable_ = false;
-		std::cout<<"Error in waitpid\n";
+		// std::cout<<"Error in waitpid\n";
 	}
 	else if (ret == 0)
 		check_timeout();

@@ -17,9 +17,7 @@ int main(int argc, char **argv)
 	}
 	c.preparingAndValidatingConfig(argc , argv);
 	if (c.valid_config_ == NO)
-	{
 		return 1;
-	}
 	c.parsingServers();
 	c.validPostParsing();
 	if(c.valid_config_ == NO)
