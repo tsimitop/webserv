@@ -492,10 +492,6 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 {
 	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
 	std::string current_index = this->current_server_.index;
-	//--------------Thomas addition start----------------------------
-	// std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
-	// std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
-	//--------------Thomas addition end----------------------------
 	if (this->url_ == "/" || this->url_ == current_index || this->url_ == "/" + current_index)
 	{
 		std::filesystem::path target_path = "src/www/" + current_index;
@@ -534,8 +530,6 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 
 const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 {
-	//fixxx it
-	// std::filesystem::path current_www_path = this->current_server_.www_path_;
 	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
 	std::string temp_filename = decodingHexToAscii(this->filename_);
 	std::filesystem::path	path_of_file_to_delete = current_www_path_ / temp_filename;
