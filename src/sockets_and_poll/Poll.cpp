@@ -111,7 +111,13 @@ int Poll::binding()
 				(HttpRequest){"", s}, 
 				0, 0, 0,
 				{}, s});
-			std::cout << CYAN << "Server: fd[" << server_fd_ << "] | port: " << s.listen_ << " | root: " << s.root_ << " | uploads_dir: "<< s.locations_[0].uploads_dir_ << QUIT << std::endl;
+			std::string uploads_dir_str_version = s.locations_[0].uploads_dir_.string();
+			std::cout << CYAN <<
+				"Server: fd[" << server_fd_ <<
+				"] | port: " << s.listen_ <<
+				" | root: " << s.root_ <<
+				" | uploads_dir: "<< uploads_dir_str_version.substr(uploads_dir_str_version.find_last_of("/") + 1) << 
+				QUIT << std::endl;
 			freeaddrinfo(res);
 			poll_success_flag_ +=YES;
 		}
@@ -153,7 +159,8 @@ void	Poll::connecting()
 					{}, (HttpRequest){"", config_.active_servers_[i]}, 
 					0, 0, 0,
 					{(size_t)fds_with_flag_[i].pollfd_.fd}, config_.active_servers_[i]}); // saving with which port they are connected and in which server
-				std::cout <<YELLOW  << "Client: " << client_fd << " connected to [" << fds_with_flag_[i].pollfd_.fd << "]" << QUIT<< std::endl;
+				std::cout <<YELLOW  << "Client: " << client_fd << " connected to fd[" << fds_with_flag_[i].pollfd_.fd << "] " 
+				<< "| with server_listen : " << fds_with_flag_[i].connected_server_.listen_ << " | server_root: " << fds_with_flag_[i].connected_server_.root_ <<  QUIT<< std::endl;
 			}
 			fds_with_flag_[i].connected_fds_.push_back((size_t)client_fd);
 		}
