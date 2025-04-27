@@ -7,6 +7,7 @@
 #include <fstream>
 #include <filesystem>
 #include <vector>
+#include <csignal>
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -15,10 +16,9 @@
 #define MAGENTA "\033[35m"
 #define CYAN "\033[36m"
 #define QUIT "\033[0m"
-
 enum answer{YES = 1, NO = 0, SIG = 2, EOF_FLAG = 3};
 enum methods{GET = 1, POST = 2, DELETE = 4};
-// int SIGNALS_E = NO;
+extern volatile sig_atomic_t poll_flag;//asynchronus signal data type 
 const std::map<int, std::string> all_posible_errors 
 = {
 	{100, "Continue"},
@@ -100,6 +100,8 @@ struct Location
 	Location();
 	Location(std::filesystem::path absolute_path);
 	Location(const Location& other);
+	// Location(Location&& other) noexcept = default;
+	// Location& operator=(Location&& other) noexcept = default;
 	Location& operator=(const Location& other);
 	~Location();
 	//===============METHODS ========================================================
@@ -127,6 +129,7 @@ int								strIsAlphaOr(std::string str, char extraChar);
 void							printError(std::string type, std::string line);
 std::string						decodingHexToAscii(std::string filename);
 size_t							findTheSizeOfAgivenFile(const std::filesystem::path& file);
+void							signalHandler(int singal);
 template <typename T>
 std::ostream& 					operator<<(std::ostream& os, std::vector<T>& vec)
 	{

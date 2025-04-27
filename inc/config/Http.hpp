@@ -20,6 +20,8 @@ struct Http
 	//===============DEFAULT CONSTRUCTORS ===========================================
 	Http();
 	Http(const Http& other);
+	// Http(Http&& other) noexcept = default;
+	// Http& operator=(Http&& other) noexcept = default;
 	Http& operator=(const Http& other);
 	~Http();
 	//===============METHODS ========================================================

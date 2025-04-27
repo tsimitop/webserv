@@ -41,6 +41,8 @@ struct PollFdWithFlag
 //===================DEFAULT CONSTRUCTORS================================
 	PollFdWithFlag() = delete;
 	PollFdWithFlag(const PollFdWithFlag& other);
+	// PollFdWithFlag(PollFdWithFlag&& other) noexcept = default;
+	// PollFdWithFlag& operator=(PollFdWithFlag&& other) noexcept = default;
 	PollFdWithFlag(
 		pollfd temp_fd, 
 		int state,

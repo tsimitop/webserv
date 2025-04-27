@@ -32,6 +32,8 @@ struct ServerInfo
 	//=============DEFAULT CONTRUCTORS ============================================
 	ServerInfo();
 	ServerInfo(const ServerInfo& other);
+	// ServerInfo(ServerInfo&& other) noexcept = default;
+	// ServerInfo& operator=(ServerInfo&& other) noexcept = default;
 	ServerInfo& operator=(const ServerInfo& other);
 	~ServerInfo();
 	//=============METHODS ========================================================

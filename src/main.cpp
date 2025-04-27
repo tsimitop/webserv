@@ -6,14 +6,9 @@
 
 int main(int argc, char **argv)
 {
+	signal(SIGINT, signalHandler);
 	HttpResponse	response;
 	std::cout << YELLOW <<  "STARTING WEB SERVER: you will be informed on the sockets listening soon.\n" << QUIT;
-	// logToFile("entered main");
-	//---------------------------Config parsing---------------------------
-	// signal(SIGINT, signalHandler);
-	// if (SIGNALS_E)
-	// 	return 1;
-	// if (SIGNALS_E) return 1;
 	Http c;
 	if (argc > 2)
 	{
@@ -26,15 +21,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	c.parsingServers();
-	// we need to check if all the necessayry atributes are serred localhost, max bodylen and timeout
 	c.validPostParsing();
 	if(c.valid_config_ == NO)
 	{
 		std::cerr << "Error: You need atleast one valid server!\n"; //
 		return (1);
 	}
-	// if (SIGNALS_E) return 1;
-	// signal(SIGINT, signalHandler);
 	Poll poll_one;
 	poll_one.setConfig(c);
 	if (poll_one.binding() != NO)

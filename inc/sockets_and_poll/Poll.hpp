@@ -20,6 +20,8 @@ struct Poll
 	//===============DEFAULTS========================================================
 	Poll();
 	Poll(const Poll& other);
+	// Poll(Poll&& other) noexcept = default;
+	// Poll& operator=(Poll&& other) noexcept = default;
 	Poll& operator=(const Poll& other);
 	~Poll();
 	//===============SETTERS=========================================================

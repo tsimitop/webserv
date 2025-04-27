@@ -1,4 +1,7 @@
 #include "../../inc/config/Location.hpp"
+
+volatile sig_atomic_t poll_flag = YES;
+
 Location::Location() : 
 location_lines_(), 
 executable_root_location_(),
@@ -14,6 +17,7 @@ redir_status_(0),
 cgi_map_()
 {
 };
+
 Location::Location(std::filesystem::path absolute_path)
 {
 	executable_root_location_ = absolute_path;
@@ -316,4 +320,9 @@ size_t			findTheSizeOfAgivenFile(const std::filesystem::path& file)
 {
 std::ifstream check(file, std::ios::binary | std::ios::ate);
 return (size_t)check.tellg();
+};
+void							signalHandler(int singal)
+{
+	if (singal == SIGINT)
+		poll_flag = NO;
 };
