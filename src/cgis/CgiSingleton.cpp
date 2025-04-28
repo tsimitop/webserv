@@ -41,14 +41,11 @@ size_t CgiSingleton::singleton_size()
 
 std::shared_ptr<Cgi> CgiSingleton::access_cgi(int poll_fd)
 {
-    auto it = running_cgis_.find(poll_fd);
-    if (it != running_cgis_.end())
-        return it->second;
-    else
-    {
-        // std::cout << poll_fd << ": poll_fd not found in running_cgis_" << std::endl;
-        return nullptr;
-    }
+	auto it = running_cgis_.find(poll_fd);
+	if (it != running_cgis_.end())
+		return it->second;
+	else
+		return nullptr;
 }
 
 CgiSingleton::~CgiSingleton(){}

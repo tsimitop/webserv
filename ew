@@ -1,0 +1,194 @@
+//___
+int	Poll::pollin(size_t i)
+{
+	int answer = YES;
+	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
+	{
+		size_t temp_len = lengthProt(i);
+		char buffer[lengthProt(i) + 1];
+		
+		memset(buffer, 0, lengthProt(i) + 1); //
+		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
+		std::cout << MAGENTA << buffer << QUIT << std::endl;
+		if (bytes == 0 || bytes < 0)
+			answer = eAgainAndEWouldblock(i, bytes);
+		else
+		{
+			int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
+			if (checking_signals == SIG)
+				return SIG;
+			// if ((size_t)bytes > temp_len)
+			// {
+			// 	std::cerr << "not valid config or sockets!\n";
+			// 	fds_with_flag_[i].pollfd_.events = POLLERR;
+			// }
+			//Handle \r\n
+			// if buffer !found \r\n continue + append
+			// if (fds_with_flag_[i].content_length_ == 0 && bytes > 0)
+			// 	fds_with_flag_[i].setContentLength(bytes,buffer);
+			// size_t final_buffer_len = fds_with_flag_[i].final_buffer_.length();
+			// size_t content_len = fds_with_flag_[i].content_length_;
+			size_t location_body_size = (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
+			std::cout << location_body_size << " = server_body_size" << std::endl;
+			// std::cout << content_len << " = content_len" << std::endl;
+			std::cout << (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_ << " = location server_body_size" << std::endl;
+			std::string temp_buffer;
+			// int j = -1;
+			// std::cout << buffer << " = buffer1\n";
+			// while(++j != bytes)
+			// 	temp_buffer[j] = buffer[j];
+			// std::cout << buffer << " = buffer2\n";
+			// std::cout << temp_buffer << " = temp_buffer\n";
+			// std::string checked_buffer = fds_with_flag_[i].final_buffer_ ; //+ temp_buffer
+			// std::cout << "[" << checked_buffer << "]" << std::endl;
+			temp_buffer = buffer;
+			std::string final_buffer = fds_with_flag_[i].final_buffer_;
+			bool is_post = final_buffer.find("POST ", 0, 4) != std::string::npos;
+			bool rnrn_found = final_buffer.find("\r\n\r\n") != std::string::npos;
+			if (rnrn_found == NO)
+			{
+				// fds_with_flag_[i].pollfd_.events |= POLLOUT;
+				// buffer[bytes] = '\0';
+				// std::cout << "temp_buffer: " << temp_buffer << std::endl;
+				// std::cout << "fds_with_flag_[i].final_buffer_: " << fds_with_flag_[i].final_buffer_ << std::endl;
+				fds_with_flag_[i].final_buffer_.append(temp_buffer);
+				// updateFinalBuffer(i, bytes, buffer);
+				std::cout << BLUE << "fds_with_flag_[i].final_buffer_: ["<< fds_with_flag_[i].final_buffer_<< "]" <<std::endl << QUIT;
+				// definingRequest(i);
+				rnrn_found = fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos;
+				is_post = fds_with_flag_[i].final_buffer_.find("POST ", 0, 4) != std::string::npos;
+				std::cout << fds_with_flag_[i].final_buffer_.find("\r\n\r\n") << " = final_buffer.find('\r\n\r\n')\n";
+				std::cout << std::boolalpha << is_post << " = is post\n";
+				std::cout << std::boolalpha << rnrn_found << " = is rnrn_found\n";
+				if (rnrn_found && is_post == NO)
+				{
+					std::cout << YELLOW << "rnrn_found && is_post == NO" << QUIT << std::endl;
+					definingRequest(i);
+					// if (fds_with_flag_[i].req_.isInvalid() == YES)
+					// 	return SIG;
+					return YES;
+				}
+				std::cout << "WILL CONTINUE\n";
+				return NO;
+			}
+			else
+			{
+				if (is_post == YES && temp_buffer.find("\r\n") == std::string::npos)
+				{
+					fds_with_flag_[i].final_buffer_.append(temp_buffer);
+					return NO;
+				}
+				fds_with_flag_[i].final_buffer_.append(temp_buffer);
+				definingRequest(i);
+				// if (fds_with_flag_[i].req_.isInvalid() == YES)
+				// {
+				// 	return SIG;
+				// }
+				return YES;
+			}
+			// if (temp_len ==(size_t)bytes || (content_len > (size_t)bytes + final_buffer_len && content_len !=0))
+			// 	{
+			// 		answer = updateFinalBuffer(i, bytes, buffer);
+			// 	}
+			// else
+			// {
+			// 	std::cout << "other\n";
+			// 	buffer[bytes] = '\0';
+			// 	fds_with_flag_[i].final_buffer_.append(temp_buffer);
+			// 	definingRequest(i);
+			// 	if (fds_with_flag_[i].req_.isInvalid() == YES)
+			// 	{
+			// 		return SIG;
+			// 	}
+			// }
+		}
+	}
+	return answer;
+};
+________________________________________________________________-
+//___________________________________________________________________-
+//___________________________________________________________________-
+//___________________________________________________________________-
+int	Poll::pollin(size_t i)
+{
+	int answer = YES;
+	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
+	{
+		size_t temp_len = lengthProt(i);
+		char buffer[lengthProt(i) + 1];
+		
+		memset(buffer, 0, lengthProt(i) + 1); //
+		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
+		std::cout << MAGENTA << buffer << QUIT << std::endl;
+		if (bytes == 0 || bytes < 0)
+			answer = eAgainAndEWouldblock(i, bytes);
+		else
+		{
+			int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
+			if (checking_signals == SIG)
+				return SIG;
+			// if ((size_t)bytes > temp_len)
+			// {
+			// 	std::cerr << "not valid config or sockets!\n";
+			// 	fds_with_flag_[i].pollfd_.events = POLLERR;
+			// }
+			//Handle \r\n
+			// if buffer !found \r\n continue + append
+			// if (fds_with_flag_[i].content_length_ == 0 && bytes > 0)
+			// 	fds_with_flag_[i].setContentLength(bytes,buffer);
+			// size_t final_buffer_len = fds_with_flag_[i].final_buffer_.length();
+			// size_t content_len = fds_with_flag_[i].content_length_;
+			size_t location_body_size = (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
+			std::cout << location_body_size << " = server_body_size" << std::endl;
+			// std::cout << content_len << " = content_len" << std::endl;
+			std::cout << (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_ << " = location server_body_size" << std::endl;
+			std::string temp_buffer;
+			// int j = -1;
+			// std::cout << buffer << " = buffer1\n";
+			// while(++j != bytes)
+			// 	temp_buffer[j] = buffer[j];
+			temp_buffer = buffer;
+			// std::cout << buffer << " = buffer2\n";
+			// std::cout << temp_buffer << " = temp_buffer\n";
+			// std::string checked_buffer = fds_with_flag_[i].final_buffer_ ; //+ temp_buffer
+			// std::cout << "[" << checked_buffer << "]" << std::endl;
+			if (fds_with_flag_[i].final_buffer_.find("\r\n\r\n") == std::string::npos)
+			{
+				// fds_with_flag_[i].pollfd_.events |= POLLOUT;
+				// buffer[bytes] = '\0';
+				// std::cout << "temp_buffer: " << temp_buffer << std::endl;
+				// std::cout << "fds_with_flag_[i].final_buffer_: " << fds_with_flag_[i].final_buffer_ << std::endl;
+				fds_with_flag_[i].final_buffer_.append(temp_buffer);
+				std::string final_buffer = fds_with_flag_[i].final_buffer_;
+				// updateFinalBuffer(i, bytes, buffer);
+				std::cout << BLUE << "fds_with_flag_[i].final_buffer_: ["<< fds_with_flag_[i].final_buffer_<< "]" <<std::endl << QUIT;
+				if (fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos)
+				{
+					definingRequest(i);
+					// if (fds_with_flag_[i].req_.isInvalid() == YES)
+					// 	return SIG;
+					return YES;
+				}
+				// definingRequest(i);
+				std::cout << "WILL CONTINUE\n";
+				return NO;
+			}
+			// if (temp_len ==(size_t)bytes || (content_len > (size_t)bytes + final_buffer_len && content_len !=0))
+			// 	{
+			// 		answer = updateFinalBuffer(i, bytes, buffer);
+			// 	}
+			else
+			{
+				std::cout << "other\n";
+				buffer[bytes] = '\0';
+				fds_with_flag_[i].final_buffer_.append(temp_buffer);
+				definingRequest(i);
+				if (fds_with_flag_[i].req_.isInvalid() == YES)
+				{
+					return SIG;
+				}
+			}
+		}
+	}
+	return answer;
+};

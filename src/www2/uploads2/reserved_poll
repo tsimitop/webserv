@@ -55,89 +55,88 @@ int Poll::binding()
 	int poll_success_flag_ = NO;
 	for (ServerInfo& s : config_.config_valid_servers_)
 	{
-			addrinfo temp, *res = nullptr;
-			memset(&temp, 0, sizeof(temp));
-			std::string port_char_pointer = std::to_string(s.listen_);
-			temp.ai_family = AF_UNSPEC;
-			temp.ai_socktype = SOCK_STREAM;
-			temp.ai_flags = AI_PASSIVE;
-			if (!s.server_name_.empty() && !port_char_pointer.empty())
+		addrinfo temp, *res = nullptr;
+		memset(&temp, 0, sizeof(temp));
+		std::string port_char_pointer = std::to_string(s.listen_);
+		temp.ai_family = AF_UNSPEC;
+		temp.ai_socktype = SOCK_STREAM;
+		temp.ai_flags = AI_PASSIVE;
+		if (!s.server_name_.empty() && !port_char_pointer.empty())
+		{
+			if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
 			{
-				if (getaddrinfo(s.server_name_.c_str(), port_char_pointer.c_str(), &temp, &res) != 0)
-				{
-					std::cerr << RED << "Error: Get Address Info Failed!" << QUIT<<std::endl;
-					s.valid_server_ = NO;
-					freeaddrinfo(res);
-					continue;
-				};
-			}
-			else
-			{
-				std::cerr << RED << "The port or host_name is empty!" << QUIT<<std::endl;
-				s.valid_server_ = NO;
-				continue;
-			}
-			server_fd_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-			if (server_fd_ == -1)
-			{
-				std::cerr << RED << "Error: Socket Failed!" << QUIT<<std::endl;
-				s.valid_server_ = NO;
-				freeaddrinfo(res);
-				continue;
-			}
-			setNonBlockingFd(server_fd_);
-			int opt = 1;
-			if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-			{
-				std::cerr << RED << "Error: SockOpt failed!" << QUIT<<std::endl;
+				std::cerr << RED << "Error: Get Address Info Failed!" << QUIT<<std::endl;
 				s.valid_server_ = NO;
 				freeaddrinfo(res);
 				continue;
 			};
-			if (bind(server_fd_,res->ai_addr,res->ai_addrlen) == -1)
-			{
-				std::cerr << RED << "Error: Bind failed!" << QUIT<<std::endl;
-				s.valid_server_ = NO;
-				freeaddrinfo(res);
-				continue;
-			};
-			listen(server_fd_, max_queued_clients_);
-			config_.active_servers_.push_back(s);
-			fds_with_flag_.push_back(
-				(PollFdWithFlag){{server_fd_, POLLIN, 0}, 
-				FIRST_TIME,
-				SERVER,
-				{}, 
-				(HttpRequest){"", s}, 
-				0, 0, 0,
-				{}, s});
-			std::string uploads_dir_str_version = s.locations_[0].uploads_dir_.string();
-			std::cout << CYAN <<
-				"Server: fd[" << server_fd_ <<
-				"] | port: " << s.listen_ <<
-				" | root: " << s.root_ <<
-				" | uploads_dir: "<< uploads_dir_str_version.substr(uploads_dir_str_version.find_last_of("/") + 1) << 
-				QUIT << std::endl;
-			freeaddrinfo(res);
-			poll_success_flag_ +=YES;
 		}
+		else
+		{
+			std::cerr << RED << "The port or host_name is empty!" << QUIT<<std::endl;
+			s.valid_server_ = NO;
+			continue;
+		}
+		server_fd_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		if (server_fd_ == -1)
+		{
+			std::cerr << RED << "Error: Socket Failed!" << QUIT<<std::endl;
+			s.valid_server_ = NO;
+			freeaddrinfo(res);
+			continue;
+		}
+		setNonBlockingFd(server_fd_);
+		int opt = 1;
+		if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+		{
+			std::cerr << RED << "Error: SockOpt failed!" << QUIT<<std::endl;
+			s.valid_server_ = NO;
+			freeaddrinfo(res);
+			continue;
+		};
+		if (bind(server_fd_,res->ai_addr,res->ai_addrlen) == -1)
+		{
+			std::cerr << RED << "Error: Bind failed!" << QUIT<<std::endl;
+			s.valid_server_ = NO;
+			freeaddrinfo(res);
+			continue;
+		};
+		listen(server_fd_, max_queued_clients_);
+		config_.active_servers_.push_back(s);
+		fds_with_flag_.push_back(
+			(PollFdWithFlag){{server_fd_, POLLIN, 0}, 
+			FIRST_TIME,
+			SERVER,
+			{}, 
+			(HttpRequest){"", s}, 
+			0, 0, 0,
+			{}, s});
+		std::string uploads_dir_str_version = s.locations_[0].uploads_dir_.string();
+		std::cout << CYAN <<
+			"Server: fd[" << server_fd_ <<
+			"] | port: " << s.listen_ <<
+			" | root: " << s.root_ <<
+			" | uploads_dir: "<< uploads_dir_str_version.substr(uploads_dir_str_version.find_last_of("/") + 1) << 
+			QUIT << std::endl;
+		freeaddrinfo(res);
+		poll_success_flag_ +=YES;
+	}
 	return poll_success_flag_;
 };
 //===============POLL CALL ======================================================
 int Poll::polling()
 {
 	fds_.clear();
-		// is running the pollfds
-		for (size_t i = 0; i != fds_with_flag_.size(); i++)
-			fds_.push_back(fds_with_flag_[i].pollfd_);
-		int activity = poll(
-							fds_.data(),
-							fds_.size(), 
-							0
-						);
-		for (size_t i = 0; i != fds_with_flag_.size(); i++)
-			 fds_with_flag_[i].pollfd_ =fds_[i];
-		return activity;
+	for (size_t i = 0; i != fds_with_flag_.size(); i++)
+		fds_.push_back(fds_with_flag_[i].pollfd_);
+	int activity = poll(
+						fds_.data(),
+						fds_.size(), 
+						0
+					);
+	for (size_t i = 0; i != fds_with_flag_.size(); i++)
+		 fds_with_flag_[i].pollfd_ =fds_[i];
+	return activity;
 };
 
 void	Poll::connecting()
@@ -197,7 +196,6 @@ void Poll::synchroIO()
 				continue;
 			else if (pollin_int == SIG)
 			{
-				// disconecting(i, "POLLERR: ");
 				close(fds_with_flag_[i].pollfd_.fd);
 				fds_with_flag_[i].pollfd_.events = POLLHUP | POLLERR;
 			}
@@ -216,7 +214,7 @@ void		Poll::pollhup(size_t& i)
 							fds_with_flag_[i].pollfd_.revents &  POLLWRBAND ? " POLLWRBAND: ":
 							fds_with_flag_[i].pollfd_.revents & POLLRDNORM ? " POLLRDNORM" :
 							"UNCLASSIFIED POLL HUNG UP: ";
-	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
+	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM))
 		disconecting(i, poll_err);
 };
 
@@ -240,33 +238,29 @@ int	Poll::pollin(size_t i)
 			int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
 			if (checking_signals == SIG)
 				return SIG;
-			size_t location_body_size = (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
-			std::cout << location_body_size << " = server_body_size" << std::endl;
-			std::cout << (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_ << " = location server_body_size" << std::endl;
-			std::string temp_buffer;
-			temp_buffer = buffer;
+			std::string temp_buffer = buffer;
 			std::string final_buffer = fds_with_flag_[i].final_buffer_;
+
+			std::stringstream ss(final_buffer);
+			// bool is_cgi = false;
+			// std::string method, cgi;
+			// ss >> method >> cgi;
+			// if (method == "POST" && cgi.substr(cgi.find_last_of(".") + 1) == "py")
+			// 	is_cgi = true;
 			bool is_post = final_buffer.find("POST ", 0, 4) != std::string::npos;
 			bool rnrn_found = final_buffer.find("\r\n\r\n") != std::string::npos;
 			if (rnrn_found == NO)
 			{
 				fds_with_flag_[i].final_buffer_.append(temp_buffer);
-				final_buffer = fds_with_flag_[i].final_buffer_;
-				std::cout << BLUE << "fds_with_flag_[i].final_buffer_: ["<< fds_with_flag_[i].final_buffer_<< "]" <<std::endl << QUIT;
 				rnrn_found = fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos;
 				is_post = fds_with_flag_[i].final_buffer_.find("POST ", 0, 4) != std::string::npos;
-				std::cout << fds_with_flag_[i].final_buffer_.find("\r\n\r\n") << " = final_buffer.find('\r\n\r\n')\n";
-				std::cout << std::boolalpha << is_post << " = is post\n";
-				std::cout << std::boolalpha << rnrn_found << " = is rnrn_found\n";
-				if (final_buffer.find("sec-ch-ua: ") != std::string::npos)
-					definingRequest(i);
-				if ((rnrn_found && is_post == NO) || final_buffer.length() == fds_with_flag_[i].content_length_)
+				if (rnrn_found && (is_post == NO))
 				{
-					std::cout << YELLOW << "rnrn_found && is_post == NO" << QUIT << std::endl;
 					definingRequest(i);
+					std::cout << "IS READY1\n";
 					return YES;
 				}
-				std::cout << "WILL CONTINUE\n";
+				std::cout << "IS NOOOOOT READY1\n";
 				return NO;
 			}
 			else
@@ -274,12 +268,13 @@ int	Poll::pollin(size_t i)
 				if (is_post == YES && temp_buffer.find("\r\n") == std::string::npos)
 				{
 					fds_with_flag_[i].final_buffer_.append(temp_buffer);
-				definingRequest(i);
-
+					definingRequest(i);
+					std::cout << "IS NOOOOOT READY2\n";
 					return NO;
 				}
 				fds_with_flag_[i].final_buffer_.append(temp_buffer);
 				definingRequest(i);
+				std::cout << "IS READY2\n";
 				return YES;
 			}
 		}
@@ -307,6 +302,7 @@ void		Poll::pollout(size_t i)
 		}
 		else
 		{
+			std::cout << "IS CGI\n";
 			std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd);
 			if (cgi == nullptr)
 			{
@@ -314,7 +310,6 @@ void		Poll::pollout(size_t i)
 				return;
 			}
 			response_str = cgi->getRespBody();
-			std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
 
 			int act = send(fds_with_flag_[i].pollfd_.fd, response_str.c_str(), response_str.length(), 0);
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
@@ -387,23 +382,11 @@ void		Poll::setMaxBodyLen(size_t i, int bytes)
 void		Poll::definingRequest(size_t i)
 {
 	fds_with_flag_[i].req_.readRequest(fds_with_flag_[i].final_buffer_, 1);
-	// try
-	// {
-	// 	fds_with_flag_[i].req_.isValid();
-	// }
-	// catch(...)
-	// {
-	// 	std::cerr << "Invalid request\n";
-	// 	return ;
-	// }
 	if (fds_with_flag_[i].req_.isValid() == NO)
 	{
 		return ;
 	}
 	fds_with_flag_[i].req_.setCurrentServer(fds_with_flag_[i].connected_server_);
-	//------Thomas-------
-	// int	invalid_req = (int)fds_with_flag_[i].req_.isInvalid();
-	//------Thomas-------
 	if (!fds_with_flag_[i].req_.isCgi())
 		fds_with_flag_[i].pollfd_.events |= POLLOUT;
 };
@@ -411,10 +394,8 @@ void		Poll::definingRequest(size_t i)
 void		Poll::disconecting(size_t& i, std::string str)
 {
 	size_t fd_of_server = fds_with_flag_[i].connected_fds_[0];
-	//---- additional for error handling--------------------
 	if (fds_with_flag_[i].req_.isInvalid() == NO)
 		close(fds_with_flag_[i].pollfd_.fd);
-	//---- additional for error handling--------------------
 	std::cout << BLUE << "Client : " << fds_with_flag_[i].pollfd_.fd << 
 	" " << str << "Disconnection from Server " << 
 	fd_of_server << QUIT << std::endl;
@@ -474,9 +455,7 @@ int			Poll::eAgainAndEWouldblock(size_t i, int bytes)
 	if (bytes == 0)
 	{
 		std::cout << "This string is empty!\n";
-		// close(fds_with_flag_[i].pollfd_.fd);
 		fds_with_flag_[i].pollfd_.events = POLLOUT;
-		// disconecting(i, "(EOF)");
 	}
 	else
 	{
@@ -488,7 +467,6 @@ int			Poll::eAgainAndEWouldblock(size_t i, int bytes)
 			fds_with_flag_[i].pollfd_.events = POLLOUT;
 		}
 	}
-			// disconecting(i, "(recv)"); // EINVAL ECONNECTRESET ENOTCONN
 	return NO;
 };
 int			Poll::updateFinalBuffer(size_t i, int bytes, char buffer[])

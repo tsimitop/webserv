@@ -46,14 +46,6 @@ HttpRequest::HttpRequest(const std::string& request, const ServerInfo& server_in
 	is_redir_ = false;
 	req_is_invalid_ = false;
 	forbidden_meth_ = false;
-	// Test for proper location redirs
-	// for (Location& location : this->current_server_.locations_)
-	// {
-	// 	std::cout << RED << location.name_ << " = locations name\n" << QUIT;
-	// 	std::cout << RED << location.redir_status_ << " = locations redir_status_\n" << QUIT;
-	// 	std::cout << RED << location.redir_location_ << " = locations redir_location_\n" << QUIT;
-	// 	std::cout << RED << std::boolalpha << location.is_redir_ << " = locations is_redir_\n" << QUIT;
-	// }
 }
 
 bool HttpRequest::wasExecuted()
@@ -164,7 +156,10 @@ void	HttpRequest::parseMethod(std::string& line)
 	if (isValidMethod(method))
 		method_ = method;
 	else
+	{
 		method_ = "UKNOWN";
+		req_is_invalid_ = true;
+	}
 }
 
 void	HttpRequest::parseUrl(std::string& line)
@@ -176,7 +171,7 @@ void	HttpRequest::parseUrl(std::string& line)
 	firstSpace = line.find(' ');
 	if (firstSpace == std::string::npos)
 	{
-		std::cout << "no url provided\n";
+		std::cout << RED << "no url provided\n" << QUIT;
 		url_ = "";
 	}
 	else
@@ -189,7 +184,7 @@ void	HttpRequest::parseHttpVersion(std::string& line)
 
 	version = removeFirstWord(line);
 	if (version.size() == 0)
-		std::cout << "no version provided\n";
+		std::cout << RED << "no version provided\n" << QUIT;
 	else
 		version_ = version;
 }
@@ -340,20 +335,11 @@ bool	HttpRequest::isValid()
 	if (method_ == "UKNOWN" || url_.empty() || version_.empty())
 	{
 		if (method_ == "UKNOWN")
-		{
 			req_is_invalid_ = true;
-			std::cout << RED << "Can't handle uknown method->400 Bad Request" << QUIT << std::endl;
-		}
 		if (url_.empty())
-		{
 			req_is_invalid_ = true;
-			std::cout << RED << "No url->server should be closed by foreign host" << QUIT << std::endl;
-		}
 		if (version_.empty())
-		{
 			req_is_invalid_ = true;
-			std::cout << RED << "No HTTP version->server should be closed by foreign host" << QUIT << std::endl;
-		}
 		return (false);
 	}
 	auto it = headers_.begin();
@@ -393,15 +379,17 @@ void	HttpRequest::extractPortFromHost()
 	}
 	std::string	port = it->second.substr(pos + 1, std::string::npos);
 	int			portNbr;
-	try {
+	try
+	{
 		portNbr = stoi(port);
 	}
-	catch (const std::invalid_argument& e) {
+	catch (const std::invalid_argument& e)
+	{
 		std::cout << RED << "Exception thrown: Couldn't convert port to int" << QUIT << std::endl;
 		return;
 	}
 
-	if (portNbr > 0 && portNbr < 65536) // NOT SURE ABOUT THIS CHECK!!!
+	if (portNbr > 0 && portNbr < 65536)
 		port_ = portNbr;
 	else
 		std::cout << RED << "Consider choosing another port instead of PORT:" << portNbr << QUIT << std::endl;
@@ -452,14 +440,10 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
 	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
 	std::string length = headers_["Content-Length"];
-	//Thomas additional cond start
+
 	if ((size_t)this->current_server_.locations_[0].client_max_body_size_ < (size_t)stoul(length))
-	{
 		resp.createResponse(413, available_errors_[413]);
-		return resp;
-	}
-	//Thomas additional cond end
-	if ((int)(this->getBody().length()) != stoi(length)) // remove most of this if statement after debugging
+	else if ((int)(this->getBody().length()) != stoi(length))
 	{
 		std::cout << RED << "Body length is not correct\n" << QUIT;
 		resp.createResponse(500, available_errors_[500]);
@@ -467,7 +451,7 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 	else
 	{
 		std::ofstream file(current_uploads_path / filename);
-		if (!file.is_open()) // probably needs to be handled by html and/or config
+		if (!file.is_open())
 			resp.createResponse(500, available_errors_[500]);
 		else
 		{
@@ -492,38 +476,20 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 {
 	std::map<int, std::filesystem::path> available_errors = this->current_server_.errors;
 	std::string current_index = this->current_server_.index;
-	if (this->url_ == "/" || this->url_ == current_index || this->url_ == "/" + current_index)
-	{
-		std::filesystem::path target_path = "src/www/" + current_index;
-		std::ifstream input_file(target_path.string());
-		if (!input_file.is_open())
-			resp.createResponse(404, available_errors_[404]);
-		else
-		{
-			//--------------Thomas addition start----------------------------
-			size_t client_max_body_size = this->current_server_.client_max_body_size_;
-			size_t server_index_length = findTheSizeOfAgivenFile(target_path);
-			if (client_max_body_size < server_index_length)
-			{
-				resp.createResponse(413, available_errors_[413]);
-				return resp;
-			}
-			//--------------Thomas addition end------------------------------
-			resp.createResponse(200, target_path);
-		}
-	}
+	if (this->url_ == "/")
+		this->url_ += this->current_server_.index;
+	std::filesystem::path	target_path = current_www_path_ += this->url_;
+	std::ifstream			input_file(target_path.string());
+	std::string		filename =target_path.string().substr(target_path.string().find_last_of('/') + 1);
+	if (!input_file)
+		resp.createResponse(404, available_errors_[404]);
 	else
 	{
-		std::filesystem::path	target_path = current_www_path_ += this->url_;
-		std::ifstream			input_file(target_path.string());
-		if (!input_file)
-			resp.createResponse(404, available_errors_[404]);
-		else
-		{
-			if (this->url_.substr(this->url_.find_last_of(".")) == ".ico")
-				resp.setContentType("image/vnd");
-			resp.createResponse(200, target_path);
-		}
+		if (this->url_.substr(this->url_.find_last_of(".")) == ".ico")
+			resp.setContentType("image/vnd");
+		resp.createResponse(200, target_path);
+		if ((size_t)resp.getContentLength() >= (size_t)this->current_server_.client_max_body_size_)
+			resp.createResponse(413, available_errors_[413]);
 	}
 	return resp;
 }
@@ -581,6 +547,8 @@ const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
+	std::cout << "performMethod: " <<this->method_ << std::endl;
+	std::cout << std::boolalpha << "this->isInvalid(): " <<this->isInvalid() << std::endl;
 	if (this->isInvalid())
 		resp.createResponse(400, available_errors_[400]);
 	else if (this->isForbidden())
