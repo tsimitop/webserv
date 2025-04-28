@@ -97,7 +97,7 @@ void		Location::validClientMaxBodySize(std::string& value)
 		value = sub + "000000";
 		return ;
 	}
-	if 	((strIsNumber(sub) &&  last_char_value == 'k' && stol(sub) <=1000))
+	if 	((strIsNumber(sub) &&  last_char_value == 'k' && stol(sub) <=1000 && stol(sub) >= 1))
 	{
 		value = sub + "000";
 		return ;
@@ -156,6 +156,8 @@ void		Location::setClientMaxBodySize(std::string line)
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
 		validClientMaxBodySize(value);
+		if (std::stol(value) < 1024)
+			valid_location_ = NO;
 		if (valid_location_ != NO)
 			client_max_body_size_ = std::stol(value);
 		else

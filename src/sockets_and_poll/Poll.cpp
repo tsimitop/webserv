@@ -178,8 +178,8 @@ void Poll::synchroIO()
 		int activity = polling();
 		if (activity == -1)
 		{
-			if (errno == EINTR)
-				std::cerr<< RED << "\nError: poll failed! Interupted signal!" << QUIT << std::endl;
+			// if (errno == EINTR)
+			// 	std::cerr<< RED << "\nError: poll failed! Interupted signal!" << QUIT << std::endl;
 			if (errno == EINVAL)
 				std::cerr<< RED << "\nError: poll failed!File dirrectories exceeding the max fds or wrong time out value!" << QUIT << std::endl;
 			if (errno == ENOMEM)
