@@ -62,6 +62,11 @@ void Cgi::check_timeout()
 Cgi::Cgi(int poll_fd, const HttpRequest& request)
 : status_(0), poll_fd_(poll_fd), cgi_is_executable_(true), timed_out_(false), cgi_request_(request), exec_complete_(false)
 {
+	exec_complete_ = false;
+	cgi_is_executable_ = false;
+	timed_out_ = false;
+	has_forked_ = false;
+	has_forked_ = false;
 	available_errors_ = cgi_request_.getAvailableErrors();
 	www_path_ = request.getPathW();
 	url_ = request.getUrl();
