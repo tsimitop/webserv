@@ -453,7 +453,7 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
 	std::string length = headers_["Content-Length"];
 	//Thomas additional cond start
-	if ((size_t)this->current_server_.client_max_body_size_ < (size_t)stoul(length))
+	if ((size_t)this->current_server_.locations_[0].client_max_body_size_ < (size_t)stoul(length))
 	{
 		resp.createResponse(413, available_errors_[413]);
 		return resp;

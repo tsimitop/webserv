@@ -86,13 +86,13 @@ void						Location::validPath(std::string line)
 		valid_location_ = NO;
 };
 
-void						Location::validClientMaxBodySize(std::string& value)
+void		Location::validClientMaxBodySize(std::string& value)
 {
 	std::string sub = value.substr(0, value.size() - 1);
 	char last_char_value = value[value.size() - 1];
 	if 	((strIsNumber(value) && std::stol(value) <= 10000000 && std::stol(value) > 1024))
 			return ;
-	if 	((strIsNumber(sub) &&  last_char_value == 'm' && stol(sub) <=2))
+	if 	((strIsNumber(sub) &&  last_char_value == 'm' && stol(sub) <=6))
 	{
 		value = sub + "000000";
 		return ;

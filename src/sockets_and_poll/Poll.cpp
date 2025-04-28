@@ -159,8 +159,10 @@ void	Poll::connecting()
 					{}, (HttpRequest){"", config_.active_servers_[i]}, 
 					0, 0, 0,
 					{(size_t)fds_with_flag_[i].pollfd_.fd}, config_.active_servers_[i]}); // saving with which port they are connected and in which server
+					std::string uploads_dir_str = fds_with_flag_[i].connected_server_.uploads_dir_.string();
 				std::cout <<YELLOW  << "Client: " << client_fd << " connected to fd[" << fds_with_flag_[i].pollfd_.fd << "] " 
-				<< "| with server_listen : " << fds_with_flag_[i].connected_server_.listen_ << " | server_root: " << fds_with_flag_[i].connected_server_.root_ <<  QUIT<< std::endl;
+				<< "| with server_listen : " << fds_with_flag_[i].connected_server_.listen_ << " | server_root: " << fds_with_flag_[i].connected_server_.root_ 
+				<< " | uploads_dir: " << uploads_dir_str.substr(uploads_dir_str.find_last_of("/") + 1)<<  QUIT<< std::endl;
 			}
 			fds_with_flag_[i].connected_fds_.push_back((size_t)client_fd);
 		}
@@ -346,18 +348,16 @@ void		Poll::closingServers()
 
 size_t		Poll::lengthProt(size_t i)
 {
-	size_t max_body_size 
-		= std::max((size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_, (size_t)1024);
-	if (max_body_size < 1024)
-	{
-		max_body_size = 1025;
-	}
-	if ((size_t)max_body_size > (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_)
+	size_t chunk_size
+		= std::min((size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_, (size_t)4096);
+	if (chunk_size< 1024)
+		chunk_size= 1025;
+	if ((size_t)chunk_size> (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_)
 	{
 		fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_ 
 		= fds_with_flag_[i].connected_server_.client_max_body_size_ - 1;
 	}
-	return (max_body_size);
+	return (chunk_size);
 };
 
 void		Poll::setMaxBodyLen(size_t i, int bytes)
