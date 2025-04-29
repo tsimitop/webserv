@@ -225,6 +225,10 @@ void		Poll::pollhup(size_t& i)
 int	Poll::pollin(size_t i)
 {
 	int answer = YES;
+	bool is_pollin = fds_with_flag_[i].pollfd_.revents & (POLLIN);
+	int revent = fds_with_flag_[i].pollfd_.revents;
+	(void) revent;
+	(void) is_pollin;
 	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
 	{
 		size_t temp_len = lengthProt(i);
@@ -248,6 +252,20 @@ int	Poll::pollin(size_t i)
 			std::string final_buffer = fds_with_flag_[i].final_buffer_;
 			bool is_post = final_buffer.find("POST ", 0, 4) != std::string::npos;
 			bool rnrn_found = final_buffer.find("\r\n\r\n") != std::string::npos;
+			// std::cout << std::boolalpha << is_post << " = is_post "<< std::endl;
+			// std::cout << std::boolalpha << rnrn_found << " = rnrn_found "<< std::endl;
+			std::cout << "Will seg?\n";
+			std::string temp;
+			if (fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos)
+			{
+				temp = fds_with_flag_[i].final_buffer_.substr(fds_with_flag_[i].final_buffer_.find("\r\n\r\n"));
+				std::cout << "Did it seg?\n"; //yes
+
+			}
+			std::cout << YELLOW << "temp = [" << temp << "]\n";
+			bool rn_found = false;
+			if (is_post && rnrn_found && temp.size() > 0)
+				rn_found = temp.find("\r\n") != std::string::npos;
 			if (rnrn_found == NO)
 			{
 				fds_with_flag_[i].final_buffer_.append(temp_buffer);
@@ -260,7 +278,7 @@ int	Poll::pollin(size_t i)
 				std::cout << std::boolalpha << rnrn_found << " = is rnrn_found\n";
 				if (final_buffer.find("sec-ch-ua: ") != std::string::npos)
 					definingRequest(i);
-				if ((rnrn_found && is_post == NO) || final_buffer.length() == fds_with_flag_[i].content_length_)
+				if ((rnrn_found && is_post == NO) || final_buffer.length() == fds_with_flag_[i].content_length_ || rn_found)
 				{
 					std::cout << YELLOW << "rnrn_found && is_post == NO" << QUIT << std::endl;
 					definingRequest(i);
