@@ -201,7 +201,7 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 		response += "\r\n";
 		return (response);
 	}
-	response += "Connection: keep-alive\r\n";
+	response += "Connection: close\r\n";
 	response += "Content-Type: ";
 	response += this->getContentType();
 	response += "\r\n";

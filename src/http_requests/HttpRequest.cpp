@@ -547,8 +547,6 @@ const HttpResponse	HttpRequest::performMethod()
 {
 	HttpResponse resp;
 
-	std::cout << "performMethod: " <<this->method_ << std::endl;
-	std::cout << std::boolalpha << "this->isInvalid(): " <<this->isInvalid() << std::endl;
 	if (this->isInvalid())
 		resp.createResponse(400, available_errors_[400]);
 	else if (this->isForbidden())

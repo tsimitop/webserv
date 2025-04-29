@@ -1,22 +1,24 @@
 #include "../../inc/sockets_and_poll/PollFdWithFlag.hpp"
 
-// PollFdWithFlag::PollFdWithFlag() : 
-// pollfd_(), 
-// state_(FIRST_TIME),
-// type_(NON_SETTED),
-// final_buffer_({}), 
-// req_(), 
-// real_max_body_size_ln_(0),
-// content_length_(0),
-// timeout_(0),
-// connected_fds_(),
-// connected_server_()
-// {
-// };
+PollFdWithFlag::PollFdWithFlag() : 
+pollfd_(), 
+state_(FIRST_TIME),
+type_(NON_SETTED),
+post_is_finished_(NO),
+final_buffer_({}), 
+req_(), 
+real_max_body_size_ln_(0),
+content_length_(0),
+timeout_(0),
+connected_fds_(),
+connected_server_()
+{
+};
 PollFdWithFlag::PollFdWithFlag(const PollFdWithFlag& other)
 : pollfd_(other.pollfd_),
 state_(other.state_),
 type_(other.type_),
+post_is_finished_(other.post_is_finished_),
 final_buffer_(other.final_buffer_),
 req_(other.req_),
 real_max_body_size_ln_(other.real_max_body_size_ln_),
@@ -30,6 +32,7 @@ PollFdWithFlag::PollFdWithFlag(
 	pollfd temp_fd, 
 	int state,
 	int type,
+	int post_is_finished,
 	std::string final_buffer, 
 	HttpRequest req, 
 	size_t real_max_body_size_ln,	
@@ -40,6 +43,7 @@ PollFdWithFlag::PollFdWithFlag(
 pollfd_(temp_fd), 
 state_(state),
 type_(type),
+post_is_finished_(post_is_finished),
 final_buffer_(final_buffer),
 req_(req),
 real_max_body_size_ln_(real_max_body_size_ln),
@@ -55,6 +59,7 @@ PollFdWithFlag& PollFdWithFlag::operator=(const PollFdWithFlag& other)
 		pollfd_ = other.pollfd_;
 		state_ = other.state_;
 		type_ = other.type_;
+		post_is_finished_ = other.post_is_finished_;
 		final_buffer_ = other.final_buffer_;
 		req_ = other.req_;
 		real_max_body_size_ln_ = other.real_max_body_size_ln_;

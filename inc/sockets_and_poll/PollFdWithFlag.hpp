@@ -29,6 +29,7 @@ struct PollFdWithFlag
 	pollfd 				pollfd_;
 	int					state_;
 	int					type_;
+	int					post_is_finished_;
 	std::string 		final_buffer_;
 	HttpRequest			req_;
 
@@ -39,7 +40,7 @@ struct PollFdWithFlag
 	std::vector<size_t> connected_fds_;
 	ServerInfo			connected_server_; 
 //===================DEFAULT CONSTRUCTORS================================
-	PollFdWithFlag() = delete;
+	PollFdWithFlag();
 	PollFdWithFlag(const PollFdWithFlag& other);
 	// PollFdWithFlag(PollFdWithFlag&& other) noexcept = default;
 	// PollFdWithFlag& operator=(PollFdWithFlag&& other) noexcept = default;
@@ -47,6 +48,7 @@ struct PollFdWithFlag
 		pollfd temp_fd, 
 		int state,
 		int type,
+		int post_is_finished,
 		std::string final_buffer, 
 		HttpRequest req, 
 		size_t real_max_body_size_ln,	
