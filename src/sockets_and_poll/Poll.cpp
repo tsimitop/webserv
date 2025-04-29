@@ -234,8 +234,8 @@ void		Poll::pollhup(size_t& i)
 		std::cout << " EVENT OCCURED = (POLLOUT | POLLIN)\n";
 	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
 		disconecting(i, poll_err);
-	else if (fds_with_flag_[i].post_is_finished_ == YES)
-		disconecting(i, "POLLHUP: ");
+	// else if (fds_with_flag_[i].pollfd_.revents == 0 && fds_with_flag_[i].post_is_finished_ == YES)
+	// 	disconecting(i, "POLLHUP: ");
 };
 
 int	Poll::pollin(size_t i)
@@ -280,6 +280,7 @@ int	Poll::pollin(size_t i)
 					definingRequest(i);
 					std::cout << "YES2\n";
 					fds_with_flag_[i].post_is_finished_ = NO;
+					fds_with_flag_[i].final_buffer_.push_back('\0');
 					return YES;
 				}
 				else
@@ -288,7 +289,7 @@ int	Poll::pollin(size_t i)
 					size_t end = fds_with_flag_[i].final_buffer_.substr(start).find("\r\n") + start;
 					size_t content_length = std::stol(fds_with_flag_[i].final_buffer_.substr(start, end));
 					std::string body_of_post = fds_with_flag_[i].final_buffer_.substr(fds_with_flag_[i].final_buffer_.find("\r\n\r\n") + 4);
-					
+					// fds_with_flag_[i].final_buffer_.push_back('\0');
 					std::cout << body_of_post.length() << " = body_of_post.length()\n";
 					std::cout << content_length << " = content_length\n";
 					if (body_of_post.length() < content_length)
@@ -301,7 +302,8 @@ int	Poll::pollin(size_t i)
 					{
 						definingRequest(i);
 						std::cout << "YES3\n";
-						fds_with_flag_[i].post_is_finished_ = YES;
+						// fds_with_flag_[i].post_is_finished_ = YES;
+						fds_with_flag_[i].final_buffer_.push_back('\0');
 						return YES;
 					}
 				}
@@ -345,14 +347,40 @@ void		Poll::pollout(size_t i)
 		{
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
 		}
+		std::cout << act << " = bytes sent\n";
+		std::cout << response_str.size() << " = response_str.size()\n";
 		if (act <= 0)
-			fds_with_flag_[i].pollfd_.events = POLLERR; // operation failed
+		{
+			if (act == 0)
+			{
+				std::cout << "This string is empty!\n";
+				// close(fds_with_flag_[i].pollfd_.fd);
+				fds_with_flag_[i].pollfd_.events |= POLLOUT;
+				return ;
+				// disconecting(i, "(EOF)");
+			}
+			else
+			{
+				if (errno == EAGAIN || errno == EWOULDBLOCK)
+				{
+					fds_with_flag_[i].pollfd_.events |= POLLOUT;
+					return ;
+				}
+				else if (errno == EINVAL)
+				{
+					close(fds_with_flag_[i].pollfd_.fd);
+					return ;
+				}
+			}
+			fds_with_flag_[i].pollfd_.events |= POLLOUT;// operation failed// operation failed
+		}
 		else
 		{
 			std::cout << "SET POLLHUP\n";
+			fds_with_flag_[i].post_is_finished_ = fds_with_flag_[i].req_.getMethod() == "POST";
+			fds_with_flag_[i].pollfd_.events |= POLLOUT;
 			fds_with_flag_[i].pollfd_.events = POLLHUP; //closing the socket
 		}
-		close(fds_with_flag_[i].pollfd_.fd);
 	}
 	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
 	{
