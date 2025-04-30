@@ -82,7 +82,8 @@ Cgi::Cgi(int poll_fd, const HttpRequest& request)
 void Cgi::execute()
 {
 	std::vector<char *> args;
-	language_ = "/usr/local/bin/python3";
+	// language_ = "/usr/local/bin/python3";
+	language_ = "/usr/bin/python3"; // DOCKER
 	args.push_back(const_cast<char *>(language_.c_str()));
 	args.push_back(const_cast<char *>(path_of_program_to_execute_.c_str()));
 	args.push_back(nullptr);

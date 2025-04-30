@@ -234,6 +234,7 @@ void		Poll::disconnectingPreviousSuccededMethods(std::string str)
 						fds_with_flag_[i].method_is_finished_ == fds_with_flag_[k].method_is_finished_ 
 					)
 					{
+						std::cout << "About to disconnect successful method\n";
 						disconecting(i, str);
 						break ;
 					}
@@ -253,7 +254,10 @@ void		Poll::pollhup(size_t& i)
 							fds_with_flag_[i].pollfd_.revents & POLLRDNORM ? " POLLRDNORM" :
 							"UNCLASSIFIED POLL HUNG UP: ";
 	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
+	{
+		std::cout << "About to disconnect in POLLHUP\n";
 		disconecting(i, poll_err);
+	}
 };
 
 int	Poll::pollin(size_t i)
