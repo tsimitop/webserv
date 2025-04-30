@@ -170,7 +170,7 @@ void PollFdWithFlag::setFinalRespBufferIfCgi()
 		if (cgi->performed_wait())
 		{
 			req_.setExecuted(true);
-			response = cgi->response_of_cgi(response);
+			response = cgi->response_of_cgi(response, req_);
 			response_str = response.respond(req_);
 			cgi->setResponseBody(response_str);
 		}

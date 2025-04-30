@@ -482,7 +482,7 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 	std::ifstream			input_file(target_path.string());
 	std::string		filename =target_path.string().substr(target_path.string().find_last_of('/') + 1);
 	if (!input_file)
-		resp.createResponse(404, available_errors_[404]);
+		resp.createResponse(this->current_server_.default_error_page_, available_errors_[this->current_server_.default_error_page_]);
 	else
 	{
 		if (this->url_.substr(this->url_.find_last_of(".")) == ".ico")
@@ -502,7 +502,7 @@ const HttpResponse	HttpRequest::deleteCase(HttpResponse& resp)
 
 	std::ifstream file(path_of_file_to_delete);
 	if (!file)
-		resp.createResponse(404, available_errors_[404]);
+		resp.createResponse(this->current_server_.default_error_page_, available_errors_[this->current_server_.default_error_page_]);
 	else
 	{
 		if (

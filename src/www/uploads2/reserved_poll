@@ -334,7 +334,7 @@ void		Poll::pollout(size_t i)
 		if (cgi->performed_wait())
 		{
 			fds_with_flag_[i].req_.setExecuted(true);
-			response = cgi->response_of_cgi(response);
+			response = cgi->response_of_cgi(response, req_);
 			response_str = response.respond(fds_with_flag_[i].req_);
 			cgi->setResponseBody(response_str);
 		}

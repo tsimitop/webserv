@@ -20,6 +20,7 @@ struct ServerInfo
 
 	//-------------vector inputs---------------
 	std::map <int, std::filesystem::path>	errors;
+	int										default_error_page_;
 	std::vector<Location>					locations_;
 	//-------------paths-----------------------
 	std::filesystem::path 					executable_root_server_;
@@ -57,6 +58,7 @@ struct ServerInfo
 	void									setServerName(std::string line);
 	void									setIndex(std::string line);
 	void									setClientMaxBodySize(std::string line);
+	void									setDefaultErrorPage(std::string line);
 	//=============HELPER METHODS =================================================
 	void 									updatePaths(std::filesystem::path absolute_path);
 	void									pushToErrors(std::string line);

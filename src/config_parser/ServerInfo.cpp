@@ -12,6 +12,7 @@ ServerInfo::ServerInfo() :
 	index(""), 
 	client_max_body_size_(0), 
 	errors(),
+	default_error_page_(404),
 	locations_(),
 	executable_root_server_(""),
 	www_path_(""),
@@ -34,6 +35,7 @@ ServerInfo::ServerInfo(const ServerInfo& other)
 	index = other.index; 
 	client_max_body_size_ = other.client_max_body_size_;
 	errors = other.errors;
+	default_error_page_ = other.default_error_page_;
 	locations_ = other.locations_;
 	locations_ = other.locations_;
 	lines_of_server_ = other.lines_of_server_;
@@ -60,6 +62,7 @@ ServerInfo& ServerInfo::operator=(const ServerInfo& other)
 		index = other.index; 
 		client_max_body_size_ = other.client_max_body_size_;
 		errors = other.errors;
+		default_error_page_ = other.default_error_page_;
 		locations_ = other.locations_;
 		locations_ = other.locations_;
 		lines_of_server_ = other.lines_of_server_;
@@ -193,6 +196,7 @@ void 					ServerInfo::defaultErrorSetting()
 	errors[404] = errors_path_ / "404.html";
 	errors[405] = errors_path_ / "405.html";
 	errors[413] = errors_path_ / "413.html";
+	errors[418] = errors_path_ / "418.html";
 	errors[500] = errors_path_ / "500.html";
 	errors[504] = errors_path_ / "504.html";
 	errors[505] = errors_path_ / "505.html";
@@ -306,7 +310,7 @@ void 						ServerInfo::updatePaths(std::filesystem::path absolute_path)
 	else
 		valid_server_ = 0;
 };
-void						ServerInfo::pushToErrors(std::string line)
+void		ServerInfo::pushToErrors(std::string line)
 {
 	std::stringstream current_line(line);
 	if (countWords(line) != 3)
@@ -330,6 +334,16 @@ void						ServerInfo::pushToErrors(std::string line)
 										executable_root_server_ / value.substr(2) : 
 										(std::filesystem::path)value;
 };
+void			ServerInfo::setDefaultErrorPage(std::string line)
+{
+	std::stringstream current_line(line);
+	std::string key, eq, value;
+	current_line >>key >> eq >> value;
+	validErrorType(value);
+	if (valid_server_ == NO)
+		return ;
+	default_error_page_ = std::stoi(value);
+}
 void			ServerInfo::locationIndexes()
 {
 	int inside_location = NO;

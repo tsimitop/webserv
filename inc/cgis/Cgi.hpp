@@ -56,5 +56,5 @@ public:
 	bool performed_wait();
 	bool read_pipe();
 	void check_timeout();
-	HttpResponse response_of_cgi(HttpResponse& resp);
+	HttpResponse response_of_cgi(HttpResponse& resp, HttpRequest req);
 };

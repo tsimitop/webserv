@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>418 I'm a Teapot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Press Start 2P', cursive;
+            background-color: #ff69b4;
+            color: #fff;
+            overflow: hidden;
+            text-align: center;
+            animation: bgFlash 4s infinite alternate;
+        }
+
+        @keyframes bgFlash {
+            0% { background-color: #ff69b4; }
+            50% { background-color: #ff1493; }
+            100% { background-color: #ff69b4; }
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-top: 80px;
+            text-shadow: 2px 2px #000, -2px -2px #ff00ff;
+            animation: glitch 1s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            25% { transform: translate(2px, -2px); }
+            50% { transform: translate(-2px, 2px); }
+            75% { transform: translate(2px, 2px); }
+            100% { transform: translate(0); }
+        }
+
+        .emoji {
+            font-size: 40px;
+            display: inline-block;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .emoji:nth-child(odd) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        p {
+            font-size: 14px;
+            padding: 20px;
+        }
+
+        .teapot {
+            font-size: 80px;
+            animation: shake 1s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0); }
+            25% { transform: rotate(3deg); }
+            50% { transform: rotate(-3deg); }
+            75% { transform: rotate(2deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>418 — I’m a Teapot!</h1>
+    <div class="teapot">🫖</div>
+    <p>Sorry, this server is feeling ✨ sassy ✨ and refuses to brew coffee!</p>
+    <div>
+        <span class="emoji">🦄</span>
+        <span class="emoji">🦄</span>
+        <span class="emoji">🌈</span>
+        <span class="emoji">🦄</span>
+        <span class="emoji">🍭</span>
+        <span class="emoji">💥</span>
+    </div>
+</body>
+</html>

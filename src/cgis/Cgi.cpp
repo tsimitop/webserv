@@ -188,7 +188,7 @@ bool Cgi::read_pipe()
 	return true;
 }
 
-HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
+HttpResponse Cgi::response_of_cgi(HttpResponse& resp, HttpRequest req)
 {
 	if (this->hasTimedOut() == true)
 	{
@@ -200,7 +200,7 @@ HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 	{
 		std::cout<<YELLOW << "Proccess exit number = " << this->getStatus() << "\n" << QUIT;
 		if (this->getStatus() == 2)
-			resp.createResponse(404, available_errors_[404]);
+			resp.createResponse(req.getCurrentServer().default_error_page_, available_errors_[req.getCurrentServer().default_error_page_]);
 		else
 			resp.createResponse(500, available_errors_[500]);
 		return resp;
