@@ -266,7 +266,7 @@ int	Http::acceptedAttributes()
 		key = "";
 		if ((all_lines_are_valid *= check_the_key) == NO)
 		{
-			std::cout << RED << "Error: not accepted attributes | existing typos |uninisialised values!" << QUIT << std::endl;
+			std::cout << RED << "Error: not accepted attributes | existing typos | unitialised values!" << QUIT << std::endl;
 			break;
 		}
 	}
@@ -325,6 +325,7 @@ void Http::preparingAndValidatingConfig(int argc, char* argv[])
 		if (!checking_argvOne)
 		{
 			valid_config_ = 0;
+			std::cerr << RED << "Error: The given configuration file is not existing!\n" <<QUIT;
 			return ;
 		}
 	}

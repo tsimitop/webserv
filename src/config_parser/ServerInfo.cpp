@@ -190,9 +190,11 @@ void 					ServerInfo::defaultErrorSetting()
 	errors[301] = errors_path_ / "301.html";
 	errors[400] = errors_path_ / "400.html";
 	errors[401] = errors_path_ / "401.html";
+	errors[403] = errors_path_ / "403.html";
 	errors[404] = errors_path_ / "404.html";
 	errors[405] = errors_path_ / "405.html";
 	errors[413] = errors_path_ / "413.html";
+	errors[415] = errors_path_ / "415.html";
 	errors[500] = errors_path_ / "500.html";
 	errors[504] = errors_path_ / "504.html";
 	errors[505] = errors_path_ / "505.html";
@@ -225,6 +227,8 @@ void						ServerInfo::setServerTimeOut(std::string line, int& attribute)
 		validServerTimeOut(value);
 		if (valid_server_ != NO)
 			attribute = std::stoi(value);
+		else
+			std::cerr << RED << "Error: " << line << std::endl;
 	}
 };
 void						ServerInfo::setListen(std::string line)
@@ -237,6 +241,8 @@ void						ServerInfo::setListen(std::string line)
 		validListen(value);
 		if (valid_server_ != NO)
 			listen_ = std::stoi(value);
+		else
+			std::cerr << RED << "Error: " << line << std::endl;
 	}
 };
 void						ServerInfo::setServerName(std::string line)
@@ -249,6 +255,8 @@ void						ServerInfo::setServerName(std::string line)
 		validServerName(value);
 		if (valid_server_ != NO)
 			server_name_ = value;
+		else
+			std::cerr << RED << "Error: " << line << std::endl;
 	}
 };
 void						ServerInfo::setIndex(std::string line)
@@ -261,6 +269,8 @@ void						ServerInfo::setIndex(std::string line)
 		validIndex(value);
 		if (valid_server_ != NO)
 			index = value;
+		else
+			std::cerr << RED << "Error: " << line << std::endl;
 	}
 };
 void						ServerInfo::setClientMaxBodySize(std::string line)
@@ -271,18 +281,17 @@ void						ServerInfo::setClientMaxBodySize(std::string line)
 		std::string key, eq, value;
 		current_line >>key >> eq >> value;
 		validClientMaxBodySize(value);
-		if (std::stol(value) < 1024)
-			valid_server_ = NO;
-		if (valid_server_ != NO)
-			client_max_body_size_ = std::stol(value);
 		try
 		{
-			if (stoi(value) < 1025)
+			if (std::stol(value) < 1024)
 				valid_server_ = NO;
+			if (valid_server_ != NO)
+				client_max_body_size_ = std::stol(value);
 		}
 		catch(const std::invalid_argument& e)
 		{
 			valid_server_ = NO;
+			std::cerr << RED << "Error: " << line << std::endl;
 		}
 	}
 };
@@ -304,7 +313,10 @@ void 						ServerInfo::updatePaths(std::filesystem::path absolute_path)
 		defaultErrorSetting();
 	}
 	else
-		valid_server_ = 0;
+	{
+		valid_server_ = NO;
+		std::cerr << RED << "Error: " << absolute_path << std::endl;
+	}
 };
 void						ServerInfo::pushToErrors(std::string line)
 {
@@ -322,9 +334,17 @@ void						ServerInfo::pushToErrors(std::string line)
 	size_t dot_of_html= value.find_last_of('.');
 	std::string error_type = value.substr(the_last_backslash + 1, dot_of_html - (the_last_backslash + 1));
 	if (valid_server_ == NO)
+	{
+
+		std::cerr << RED << "Error: " << line << std::endl;
 		return ;
+	}
 	if (!(valid_server_ = validErrorRoot(value)))
+	{
+
+		std::cerr << RED << "Error: " << line << std::endl;
 		return ;
+	}
 	if ( errors.find(std::stoi(error_type)) == errors.end())
 		errors[std::stoi(error_type)] = value[0] == '.' ? 
 										executable_root_server_ / value.substr(2) : 

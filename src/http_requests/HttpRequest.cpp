@@ -348,7 +348,7 @@ bool	HttpRequest::isValid()
 			break;
 	if (it == headers_.end() || (it->second).empty() || isOnlyWhitespace(it->second))
 	{
-		std::cout << RED << "Didn't find Host" << QUIT << std::endl;
+		// std::cout << RED << "Didn't find Host" << QUIT << std::endl;
 		req_is_invalid_ = true;
 		return (false);
 	}
@@ -437,28 +437,27 @@ const char *HttpRequest::httpParserException::what() const throw()
 // Execute methodes
 const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
+	
+	if (this->filename_.find_last_of(".") != std::string::npos)
+	{
+		
+		std::cout << (this->filename_.find_last_of(".") != std::string::npos && this->filename_.substr(this->filename_.find_last_of(".")) == ".txt") << " = is txt: " <<  this->filename_.substr(this->filename_.find_last_of(".")) << std::endl;
+		std::cout << (this->filename_.find_last_of(".") != std::string::npos && this->filename_.substr(this->filename_.find_last_of(".")) == ".md") << " = is md: " <<  this->filename_.substr(this->filename_.find_last_of(".")) << std::endl;
+	}
+		bool is_text_or_md = (this->filename_.find_last_of(".") != std::string::npos && this->filename_.substr(this->filename_.find_last_of(".")) == ".txt") 
+	|| (this->filename_.find_last_of(".") != std::string::npos && this->filename_.substr(this->filename_.find_last_of(".")) == ".md");
+std::cout << is_text_or_md << " = is_text_or_md";
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
 	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
 	std::string length = headers_["Content-Length"];
 
 	if ((size_t)this->current_server_.locations_[0].client_max_body_size_ < (size_t)stoul(length))
 		resp.createResponse(413, available_errors_[413]);
+	else if (!is_text_or_md)
+		resp.createResponse(415, available_errors_[415]);
 	else if ((int)(this->getBody().length()) != stoi(length))
 	{
-/*
-POST /uploads HTTP/1.1
-Host: localhost:4242
-Connection: keep-alive
-Content-Length: 7
-Content-Disposition: attachment; filename="hello.md"
-Content-Type: application/octet-stream
 
-hello
-
-DELETE /uploads2%2Fup.md HTTP/1.1
-Host: localhost:4242
-Connection: close
-*/
 		std::cout << RED << ((int)(this->getBody().length())) << " = bodylength\t|\t" << stoi(length) << " = Content-Length\n" << QUIT;
 		std::cout << RED << "Body length is not correct\n" << QUIT;
 		resp.createResponse(500, available_errors_[500]);
@@ -468,7 +467,7 @@ Connection: close
 		std::ofstream file(current_uploads_path / filename);
 		if (!file.is_open())
 			resp.createResponse(500, available_errors_[500]);
-		else
+		else if (is_text_or_md)
 		{
 			file << this->getBody();
 			file.close();
@@ -483,6 +482,8 @@ Connection: close
 					resp.setContentLength(stoi(it->second));
 			}
 		}
+		else
+			resp.createResponse(415, available_errors_[415]);
 	}
 	return resp;
 }
@@ -500,8 +501,16 @@ const HttpResponse	HttpRequest::getCase(HttpResponse& resp)
 		resp.createResponse(404, available_errors_[404]);
 	else
 	{
-		if (this->url_.substr(this->url_.find_last_of(".")) == ".ico")
+		if (std::filesystem::is_directory(target_path.string()))
+		{
+			resp.createResponse(403, available_errors_[403]);
+			return resp;
+			std::cout << target_path.string() << " is a dierctory\n";
+		}
+		if (this->url_.find_last_of(".") != std::string::npos && this->url_.substr(this->url_.find_last_of(".")) == ".ico")
+		{
 			resp.setContentType("image/vnd");
+		}
 		resp.createResponse(200, target_path);
 		if ((size_t)resp.getContentLength() >= (size_t)this->current_server_.client_max_body_size_)
 			resp.createResponse(413, available_errors_[413]);

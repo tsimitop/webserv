@@ -313,7 +313,7 @@ void	Location::setRedir (std::string line, std::string& attribute)
 	{
 		std::cerr << e.what() << '\n';
 	}
-	if (redir_status_ < 300 || redir_status_ > 399)
+	if (redir_status_ < 301 || redir_status_ > 308 || redir_status_ == 305 || redir_status_ == 306)
 		valid_location_ = NO;
 	redir_location_ = new_location;
 };
@@ -325,6 +325,9 @@ return (size_t)check.tellg();
 };
 void							signalHandler(int singal)
 {
-	if (singal == SIGINT)
+	if ((singal == SIGINT) | (singal == SIGPIPE))
+	{
+		std::cout << "SIGNAL detected\n";
 		poll_flag = NO;
+	}
 };

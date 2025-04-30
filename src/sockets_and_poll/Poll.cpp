@@ -263,8 +263,6 @@ void		Poll::pollhup(size_t& i)
 int	Poll::pollin(size_t i)
 {
 	int answer = YES;
-	size_t index = i;
-	(void) index;
 	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
 	{
 		size_t temp_len = lengthProt(i);
@@ -276,19 +274,29 @@ int	Poll::pollin(size_t i)
 			answer = eAgainAndEWouldblockForReq(i, bytes);
 		else
 		{
+			std::cout << "ELSE000\n";
 			buffer[bytes] = '\0';
-			int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
-			if (checking_signals == SIG)
-				return SIG;
+			std::cout << "kollisa00\n";
+			// int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
+			// std::cout << SIG << " = SIG\t" << checking_signals << " = checking_signals\n";
+			// if (checking_signals == SIG)
+			// 	return SIG;
+			std::cout << "kollisa\n";
 
 			std::string	temp_buffer = buffer;
 			fds_with_flag_[i].final_buffer_.append(temp_buffer);
-			bool		rnrn_found = fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos;
-			bool is_post = fds_with_flag_[i].final_buffer_.find("POST ", 0, 4) != std::string::npos;
+			bool	rnrn_found = fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos;
+			bool	is_post = fds_with_flag_[i].final_buffer_.find("POST ", 0, 4) != std::string::npos;
+			std::cout << "before if\n";
 			if (rnrn_found == NO)
+			{
+				std::cout << "rnrn_found == NO\n";
+
 				return NO;
+			}
 			else
 			{
+				std::cout << "ELSE111\n";
 				if (is_post == NO)
 				{
 					definingRequest(i);
@@ -301,6 +309,30 @@ int	Poll::pollin(size_t i)
 					size_t end = fds_with_flag_[i].final_buffer_.substr(start).find("\r\n") + start;
 					size_t content_length = std::stol(fds_with_flag_[i].final_buffer_.substr(start, end));
 					std::string body_of_post = fds_with_flag_[i].final_buffer_.substr(fds_with_flag_[i].final_buffer_.find("\r\n\r\n") + 4);
+std::cout << "1WILL seg\n";
+					size_t start_b = fds_with_flag_[i].final_buffer_.find("filename=") + 10;
+std::cout << "2WILL seg\n";
+					size_t end_b = fds_with_flag_[i].final_buffer_.substr(start_b).find_first_of("\"");
+std::cout << "3WILL seg\n";
+					std::string filename = fds_with_flag_[i].final_buffer_.substr(start_b, end_b);
+std::cout << "4WILL seg\n";
+					bool apparent_filetype = filename.find_last_of(".") != std::string::npos && filename.find_last_of(".") == filename.find_first_of(".");
+std::cout << "5WILL seg\n";
+					std::string filetype;
+					if (apparent_filetype == true)
+						filetype = filename.substr(apparent_filetype, end_b);
+std::cout << "6WILL seg\n";
+					if (!filetype.empty())
+					{
+						if (filetype != "txt" || filetype != "md")
+						{
+							definingRequest(i);
+							std::cout << "FILETYPE IS WRONG!!!!\n";
+							return YES;
+						}
+					}
+					std::cout << filename << " = filename\n";
+
 					if (body_of_post.length() < content_length)
 						return NO;
 					else
@@ -328,6 +360,7 @@ void		Poll::pollout(size_t i)
 	{
 		if (fds_with_flag_[i].final_resp_buffer_.empty())
 			fds_with_flag_[i].setFinalRespBuffer();
+
 		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
 		if (is_valid_cgi)
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
@@ -335,15 +368,22 @@ void		Poll::pollout(size_t i)
 			eAgainAndEWouldblockForResp(i, act);
 		else
 		{
-			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi == YES)
+
+			// size_t chunk_length = lengthProt(i);
+			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi == YES )
+			// || std::stoi(fds_with_flag_[i].req_.getContentLength()) < chunk_length)
 				fds_with_flag_[i].pollfd_.events = POLLHUP;
 			fds_with_flag_[i].method_is_finished_ = YES;
 		}
 	}
 	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
+	{
 		fds_with_flag_[i].setFinalRespBufferIfCgi();
+	}
 	if (fds_with_flag_[i].pollfd_.events & (POLLHUP | POLLERR))
+	{
 		fds_with_flag_[i].final_buffer_.clear();
+	}
 };
 //================HELPER METHODS ================================================
 void		Poll::closingServers()
@@ -399,6 +439,7 @@ void		Poll::definingRequest(size_t i)
 {
 	fds_with_flag_[i].req_.readRequest(fds_with_flag_[i].final_buffer_, 1);
 	fds_with_flag_[i].req_.setCurrentServer(fds_with_flag_[i].connected_server_);
+	fds_with_flag_[i].req_.isValid();
 	if (!fds_with_flag_[i].req_.isCgi())
 		fds_with_flag_[i].pollfd_.events |= POLLOUT;
 };
@@ -421,12 +462,15 @@ void		Poll::disconecting(size_t& i, std::string str)
 int		checkingForSignals(const char *buffer, int bytes, const std::string final_buffer)
 {
 	(void) final_buffer;
+	std::cout << "Caught CTRL+D\n";
 	for (int i = 0; i < bytes; i++)
 		if (((unsigned char)buffer[i] == 0x04))
 			return SIG;
+	std::cout << "Caught CTRL+C\n";
 	for (int i = 0; i < bytes - 1; ++i)
 		if ((unsigned char)buffer[i] == 0xff && (unsigned char)buffer[i + 1] == 0xf4)
 			return SIG;
+	std::cout << "NO SIGNAL\n";
 	return NO;		
 };
 

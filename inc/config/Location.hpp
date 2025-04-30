@@ -38,7 +38,6 @@ const std::map<int, std::string> all_posible_errors
 	{304, "Not Modified"},
 	{307, "Temporary Redirect"},
 	{308, "Permanent Redirect"},
-	{404, "error on Wikimedia"},
 	{400, "Bad Request"},
 	{401, "Unauthorized"},
 	{402, "Payment Required"},
