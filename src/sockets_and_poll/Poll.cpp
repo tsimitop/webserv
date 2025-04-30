@@ -200,9 +200,7 @@ void Poll::synchroIO()
 		}
 		connecting();
 		if (activity == 0)
-		{
 			disconnectingPreviousSuccededMethods("POLLSP: ");
-		}
 		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 		{
 			int er = errno;
@@ -333,31 +331,47 @@ int	Poll::pollin(size_t i)
 	}
 	return answer;
 };
-
+// HttpResponse response;
+// 	{
+// 		if (fds_with_flag_[i].final_resp_buffer_.empty())
+// 			fds_with_flag_[i].setFinalRespBuffer();
+// 		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
+// 		if (is_valid_cgi)
+// 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
+// 		std::cout << act << " = bytes sent\n";
+// 		std::cout << fds_with_flag_[i].final_resp_buffer_.size() << " = fds_with_flag_[i].final_resp_buffer_.size()\n";
+// 		if (act <= 0)
+// 			eAgainAndEWouldblockForResp(i, act);
+// 		else
+// 		{
+// 			std::cout << "SET POLLHUP\n";
+// 			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi)
+// 				fds_with_flag_[i].pollfd_.events = POLLHUP;
+// 			fds_with_flag_[i].method_is_finished_ = YES;
+// 		}
+// 	}
 void		Poll::pollout(size_t i)
 {
 	HttpResponse response;
+
+	bool is_cgi = fds_with_flag_[i].req_.isCgi();
+	bool is_valid_cgi = is_cgi
+	&& !(is_cgi && fds_with_flag_[i].req_.isInvalid())
+	&& !(is_cgi && fds_with_flag_[i].req_.isForbidden());
+
 	if(fds_with_flag_[i].pollfd_.revents & POLLOUT)
 	{
 		if (fds_with_flag_[i].final_resp_buffer_.empty())
 			fds_with_flag_[i].setFinalRespBuffer();
 		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
-		if (
-			fds_with_flag_[i].req_.isCgi() \
-			&& !(fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.isInvalid()) \
-			&& !(fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.isForbidden())
-			)
-		{
+		if (is_valid_cgi)
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
-		}
-		std::cout << act << " = bytes sent\n";
-		std::cout << fds_with_flag_[i].final_resp_buffer_.size() << " = fds_with_flag_[i].final_resp_buffer_.size()\n";
 		if (act <= 0)
 			eAgainAndEWouldblockForResp(i, act);
 		else
 		{
 			std::cout << "SET POLLHUP\n";
-			if (fds_with_flag_[i].req_.getMethod() != "POST")
+			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi == YES)
 				fds_with_flag_[i].pollfd_.events = POLLHUP;
 			fds_with_flag_[i].method_is_finished_ = YES;
 		}
