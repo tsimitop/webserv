@@ -309,25 +309,18 @@ int	Poll::pollin(size_t i)
 					size_t end = fds_with_flag_[i].final_buffer_.substr(start).find("\r\n") + start;
 					size_t content_length = std::stol(fds_with_flag_[i].final_buffer_.substr(start, end));
 					std::string body_of_post = fds_with_flag_[i].final_buffer_.substr(fds_with_flag_[i].final_buffer_.find("\r\n\r\n") + 4);
-std::cout << "1WILL seg\n";
 					size_t start_b = fds_with_flag_[i].final_buffer_.find("filename=") + 10;
-std::cout << "2WILL seg\n";
 					size_t end_b = fds_with_flag_[i].final_buffer_.substr(start_b).find_first_of("\"");
-std::cout << "3WILL seg\n";
 					std::string filename = fds_with_flag_[i].final_buffer_.substr(start_b, end_b);
-std::cout << "4WILL seg\n";
 					bool apparent_filetype = filename.find_last_of(".") != std::string::npos && filename.find_last_of(".") == filename.find_first_of(".");
-std::cout << "5WILL seg\n";
 					std::string filetype;
 					if (apparent_filetype == true)
 						filetype = filename.substr(apparent_filetype, end_b);
-std::cout << "6WILL seg\n";
 					if (!filetype.empty())
 					{
-						if (filetype != "txt" || filetype != "md")
+						if (filetype != "txt" && filetype != "md")
 						{
 							definingRequest(i);
-							std::cout << "FILETYPE IS WRONG!!!!\n";
 							return YES;
 						}
 					}
