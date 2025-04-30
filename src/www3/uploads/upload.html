@@ -28,29 +28,7 @@
 <input type="text" id="nameOfUser" placeholder="Enter your name">
 <button onclick="tryCGIpost('../cgi/for_post.py')">Try post CGI</button><br><br>
 
-<script>
-	function uploadFile() {
-		const fileInput = document.getElementById("myFile");
-		const file = fileInput.files[0];
 
-		if (!file) {
-			alert("Please select a file");
-			return;
-		}
-
-		const filename = file.name;
-
-		fetch('/uploads', {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/octet-stream",
-				"Content-Disposition": 'attachment; filename="' + filename + '"',
-			},
-			body: file // Send the raw file
-		}).then(response => console.log("Upload complete"))
-		  .catch(error => console.error("Error:", error));
-	}
-</script>
 
 <script>
 	function deleteFile() {
@@ -74,6 +52,30 @@
 			}
 		})
 		.catch(error => console.error("Error: ", error));
+	}
+</script>
+
+<script>
+	function uploadFile() {
+		const fileInput = document.getElementById("myFile");
+		const file = fileInput.files[0];
+
+		if (!file) {
+			alert("Please select a file");
+			return;
+		}
+
+		const filename = file.name;
+
+		fetch('/uploads', {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/octet-stream",
+				"Content-Disposition": 'attachment; filename="' + filename + '"',
+			},
+			body: file // Send the raw file
+		}).then(response => console.log("Upload complete"))
+		  .catch(error => console.error("Error:", error));
 	}
 </script>
 

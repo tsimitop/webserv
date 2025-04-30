@@ -137,10 +137,6 @@ void PollFdWithFlag::setFinalRespBuffer()
 	{
 		response = req_.performMethod();
 		response_str = response.respond(req_);
-		int step_back;
-		std::string	filtered_string = filteredBuffer(response_str, step_back);
-		response_str.clear();
-		response_str = filtered_string;
 	}
 	else
 	{

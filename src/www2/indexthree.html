@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Webserv_index_three</title>
+	<title>Webserv</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Tektur:wght@400..900&display=swap" rel="stylesheet">
@@ -124,8 +124,8 @@
 </head>
 <body>
 	<button id="music-toggle">Play Music</button>
-	<h1>The simplest index three ever</h1>
-	<p>Is this a simple index three or what?</p>
+	<h1>The simplest index ever</h1>
+	<p>Is this a simple index or what?</p>
 	
 	<input type="file" id="myFile">
 	<button onclick="uploadFile()">Upload</button>
@@ -145,7 +145,23 @@
 	<button onclick="tryCGI('../cgi/mistake.py')">Try wrong CGI</button><br><br>
 	<input type="text" id="nameOfUser" placeholder="Enter your name">
 	<button onclick="tryCGIpost('../cgi/for_post.py')">Try post CGI</button><br><br>
-	
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			document.getElementById("myFile").addEventListener("keydown", function(event) {
+				if (event.key === "Enter") uploadFile();
+			});
+		
+			document.getElementById("filenameToDelete").addEventListener("keydown", function(event) {
+				if (event.key === "Enter") deleteFile();
+			});
+		
+			document.getElementById("nameOfUser").addEventListener("keydown", function(event) {
+				if (event.key === "Enter") tryCGIpost('/cgi-bin/script');
+			});
+		});
+		</script>
+		
 	<script>
 		function uploadFile() {
 			const fileInput = document.getElementById("myFile");
