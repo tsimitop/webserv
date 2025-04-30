@@ -264,8 +264,8 @@ int	Poll::pollin(size_t i)
 	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
 	{
 		size_t temp_len = lengthProt(i);
-		char buffer[lengthProt(i) + 1];
-		memset(buffer, 0, lengthProt(i) + 1); //
+		char buffer[temp_len];
+		memset(buffer, 0, temp_len); //
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
 		if (bytes == 0 || bytes < 0)
 			answer = eAgainAndEWouldblockForReq(i, bytes);
@@ -287,7 +287,7 @@ int	Poll::pollin(size_t i)
 				if (is_post == NO)
 				{
 					definingRequest(i);
-					fds_with_flag_[i].final_buffer_.push_back('\0');
+					fds_with_flag_[i].setFinalRespBuffer();
 					return YES;
 				}
 				else
@@ -295,6 +295,7 @@ int	Poll::pollin(size_t i)
 					size_t start = fds_with_flag_[i].final_buffer_.find("Content-Length: ") + 16;
 					size_t end = fds_with_flag_[i].final_buffer_.substr(start).find("\r\n") + start;
 					size_t content_length = std::stol(fds_with_flag_[i].final_buffer_.substr(start, end));
+					fds_with_flag_[i].content_length_ = content_length;
 					std::string body_of_post = fds_with_flag_[i].final_buffer_.substr(fds_with_flag_[i].final_buffer_.find("\r\n\r\n") + 4);
 					if (body_of_post.length() < content_length)
 						return NO;
@@ -302,6 +303,7 @@ int	Poll::pollin(size_t i)
 					{
 						definingRequest(i);
 						fds_with_flag_[i].final_buffer_.push_back('\0');
+						fds_with_flag_[i].setFinalRespBuffer();
 						return YES;
 					}
 				}
@@ -321,8 +323,6 @@ void		Poll::pollout(size_t i)
 
 	if(fds_with_flag_[i].pollfd_.revents & POLLOUT)
 	{
-		if (fds_with_flag_[i].final_resp_buffer_.empty())
-			fds_with_flag_[i].setFinalRespBuffer();
 		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
 		if (is_valid_cgi)
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
@@ -330,15 +330,18 @@ void		Poll::pollout(size_t i)
 			eAgainAndEWouldblockForResp(i, act);
 		else
 		{
-			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi == YES)
+			fds_with_flag_[i].final_resp_buffer_.erase(0, act);
+			// if (fds_with_flag_[i].final_resp_buffer_.empty())
+			// 	fds_with_flag_[i].pollfd_.events = POLLHUP;
+			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi || fds_with_flag_[i].final_resp_buffer_.empty())
 				fds_with_flag_[i].pollfd_.events = POLLHUP;
-			fds_with_flag_[i].method_is_finished_ = YES;
+			// fds_with_flag_[i].method_is_finished_ = YES;
 		}
 	}
 	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
 		fds_with_flag_[i].setFinalRespBufferIfCgi();
-	if (fds_with_flag_[i].pollfd_.events & (POLLHUP | POLLERR))
-		fds_with_flag_[i].final_buffer_.clear();
+	// if (fds_with_flag_[i].pollfd_.events & (POLLHUP | POLLERR))
+	// 	fds_with_flag_[i].final_buffer_.clear();
 };
 //================HELPER METHODS ================================================
 void		Poll::closingServers()
