@@ -97,6 +97,11 @@ void Cgi::execute()
 	envp.push_back(const_cast<char*>(content_length.c_str()));
 	envp.push_back(const_cast<char*>(name.c_str()));
 	envp.push_back(nullptr);
+	int null_fd = open("/dev/null", O_WRONLY);
+	if (!null_fd)
+		std::cout << "failed to create fd\n";
+	dup2(null_fd, STDERR_FILENO);
+	close(null_fd);
 	dup2(pipe_fd_[1], STDOUT_FILENO);
 	dup2(pipe_fd_[0], STDIN_FILENO);
 	close(pipe_fd_[0]);

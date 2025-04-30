@@ -268,9 +268,10 @@ int	Poll::pollin(size_t i)
 	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
 	{
 		size_t temp_len = lengthProt(i);
-		char buffer[lengthProt(i) + 1];
-		memset(buffer, 0, lengthProt(i) + 1); //
+		char buffer[temp_len];
+		memset(buffer, 0, temp_len); //
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
+		std::cout << MAGENTA << buffer << QUIT << std::endl;
 		if (bytes == 0 || bytes < 0)
 			answer = eAgainAndEWouldblockForReq(i, bytes);
 		else

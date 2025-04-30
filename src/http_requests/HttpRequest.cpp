@@ -445,6 +445,21 @@ const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 		resp.createResponse(413, available_errors_[413]);
 	else if ((int)(this->getBody().length()) != stoi(length))
 	{
+/*
+POST /uploads HTTP/1.1
+Host: localhost:4242
+Connection: keep-alive
+Content-Length: 7
+Content-Disposition: attachment; filename="hello.md"
+Content-Type: application/octet-stream
+
+hello
+
+DELETE /uploads2%2Fup.md HTTP/1.1
+Host: localhost:4242
+Connection: close
+*/
+		std::cout << RED << ((int)(this->getBody().length())) << " = bodylength\t|\t" << stoi(length) << " = Content-Length\n" << QUIT;
 		std::cout << RED << "Body length is not correct\n" << QUIT;
 		resp.createResponse(500, available_errors_[500]);
 	}
