@@ -252,10 +252,6 @@ void		Poll::pollhup(size_t& i)
 							fds_with_flag_[i].pollfd_.revents &  POLLWRBAND ? " POLLWRBAND: ":
 							fds_with_flag_[i].pollfd_.revents & POLLRDNORM ? " POLLRDNORM" :
 							"UNCLASSIFIED POLL HUNG UP: ";
-	if(fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM))
-		std::cout << poll_err << " EVENT OCCURED\n";
-	if(fds_with_flag_[i].pollfd_.revents & (POLLOUT | POLLIN))
-		std::cout << " EVENT OCCURED = (POLLOUT | POLLIN)\n";
 	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
 		disconecting(i, poll_err);
 };
@@ -267,12 +263,10 @@ int	Poll::pollin(size_t i)
 	(void) index;
 	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
 	{
-		std::cout << "revents & (POLLIN)\n";
 		size_t temp_len = lengthProt(i);
 		char buffer[lengthProt(i) + 1];
 		memset(buffer, 0, lengthProt(i) + 1); //
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
-		std::cout << MAGENTA << buffer << QUIT << std::endl;
 		if (bytes == 0 || bytes < 0)
 			answer = eAgainAndEWouldblockForReq(i, bytes);
 		else
@@ -286,20 +280,13 @@ int	Poll::pollin(size_t i)
 			fds_with_flag_[i].final_buffer_.append(temp_buffer);
 			bool		rnrn_found = fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos;
 			bool is_post = fds_with_flag_[i].final_buffer_.find("POST ", 0, 4) != std::string::npos;
-			bool		rn_found = fds_with_flag_[i].final_buffer_.substr(temp_buffer.find("\r\n\r\n") + 4).find("\r\n") != std::string::npos;
-			std::cout << rnrn_found << " = rnrn_found\n";
 			if (rnrn_found == NO)
-			{
-				std::cout << "NO1\n";
 				return NO;
-			}
 			else
 			{
-				std::cout << rn_found << " = rn_found\n";
 				if (is_post == NO)
 				{
 					definingRequest(i);
-					std::cout << "YES2\n";
 					fds_with_flag_[i].final_buffer_.push_back('\0');
 					return YES;
 				}
@@ -309,19 +296,11 @@ int	Poll::pollin(size_t i)
 					size_t end = fds_with_flag_[i].final_buffer_.substr(start).find("\r\n") + start;
 					size_t content_length = std::stol(fds_with_flag_[i].final_buffer_.substr(start, end));
 					std::string body_of_post = fds_with_flag_[i].final_buffer_.substr(fds_with_flag_[i].final_buffer_.find("\r\n\r\n") + 4);
-					// fds_with_flag_[i].final_buffer_.push_back('\0');
-					std::cout << body_of_post.length() << " = body_of_post.length()\n";
-					std::cout << content_length << " = content_length\n";
 					if (body_of_post.length() < content_length)
-					{
-						std::cout << "NO2\n";
 						return NO;
-					}
 					else
 					{
 						definingRequest(i);
-						std::cout << "YES3\n";
-						// fds_with_flag_[i].method_is_finished_ = YES;
 						fds_with_flag_[i].final_buffer_.push_back('\0');
 						return YES;
 					}
@@ -331,25 +310,6 @@ int	Poll::pollin(size_t i)
 	}
 	return answer;
 };
-// HttpResponse response;
-// 	{
-// 		if (fds_with_flag_[i].final_resp_buffer_.empty())
-// 			fds_with_flag_[i].setFinalRespBuffer();
-// 		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
-// 		if (is_valid_cgi)
-// 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
-// 		std::cout << act << " = bytes sent\n";
-// 		std::cout << fds_with_flag_[i].final_resp_buffer_.size() << " = fds_with_flag_[i].final_resp_buffer_.size()\n";
-// 		if (act <= 0)
-// 			eAgainAndEWouldblockForResp(i, act);
-// 		else
-// 		{
-// 			std::cout << "SET POLLHUP\n";
-// 			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi)
-// 				fds_with_flag_[i].pollfd_.events = POLLHUP;
-// 			fds_with_flag_[i].method_is_finished_ = YES;
-// 		}
-// 	}
 void		Poll::pollout(size_t i)
 {
 	HttpResponse response;
@@ -370,7 +330,6 @@ void		Poll::pollout(size_t i)
 			eAgainAndEWouldblockForResp(i, act);
 		else
 		{
-			std::cout << "SET POLLHUP\n";
 			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi == YES)
 				fds_with_flag_[i].pollfd_.events = POLLHUP;
 			fds_with_flag_[i].method_is_finished_ = YES;
@@ -396,15 +355,26 @@ void		Poll::closingServers()
 
 size_t		Poll::lengthProt(size_t i)
 {
-	size_t chunk_size
-		= std::min((size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_, (size_t)4096);
-	if (chunk_size< 1024)
-		chunk_size= 1025;
-	if ((size_t)chunk_size> (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_)
+	size_t chunk_size;
+	size_t location_max_size = (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
+	if (location_max_size > 2000000)
+		chunk_size = 2000000;
+	else if (location_max_size > 1000000)
 	{
-		fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_ 
-		= fds_with_flag_[i].connected_server_.client_max_body_size_ - 1;
+		chunk_size = 1000000;
 	}
+	else if (location_max_size > 500000)
+		chunk_size = 500000;
+	else
+		chunk_size
+			= location_max_size - 100;
+	// if (chunk_size< 1024)
+	// 	chunk_size= 1025;
+	// if ((size_t)chunk_size> (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_)
+	// {
+	// 	fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_ 
+	// 	= fds_with_flag_[i].connected_server_.client_max_body_size_ - 1;
+	// }
 	return (chunk_size);
 };
 

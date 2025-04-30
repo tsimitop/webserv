@@ -58,7 +58,6 @@ int	Poll::pollin(size_t i)
 				std::cout << std::boolalpha << rnrn_found << " = is rnrn_found\n";
 				if (fds_with_flag_[i].final_buffer_.find("sec-ch-ua: ") != std::string::npos)
 					definingRequest(i);
-				std::cout << rnrn_found << " = rnrn_found\t" << is_post << " = is_post\t" << rn_found << " = rn_found\t\n";
 				if ((rnrn_found && is_post == NO) || rn_found)
 				{
 					std::cout << YELLOW << "rnrn_found && is_post == NO" << QUIT << std::endl;
