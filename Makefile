@@ -3,7 +3,7 @@ NAME = webserv
 CC = c++
 
 # CFLAGS = -g -fsanitize=address -std=c++17 -Wall -Werror -Wextra
-CFLAGS = -g -std=c++17 -Wall -Werror -Wextra -fsanitize=address
+CFLAGS = -g -std=c++17 -Wall -Werror -Wextra #-fsanitize=address
 #DEBUG = -g
 
 SOURCE	= ./src

@@ -4,9 +4,11 @@ PollFdWithFlag::PollFdWithFlag() :
 pollfd_(), 
 state_(FIRST_TIME),
 type_(NON_SETTED),
-post_is_finished_(NO),
-final_buffer_({}), 
-req_(), 
+method_is_finished_(NO),
+final_buffer_({}),
+final_resp_buffer_({}),
+req_(),
+resp_(), 
 real_max_body_size_ln_(0),
 content_length_(0),
 timeout_(0),
@@ -18,9 +20,11 @@ PollFdWithFlag::PollFdWithFlag(const PollFdWithFlag& other)
 : pollfd_(other.pollfd_),
 state_(other.state_),
 type_(other.type_),
-post_is_finished_(other.post_is_finished_),
+method_is_finished_(other.method_is_finished_),
 final_buffer_(other.final_buffer_),
+final_resp_buffer_(other.final_resp_buffer_),
 req_(other.req_),
+resp_(other.resp_),
 real_max_body_size_ln_(other.real_max_body_size_ln_),
 content_length_(other.content_length_),
 timeout_(other.timeout_),
@@ -33,8 +37,10 @@ PollFdWithFlag::PollFdWithFlag(
 	int state,
 	int type,
 	int post_is_finished,
-	std::string final_buffer, 
-	HttpRequest req, 
+	std::string final_buffer,
+	std::string final_resp_buffer, 
+	HttpRequest req,
+	HttpResponse resp,
 	size_t real_max_body_size_ln,	
 	size_t content_length,
 	size_t timeout,
@@ -43,9 +49,11 @@ PollFdWithFlag::PollFdWithFlag(
 pollfd_(temp_fd), 
 state_(state),
 type_(type),
-post_is_finished_(post_is_finished),
+method_is_finished_(post_is_finished),
 final_buffer_(final_buffer),
+final_resp_buffer_(final_resp_buffer),
 req_(req),
+resp_(resp),
 real_max_body_size_ln_(real_max_body_size_ln),
 content_length_(content_length),
 timeout_(timeout),
@@ -59,9 +67,11 @@ PollFdWithFlag& PollFdWithFlag::operator=(const PollFdWithFlag& other)
 		pollfd_ = other.pollfd_;
 		state_ = other.state_;
 		type_ = other.type_;
-		post_is_finished_ = other.post_is_finished_;
+		method_is_finished_ = other.method_is_finished_;
 		final_buffer_ = other.final_buffer_;
+		final_resp_buffer_ = other.final_resp_buffer_;
 		req_ = other.req_;
+		resp_ = other.resp_;
 		real_max_body_size_ln_ = other.real_max_body_size_ln_;
 		content_length_= other.content_length_;
 		timeout_ = other.timeout_;
@@ -116,3 +126,58 @@ void PollFdWithFlag::setConnectedServer(const ServerInfo& connected_server)
 {
 	connected_server_ = connected_server;
 };
+
+void PollFdWithFlag::setFinalRespBuffer()
+{
+	HttpResponse response;
+	std::string response_str;
+	if (!req_.isCgi() \
+		|| (req_.isCgi() && req_.isInvalid()) \
+		|| (req_.isCgi() && req_.isForbidden()))
+	{
+		response = req_.performMethod();
+		response_str = response.respond(req_);
+		int step_back;
+		std::string	filtered_string = filteredBuffer(response_str, step_back);
+		response_str.clear();
+		response_str = filtered_string;
+	}
+	else
+	{
+		std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(pollfd_.fd);
+		if (cgi == nullptr)
+		{
+			std::cout << RED << "Cgi is not accessible from singleton\n";
+			return;
+		}
+		response_str = cgi->getRespBody();
+		std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
+	}
+	final_resp_buffer_.append(response_str);
+}
+
+void PollFdWithFlag::setFinalRespBufferIfCgi()
+{
+	HttpResponse response;
+	if (final_resp_buffer_.empty())
+	{
+		std::string response_str;
+
+		if (CgiSingleton::getInstance().access_cgi(pollfd_.fd) == nullptr)
+		{
+			std::cout << YELLOW << "ADDING EVENT:" << pollfd_.fd << QUIT<< std::endl;
+			CgiSingleton::getInstance().add_event(pollfd_.fd, std::make_shared<Cgi>(pollfd_.fd, req_));
+		}
+		std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(pollfd_.fd);
+		if (!cgi->hasForked())
+			cgi->execution_close();
+		if (cgi->performed_wait())
+		{
+			req_.setExecuted(true);
+			response = cgi->response_of_cgi(response);
+			response_str = response.respond(req_);
+			cgi->setResponseBody(response_str);
+		}
+		final_resp_buffer_.append(response_str);
+	}
+}

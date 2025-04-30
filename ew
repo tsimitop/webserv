@@ -11,7 +11,7 @@ int	Poll::pollin(size_t i)
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
 		std::cout << MAGENTA << buffer << QUIT << std::endl;
 		if (bytes == 0 || bytes < 0)
-			answer = eAgainAndEWouldblock(i, bytes);
+			answer = eAgainAndEWouldblockForReq(i, bytes);
 		else
 		{
 			int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
@@ -121,7 +121,7 @@ int	Poll::pollin(size_t i)
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
 		std::cout << MAGENTA << buffer << QUIT << std::endl;
 		if (bytes == 0 || bytes < 0)
-			answer = eAgainAndEWouldblock(i, bytes);
+			answer = eAgainAndEWouldblockForReq(i, bytes);
 		else
 		{
 			int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);

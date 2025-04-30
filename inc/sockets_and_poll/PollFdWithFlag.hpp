@@ -19,6 +19,7 @@
 #include "../config/Http.hpp"
 #include "../http_requests/HttpRequest.hpp"
 #include "../http_requests/HttpResponse.hpp"
+#include "../cgis/CgiSingleton.hpp"
 //===================ENUMERATORS=========================================
 
 // volatile sig_atomic_t SIGNALS_E = NO;
@@ -29,10 +30,12 @@ struct PollFdWithFlag
 	pollfd 				pollfd_;
 	int					state_;
 	int					type_;
-	int					post_is_finished_;
+	int					method_is_finished_;
 	std::string 		final_buffer_;
-	HttpRequest			req_;
+	std::string 		final_resp_buffer_;
 
+	HttpRequest			req_;
+	HttpResponse		resp_;
 	size_t				real_max_body_size_ln_;
 	size_t				content_length_;
 	size_t				timeout_;
@@ -49,8 +52,10 @@ struct PollFdWithFlag
 		int state,
 		int type,
 		int post_is_finished,
-		std::string final_buffer, 
-		HttpRequest req, 
+		std::string final_buffer,
+		std::string final_resp_buffer,
+		HttpRequest req,
+		HttpResponse	resp,
 		size_t real_max_body_size_ln,	
 		size_t content_length,
 		size_t timeout,
@@ -67,5 +72,6 @@ struct PollFdWithFlag
 	void setContentLength(int bytes, char buffer[]);
 	void setConnectedFds(const std::vector<size_t>& connected_fds);
 	void setConnectedServer(const ServerInfo& connected_server);
-
+	void setFinalRespBuffer();
+	void setFinalRespBufferIfCgi();
 };

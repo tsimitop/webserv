@@ -145,7 +145,23 @@
 	<button onclick="tryCGI('../cgi/mistake.py')">Try wrong CGI</button><br><br>
 	<input type="text" id="nameOfUser" placeholder="Enter your name">
 	<button onclick="tryCGIpost('../cgi/for_post.py')">Try post CGI</button><br><br>
-	
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			document.getElementById("myFile").addEventListener("keydown", function(event) {
+				if (event.key === "Enter") uploadFile();
+			});
+		
+			document.getElementById("filenameToDelete").addEventListener("keydown", function(event) {
+				if (event.key === "Enter") deleteFile();
+			});
+		
+			document.getElementById("nameOfUser").addEventListener("keydown", function(event) {
+				if (event.key === "Enter") tryCGIpost('/cgi-bin/script');
+			});
+		});
+		</script>
+		
 	<script>
 		function uploadFile() {
 			const fileInput = document.getElementById("myFile");

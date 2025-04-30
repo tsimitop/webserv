@@ -38,11 +38,13 @@ struct Poll
 	//================HELPER METHODS ================================================
 	void		connecting();
 	void		disconecting(size_t& i, std::string str);
+	void		disconnectingPreviousSuccededMethods(std::string str);
 	void		closingServers();
 	void		setMaxBodyLen(size_t i, int bytes);
 	void		definingRequest(size_t i);
 	size_t		lengthProt(size_t i);
-	int			eAgainAndEWouldblock(size_t i, int bytes);
+	int			eAgainAndEWouldblockForReq(size_t i, int bytes);
+	void		eAgainAndEWouldblockForResp(size_t i, int act);
 	int			updateFinalBuffer(size_t i, int bytes, char buffer[]);
 	void		validPollout();
 	void		nonValidSigletonCase(size_t i, std::string& response_str);
