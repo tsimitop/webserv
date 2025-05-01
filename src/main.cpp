@@ -45,11 +45,11 @@ curl -X POST -H "Content-Type: application/octet-stream" -H "Content-Disposition
 */
 
 /*
-POST /uploads HTTP/1.1
 UKNOWN /uploads HTTP/1.1
+POST /uploads HTTP/1.1
 Host: localhost:4242
 Connection: keep-alive
-Content-Length: 0
+Content-Length: 7
 Content-Disposition: attachment; filename="hello.md"
 Content-Type: application/octet-stream
 

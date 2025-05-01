@@ -105,7 +105,7 @@ int Poll::binding()
 			config_.active_servers_.push_back(s);
 			fds_with_flag_.push_back(
 				(PollFdWithFlag){{server_fd_, POLLIN, 0}, 
-				FIRST_TIME, SERVER, NO,
+				FIRST_TIME, SERVER, NO, false,
 				{}, {},
 				(HttpRequest){"", s},
 				(HttpResponse){},
@@ -160,6 +160,7 @@ void	Poll::connecting()
 					FIRST_TIME,
 					CLIENT,
 					NO,
+					false,
 					{}, {},
 					(HttpRequest){"", config_.active_servers_[i]},
 					(HttpResponse){},
@@ -181,35 +182,25 @@ void Poll::synchroIO()
 	{
 		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 		{
-			// if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd))
-			// 		std::cout << (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd)->cgiPidDone()) << " = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd)->cgiPidDone()\n";
 			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd) && CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd)->cgiPidDone())
-					fds_with_flag_[i].pollfd_.events |= POLLOUT;
-
+				fds_with_flag_[i].pollfd_.events |= POLLOUT;
 		}
 		int activity = polling();
 		if (activity == -1)
 		{
-			// if (errno == EINTR)
-			// 	std::cerr<< RED << "\nError: poll failed! Interupted signal!" << QUIT << std::endl;
-			if (errno == EINVAL)
-				std::cerr<< RED << "\nError: poll failed!File dirrectories exceeding the max fds or wrong time out value!" << QUIT << std::endl;
-			if (errno == ENOMEM)
-				std::cerr << RED << "\nError: poll failed! Not allocation enough space!" << QUIT << std::endl;
+			std::cerr << RED << "Error: " << errno << QUIT << std::endl;
 			break;
 		}
 		connecting();
-		if (activity == 0)
-			disconnectingPreviousSuccededMethods("POLLSP: ");
+		// if (activity == 0)
+		// 	disconnectingPreviousSuccededMethods("POLLSP: ");
 		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 		{
-			int er = errno;
-			(void)er;
 			pollhup(i);
 			int pollin_int = pollin(i);
 			if (pollin_int == NO)
 				continue;
-			else if (pollin_int == SIG)
+			if (pollin_int == SIG)
 			{
 				fds_with_flag_[i].pollfd_.events = POLLHUP | POLLERR;
 			}
@@ -247,18 +238,42 @@ void		Poll::disconnectingPreviousSuccededMethods(std::string str)
 void		Poll::pollhup(size_t& i)
 {
 	// std::cout << GREEN << "ENTERED POLLHUP FUNCTION\n";
+	
 	std::string poll_err = fds_with_flag_[i].pollfd_.revents & POLLERR ? "POLLERR:" :
 							fds_with_flag_[i].pollfd_.revents & POLLHUP ?  "POLLHUP: " :
 							fds_with_flag_[i].pollfd_.revents & POLLNVAL ?  "POLLNVAL: " :
 							fds_with_flag_[i].pollfd_.revents &  POLLWRBAND ? " POLLWRBAND: ":
 							fds_with_flag_[i].pollfd_.revents & POLLRDNORM ? " POLLRDNORM" :
 							"UNCLASSIFIED POLL HUNG UP: ";
-	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
+	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM))// || fds_with_flag_[i].method_is_finished_ // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
 	{
 		std::cout << "About to disconnect in POLLHUP\n";
 		disconecting(i, poll_err);
 	}
 };
+
+// int	Poll::pollin(size_t i)
+// {
+// 	int answer = YES;
+// 	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
+// 	{
+// 		// size_t temp_len = lengthProt(i);
+// 		std::cout << "server index: " << i << std::endl;
+// 		char buffer[1000000];
+// 		memset(buffer, 0, 1000000); //
+// 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, 1000000, 0);
+// 		while (bytes > 0) {
+// 			std::string	temp_buffer = buffer;
+// 			fds_with_flag_[i].final_buffer_.append(temp_buffer);
+// 			memset(buffer, 0, 1000000);
+// 			bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, 1000000, 0);
+// 		}
+// 		definingRequest(i);
+// 		if (bytes == 0 || bytes < 0)
+// 			answer = eAgainAndEWouldblockForReq(i, bytes);
+// 	}
+// 	return answer;
+// };
 
 int	Poll::pollin(size_t i)
 {
@@ -270,37 +285,33 @@ int	Poll::pollin(size_t i)
 		memset(buffer, 0, temp_len); //
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
 		std::cout << MAGENTA << buffer << QUIT << std::endl;
-		if (bytes == 0 || bytes < 0)
-			answer = eAgainAndEWouldblockForReq(i, bytes);
+		if (bytes <= 0)
+		{
+			definingRequest(i);
+			fds_with_flag_[i].pollfd_.events = POLLOUT;
+			std::cout << "0YES\n";
+			fds_with_flag_[i].request_recieved_ = true;
+			return YES;
+			// answer = eAgainAndEWouldblockForReq(i, bytes);
+		}
 		else
 		{
-			std::cout << "ELSE000\n";
-			buffer[bytes] = '\0';
-			std::cout << "kollisa00\n";
-			// int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
-			// std::cout << SIG << " = SIG\t" << checking_signals << " = checking_signals\n";
-			// if (checking_signals == SIG)
-			// 	return SIG;
-			std::cout << "kollisa\n";
-
 			std::string	temp_buffer = buffer;
 			fds_with_flag_[i].final_buffer_.append(temp_buffer);
 			bool	rnrn_found = fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos;
 			bool	is_post = fds_with_flag_[i].final_buffer_.find("POST ", 0, 4) != std::string::npos;
-			std::cout << "before if\n";
 			if (rnrn_found == NO)
 			{
-				std::cout << "rnrn_found == NO\n";
-
+				std::cout << "1NO\n";
 				return NO;
 			}
 			else
 			{
-				std::cout << "ELSE111\n";
 				if (is_post == NO)
 				{
 					definingRequest(i);
-					fds_with_flag_[i].final_buffer_.push_back('\0');
+					std::cout << "1YES\n";
+					fds_with_flag_[i].request_recieved_ = true;
 					return YES;
 				}
 				else
@@ -316,11 +327,13 @@ int	Poll::pollin(size_t i)
 					std::string filetype;
 					if (apparent_filetype == true)
 						filetype = filename.substr(apparent_filetype, end_b);
-					if (!filetype.empty())
+					if (!filetype.empty() && body_of_post.length() == content_length)
 					{
 						if (filetype != "txt" && filetype != "md")
 						{
 							definingRequest(i);
+							std::cout << "2YES\n";
+							fds_with_flag_[i].request_recieved_ = true;
 							return YES;
 						}
 					}
@@ -330,8 +343,8 @@ int	Poll::pollin(size_t i)
 						return NO;
 					else
 					{
+						fds_with_flag_[i].request_recieved_ = true;
 						definingRequest(i);
-						fds_with_flag_[i].final_buffer_.push_back('\0');
 						return YES;
 					}
 				}
@@ -340,7 +353,7 @@ int	Poll::pollin(size_t i)
 	}
 	return answer;
 };
-void		Poll::pollout(size_t i)
+void		Poll::pollout(size_t& i)
 {
 	HttpResponse response;
 
@@ -348,30 +361,50 @@ void		Poll::pollout(size_t i)
 	bool is_valid_cgi = is_cgi
 	&& !(is_cgi && fds_with_flag_[i].req_.isInvalid())
 	&& !(is_cgi && fds_with_flag_[i].req_.isForbidden());
-
-	if(fds_with_flag_[i].pollfd_.revents & POLLOUT)
+// std::cout << "POLLOUTING\n";
+	if(fds_with_flag_[i].pollfd_.revents & POLLOUT) // && !fds_with_flag_[i].method_is_finished_
 	{
+		std::cout << "fds_with_flag_[i].pollfd_.revents & POLLOUT\n";
 		if (fds_with_flag_[i].final_resp_buffer_.empty())
 			fds_with_flag_[i].setFinalRespBuffer();
 
+		if (fds_with_flag_[i].method_is_finished_ && fds_with_flag_[i].request_recieved_)
+			fds_with_flag_[i].final_resp_buffer_ = "\0";
 		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
+		std::cout << GREEN << act << " = bytes sent\n" << QUIT;
+		fds_with_flag_[i].final_buffer_.clear();
 		if (is_valid_cgi)
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
 		if (act <= 0)
-			eAgainAndEWouldblockForResp(i, act);
+		{
+			fds_with_flag_[i].method_is_finished_ = YES;
+			fds_with_flag_[i].pollfd_.events = POLLHUP;
+			// std::cout << BLUE << "2: Closing fds_with_flag_[i].pollfd_.fd: " << fds_with_flag_[i].pollfd_.fd << std::endl;
+			// close(fds_with_flag_[i].pollfd_.fd);
+			// fds_with_flag_.erase(fds_with_flag_.begin() + i);
+		}
 		else
 		{
-
-			// size_t chunk_length = lengthProt(i);
-			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi == YES )
-			// || std::stoi(fds_with_flag_[i].req_.getContentLength()) < chunk_length)
+			std::cout << "else of pollout\n";
+			std::cout << act << " = act\t|\t" << fds_with_flag_[i].final_resp_buffer_.length() << " = fds_with_flag_[i].final_resp_buffer_.length()\n";
+			if ((size_t)act == fds_with_flag_[i].final_resp_buffer_.length() && fds_with_flag_[i].request_recieved_)
+			{
+				fds_with_flag_[i].method_is_finished_ = YES;
 				fds_with_flag_[i].pollfd_.events = POLLHUP;
-			fds_with_flag_[i].method_is_finished_ = YES;
+			}
 		}
 	}
 	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
 	{
 		fds_with_flag_[i].setFinalRespBufferIfCgi();
+	}
+	else if (fds_with_flag_[i].method_is_finished_ && fds_with_flag_[i].request_recieved_)
+	{
+		std::cout << BLUE << "1: Closing fds_with_flag_[i].pollfd_.fd: " << fds_with_flag_[i].pollfd_.fd << std::endl;
+		close(fds_with_flag_[i].pollfd_.fd);
+		fds_with_flag_.erase(fds_with_flag_.begin() + i);
+		i--;
+		return ;
 	}
 	if (fds_with_flag_[i].pollfd_.events & (POLLHUP | POLLERR))
 	{
@@ -385,6 +418,7 @@ void		Poll::closingServers()
 	{
 		while (!fds_with_flag_.empty())
 		{
+			std::cout << BLUE << "Closing Sever: " << fds_with_flag_[0].pollfd_.fd << std::endl << QUIT;
 			close(fds_with_flag_[0].pollfd_.fd);
 			fds_with_flag_.erase(fds_with_flag_.begin());
 		}
@@ -434,23 +468,40 @@ void		Poll::definingRequest(size_t i)
 	fds_with_flag_[i].req_.setCurrentServer(fds_with_flag_[i].connected_server_);
 	fds_with_flag_[i].req_.isValid();
 	if (!fds_with_flag_[i].req_.isCgi())
-		fds_with_flag_[i].pollfd_.events |= POLLOUT;
+		fds_with_flag_[i].pollfd_.events = POLLOUT;
 };
 
-void		Poll::disconecting(size_t& i, std::string str)
+// void		Poll::disconecting(size_t& i, std::string str)
+// {
+// 	size_t fd_of_server = fds_with_flag_[i].connected_fds_[0];
+// 	// if (fds_with_flag_[i].req_.isInvalid() == NO)
+// 	int fd = fds_with_flag_[i].pollfd_.fd;
+// 	if (fd >= 0)
+// 	{
+// 		// close(fds_with_flag_[i].pollfd_.fd);
+// 		close(fd); // Always close before erasing
+// 		std::cout << BLUE << "Client : " << fds_with_flag_[i].pollfd_.fd << 
+// 		" " << str << "Disconnection from Server " << 
+// 		fd_of_server << QUIT << std::endl;
+// 		fds_with_flag_.erase(fds_with_flag_.begin() + i);
+// 		fds_with_flag_[i].pollfd_.fd = -1; // Defensive: prevent reuse
+// 	}
+// 	i--;
+// }
+void Poll::disconecting(size_t& i, std::string str)
 {
+	int fd = fds_with_flag_[i].pollfd_.fd;
 	size_t fd_of_server = fds_with_flag_[i].connected_fds_[0];
-	//---- additional for error handling--------------------
-	if (fds_with_flag_[i].req_.isInvalid() == NO)
-		close(fds_with_flag_[i].pollfd_.fd);
-	//---- additional for error handling--------------------
-	std::cout << BLUE << "Client : " << fds_with_flag_[i].pollfd_.fd << 
-	" " << str << "Disconnection from Server " << 
-	fd_of_server << QUIT << std::endl;
+
+	if (fd >= 0)
+	{
+		close(fd);
+		std::cout << BLUE << "Client : " << fd << " " << str
+		<< "Disconnection from Server " << fd_of_server << QUIT << std::endl;
+	}
 	fds_with_flag_.erase(fds_with_flag_.begin() + i);
 	i--;
 }
-
 //===================OUTER HELPER FUNCTIONS ==========================================
 int		checkingForSignals(const char *buffer, int bytes, const std::string final_buffer)
 {
@@ -503,7 +554,7 @@ std::string safeNullTermination(int bytes, size_t max_body_ln, std::string buffe
 
 int			Poll::eAgainAndEWouldblockForReq(size_t i, int bytes)
 {
-	if (bytes == 0)
+	if (bytes <= 0)
 	{
 		std::cout << "This string is empty!\n";
 		// close(fds_with_flag_[i].pollfd_.fd);
@@ -511,43 +562,44 @@ int			Poll::eAgainAndEWouldblockForReq(size_t i, int bytes)
 		return YES;
 		// disconecting(i, "(EOF)");
 	}
-	else
-	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-			return NO;
-		else if (errno == EINVAL)
-		{
-			close(fds_with_flag_[i].pollfd_.fd);
-			fds_with_flag_[i].pollfd_.events |= POLLOUT;
-			return YES;
-		}
-	}
+	// else
+	// {
+	// 	if (errno == EAGAIN || errno == EWOULDBLOCK)
+	// 		return NO;
+	// 	else if (errno == EINVAL)
+	// 	{
+	// 		close(fds_with_flag_[i].pollfd_.fd);
+	// 		fds_with_flag_[i].pollfd_.events |= POLLOUT;
+	// 		return YES;
+	// 	}
+	// }
 			// disconecting(i, "(recv)"); // EINVAL ECONNECTRESET ENOTCONN
 	return NO;
 };
 void	Poll::eAgainAndEWouldblockForResp(size_t i, int act)
 {
-	if (act == 0)
-			{
-				std::cout << "This string is empty!\n";
-				close(fds_with_flag_[i].pollfd_.fd);
-				fds_with_flag_[i].pollfd_.events |= POLLHUP;
-				return ;
-			}
-			else
-			{
-				if (errno == EAGAIN || errno == EWOULDBLOCK)
-				{
-					fds_with_flag_[i].pollfd_.events |= POLLOUT;
-					return ;
-				}
-				else if (errno == EINVAL)
-				{
-					close(fds_with_flag_[i].pollfd_.fd);
-					fds_with_flag_[i].pollfd_.events = POLLERR;
-					return ;
-				}
-			}
+	if (act <= 0)
+	{
+		std::cout << "This string is empty!\n";
+		// close(fds_with_flag_[i].pollfd_.fd);
+		// fds_with_flag_.erase(fds_with_flag_.begin() + i);
+		fds_with_flag_[i].pollfd_.events |= POLLHUP;
+		return ;
+	}
+	else
+	{
+	// 	if (errno == EAGAIN || errno == EWOULDBLOCK)
+	// 	{
+	// 		fds_with_flag_[i].pollfd_.events |= POLLOUT;
+	// 		return ;
+	// 	}
+	// 	else if (errno == EINVAL)
+	// 	{
+		// close(fds_with_flag_[i].pollfd_.fd);
+		fds_with_flag_[i].pollfd_.events = POLLERR;
+		return ;
+		// }
+	}
 };
 int			Poll::updateFinalBuffer(size_t i, int bytes, char buffer[])
 {

@@ -5,6 +5,7 @@ pollfd_(),
 state_(FIRST_TIME),
 type_(NON_SETTED),
 method_is_finished_(NO),
+request_recieved_(false),
 final_buffer_({}),
 final_resp_buffer_({}),
 req_(),
@@ -21,6 +22,7 @@ PollFdWithFlag::PollFdWithFlag(const PollFdWithFlag& other)
 state_(other.state_),
 type_(other.type_),
 method_is_finished_(other.method_is_finished_),
+request_recieved_(other.request_recieved_),
 final_buffer_(other.final_buffer_),
 final_resp_buffer_(other.final_resp_buffer_),
 req_(other.req_),
@@ -37,6 +39,7 @@ PollFdWithFlag::PollFdWithFlag(
 	int state,
 	int type,
 	int post_is_finished,
+	bool request_recieved,
 	std::string final_buffer,
 	std::string final_resp_buffer, 
 	HttpRequest req,
@@ -50,6 +53,7 @@ pollfd_(temp_fd),
 state_(state),
 type_(type),
 method_is_finished_(post_is_finished),
+request_recieved_(request_recieved),
 final_buffer_(final_buffer),
 final_resp_buffer_(final_resp_buffer),
 req_(req),
@@ -68,6 +72,7 @@ PollFdWithFlag& PollFdWithFlag::operator=(const PollFdWithFlag& other)
 		state_ = other.state_;
 		type_ = other.type_;
 		method_is_finished_ = other.method_is_finished_;
+		request_recieved_ = other.request_recieved_;
 		final_buffer_ = other.final_buffer_;
 		final_resp_buffer_ = other.final_resp_buffer_;
 		req_ = other.req_;

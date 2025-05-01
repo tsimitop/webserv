@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Extra</title>
+	<title>Webserv</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Tektur:wght@400..900&display=swap" rel="stylesheet">
@@ -123,12 +123,11 @@
 	</style>
 </head>
 <body>
-	<button id="music-toggle">Play Music</button>
-	<h1>The simplest extra_index ever</h1>
-	<p>Is this a simple extra_index or what?</p>
+	<h1>The simplest index ever</h1>
+	<p>Is this a simple index or what?</p>
 	
 	<input type="file" id="myFile">
-	<button onclick="uploadFile()">Upload</button>
+	<button id="uploadButton">Upload</button>
 	
 	<br><br>
 	
@@ -145,7 +144,28 @@
 	<button onclick="tryCGI('../cgi/mistake.py')">Try wrong CGI</button><br><br>
 	<input type="text" id="nameOfUser" placeholder="Enter your name">
 	<button onclick="tryCGIpost('../cgi/for_post.py')">Try post CGI</button><br><br>
-	
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			document.getElementById("uploadButton").addEventListener("click", function(event) {
+				event.preventDefault();
+				uploadFile();
+			});
+			document.getElementById("myFile").addEventListener("keydown", function(event) {
+				event.preventDefault();
+				if (event.key === "Enter") uploadFile();
+			});
+		
+			document.getElementById("filenameToDelete").addEventListener("keydown", function(event) {
+				if (event.key === "Enter") deleteFile();
+			});
+		
+			document.getElementById("nameOfUser").addEventListener("keydown", function(event) {
+				if (event.key === "Enter") tryCGIpost('/cgi-bin/script');
+			});
+		});
+		</script>
+		
 	<script>
 		function uploadFile() {
 			const fileInput = document.getElementById("myFile");
@@ -157,16 +177,48 @@
 			}
 	
 			const filename = file.name;
-	
-			fetch('/uploads', {
+
+			var reader = new FileReader();
+			reader.onload = function (event) {
+			var arrayBuffer = event.target.result;
+			var blob = new Blob([arrayBuffer], { type: "application/octet-stream" });
+			const filename = file.name;
+			fetch("/uploads", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/octet-stream",
 					"Content-Disposition": 'attachment; filename="' + filename + '"',
 				},
-				body: file // Send the raw file
-			}).then(response => console.log("Upload complete"))
-			  .catch(error => console.error("Error:", error));
+				body: blob,
+			})
+				.then(function (response) {
+					if (response.status == 201) {
+						console.log("Redirecting to", response.url);
+						window.location.href = "/uploads";
+					} else {
+						// return response.text().then(function (html) {
+						// 	hideSpinner();
+						// 	console.log("File uploaded successfully");
+						// 	// displayUploadedFilesFromHTML(html);
+						// });
+						console.log(response);
+					}
+				})
+				.catch(function (error) {
+					console.error("Upload failed:", error);
+				});
+		};
+		reader.readAsArrayBuffer(file);
+	
+			// fetch('/uploads', {
+			// 	method: "POST",
+			// 	headers: {
+			// 		"Content-Type": "application/octet-stream",
+			// 		"Content-Disposition": 'attachment; filename="' + filename + '"',
+			// 	},
+			// 	body: file // Send the raw file
+			// }).then(response => console.log("Upload complete"))
+			//   .catch(error => console.error("Error:", error));
 		}
 	</script>
 	
@@ -240,49 +292,6 @@
 			  console.error("Error:", error);
 			});
 		}
-	</script>
-	<audio id="bg-music" autoplay loop muted>
-		<source src="ai_gen_8_bit.mp3" type="audio/mp3">
-		Your browser does not support the audio element.
-	</audio>
-	<script>
-		document.addEventListener("DOMContentLoaded", () => {
-			const music = document.getElementById("bg-music");
-			const musicBtn = document.getElementById("music-toggle");
-			let isPlaying = false;
-	
-			music.loop = false;
-	
-			setInterval(() => {
-				if (isPlaying && music.currentTime >= 15) {
-					music.currentTime = 0;
-					music.play();
-				}
-			}, 500);
-	
-			window.addEventListener("click", () => {
-				if (!isPlaying) {
-					music.muted = false;
-					music.play();
-					isPlaying = true;
-					if (musicBtn) musicBtn.textContent = 'Pause Music';
-				}
-			}, { once: true });
-	
-			if (musicBtn) {
-				musicBtn.addEventListener("click", () => {
-					if (!isPlaying) {
-						music.muted = false;
-						music.play();
-						musicBtn.textContent = "Pause Music";
-					} else {
-						music.pause();
-						musicBtn.textContent = "Play Music";
-					}
-					isPlaying = !isPlaying;
-				});
-			}
-		});
 	</script>
 	</body>
 </html>

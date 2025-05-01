@@ -31,6 +31,7 @@ struct PollFdWithFlag
 	int					state_;
 	int					type_;
 	int					method_is_finished_;
+	bool				request_recieved_;
 	std::string 		final_buffer_;
 	std::string 		final_resp_buffer_;
 
@@ -52,6 +53,7 @@ struct PollFdWithFlag
 		int state,
 		int type,
 		int post_is_finished,
+		bool request_recieved_,
 		std::string final_buffer,
 		std::string final_resp_buffer,
 		HttpRequest req,

@@ -34,7 +34,7 @@ struct Poll
 	//===============POLL STATES ====================================================
 	void		pollhup(size_t& i);
 	int			pollin(size_t i);
-	void		pollout(size_t i);
+	void		pollout(size_t& i);
 	//================HELPER METHODS ================================================
 	void		connecting();
 	void		disconecting(size_t& i, std::string str);

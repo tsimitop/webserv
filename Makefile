@@ -68,4 +68,6 @@ docker_clean:
 	docker stop webserv
 	docker rm webserv
 
+docker_re: docker_clean docker_run
+
 .PHONY: all clean fclean re superclean
