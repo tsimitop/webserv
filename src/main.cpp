@@ -69,25 +69,25 @@ DNT: 1
 Content-Disposition: attachment; filename="up3.md"
 sec-ch-ua-mobile: ?0
 Content-Type: application/octet-stream
-Accept: */*
-Origin: http://localhost:4242
-Sec-Fetch-Site: same-origin
-Sec-Fetch-Mode: cors
-Sec-Fetch-Dest: empty
-Referer: http://localhost:4242/index.html
-Accept-Encoding: gzip, deflate, br, zstd
-Accept-Language: en-US,en;q=0.9
+// Accept: */
+// Origin: http://localhost:4242
+// Sec-Fetch-Site: same-origin
+// Sec-Fetch-Mode: cors
+// Sec-Fetch-Dest: empty
+// Referer: http://localhost:4242/index.html
+// Accept-Encoding: gzip, deflate, br, zstd
+// Accept-Language: en-US,en;q=0.9
 
 
 
-Host: localhostET / HTTP/1.1
-Host: localhostET / HTTP/1.1
-Host: localhostET / HTTP/1.1
-Host: localhostET / HTTP/1.1
-Host: localhostET / HTTP/1.1
-Host: localhostET / HTTP/1.1
-Host: localhostET / HTTP/1.1
-Host: localhostET / HTTP/1.1
-Host: localhostET / HTTP/1.1
-Host: localhostET / HTTP/1.1klnkkl
-*/
+// Host: localhostET / HTTP/1.1
+// Host: localhostET / HTTP/1.1
+// Host: localhostET / HTTP/1.1
+// Host: localhostET / HTTP/1.1
+// Host: localhostET / HTTP/1.1
+// Host: localhostET / HTTP/1.1
+// Host: localhostET / HTTP/1.1
+// Host: localhostET / HTTP/1.1
+// Host: localhostET / HTTP/1.1
+// Host: localhostET / HTTP/1.1klnkkl
+// */
