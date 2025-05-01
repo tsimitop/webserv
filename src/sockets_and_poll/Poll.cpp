@@ -219,40 +219,6 @@ void Poll::synchroIO()
 	if (poll_flag == NO)
 		closingServers();
 };
-void		Poll::disconnectingPreviousSuccededMethods(std::string str)
-{
-	(void)str;
-	// if (config_.active_servers_.size() + 1 < fds_with_flag_.size())
-	// {
-	// 	for (size_t i = config_.active_servers_.size(); i + 1!= fds_with_flag_.size(); i++)
-	// 	{
-	// 		if (fds_with_flag_[i].method_is_finished_ == YES)
-	// 		{
-	// 			for(size_t k = i + 1; k != fds_with_flag_.size(); k++)
-	// 			{
-	// 				if(
-	// 					fds_with_flag_[i].connected_server_.listen_ == fds_with_flag_[i].connected_server_.listen_ && 
-	// 					fds_with_flag_[i].method_is_finished_ == fds_with_flag_[k].method_is_finished_ 
-	// 				)
-	// 				{
-	// 					std::cout << "About to disconnect successful method\n";
-	// 					disconecting(i, str);
-	// 					break ;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// for (size_t i = 0; i != fds_with_flag_.size(); i++)
-	// 	if (fds_with_flag_[i].method_is_finished_ == 1)
-	// 	{
-	// 		// exit(0);
-	// 		close(fds_with_flag_[i].pollfd_.fd);
-	// 		fds_with_flag_.erase(fds_with_flag_.begin() + i);
-	// 		i--;
-	// 	}
-			
-}
 //===============POLL STATES ====================================================
 void		Poll::pollhup(size_t& i)
 {
@@ -283,15 +249,6 @@ int	Poll::pollin(size_t i)
 			answer = eAgainAndEWouldblockForReq(i, bytes);
 		else
 		{
-			// std::cout << "ELSE000\n";
-			// buffer[bytes] = '\0';
-			// std::cout << "kollisa00\n";
-			// int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
-			// std::cout << SIG << " = SIG\t" << checking_signals << " = checking_signals\n";
-			// if (checking_signals == SIG)
-			// 	return SIG;
-			// std::cout << "kollisa\n";
-			// buffer[bytes] = '\0';
 			std::string	temp_buffer = buffer;
 			size_t final_buffer_pre_append_last_element_index;
 			if(!temp_buffer.empty() && temp_buffer[0] != '\0')
@@ -373,7 +330,6 @@ void		Poll::pollout(size_t i)
 			eAgainAndEWouldblockForResp(i, act);
 		else
 		{
-			// fds_with_flag_[i].final_resp_buffer_.erase(0, act);
 			if (fds_with_flag_[i].final_buffer_.substr(0,4) != "POST" || is_valid_cgi)
 				fds_with_flag_[i].pollfd_.events |= POLLHUP;
 		}
@@ -386,7 +342,6 @@ void		Poll::pollout(size_t i)
 	{
 		fds_with_flag_[i].final_buffer_.clear();
 		fds_with_flag_[i].final_resp_buffer_.clear();
-		// close(fds_with_flag_[i].pollfd_.fd);
 	}
 };
 //================HELPER METHODS ================================================
@@ -474,7 +429,6 @@ int		checkingForSignals(const char *buffer, int bytes, const std::string final_b
 
 int setNonBlockingFd(int fd)
 {
-	//not an extra parameter 0
 	int flag = fcntl(fd, F_GETFL);
 	return (fcntl(fd, F_SETFL, flag | O_NONBLOCK));
 }
@@ -518,16 +472,10 @@ int			Poll::eAgainAndEWouldblockForReq(size_t i, int bytes)
 	}
 	else
 	{
-		// if (errno == EAGAIN || errno == EWOULDBLOCK)
-		// 	return NO;
-		// else if (errno == EINVAL)
-		// {
 			close(fds_with_flag_[i].pollfd_.fd);
 			fds_with_flag_[i].pollfd_.events |= POLLOUT;
 			return YES;
-	// 	}
 	}
-			// disconecting(i, "(recv)"); // EINVAL ECONNECTRESET ENOTCONN
 	return NO;
 };
 void	Poll::eAgainAndEWouldblockForResp(size_t i, int act)
@@ -541,17 +489,9 @@ void	Poll::eAgainAndEWouldblockForResp(size_t i, int act)
 			}
 			else
 			{
-				// if (errno == EAGAIN || errno == EWOULDBLOCK)
-				// {
-				// 	fds_with_flag_[i].pollfd_.events |= POLLOUT;
-				// 	return ;
-				// }
-				// else if (errno == EINVAL)
-				// {
 					close(fds_with_flag_[i].pollfd_.fd);
 					fds_with_flag_[i].pollfd_.events = POLLERR;
 					return ;
-				// }
 			}
 };
 int			Poll::updateFinalBuffer(size_t i, int bytes, char buffer[])
