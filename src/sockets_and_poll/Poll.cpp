@@ -273,7 +273,7 @@ int	Poll::pollin(size_t i)
 					fds_with_flag_[i].req_.readRequest(fds_with_flag_[i].final_buffer_, 1);
 					if (fds_with_flag_[i].req_.isValid())
 					{
-						std::string content_disposition = fds_with_flag_[i].req_.getHeaders()["Content-Disposition"];
+							std::string content_disposition = fds_with_flag_[i].req_.getHeaders()["Content-Disposition"];
 						fds_with_flag_[i].content_length_ = std::stol(fds_with_flag_[i].req_.getContentLength());
 						if (
 								content_disposition.find_first_of(".") == content_disposition.find_last_of(".") && 
@@ -331,7 +331,7 @@ void		Poll::pollout(size_t i)
 		else
 		{
 			if (fds_with_flag_[i].final_buffer_.substr(0,4) != "POST" || is_valid_cgi)
-				fds_with_flag_[i].pollfd_.events |= POLLHUP;
+				fds_with_flag_[i].pollfd_.events = POLLHUP;
 		}
 	}
 	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
