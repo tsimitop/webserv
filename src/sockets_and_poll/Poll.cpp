@@ -275,14 +275,18 @@ int	Poll::pollin(size_t i)
 					{
 							std::string content_disposition = fds_with_flag_[i].req_.getHeaders()["Content-Disposition"];
 						fds_with_flag_[i].content_length_ = std::stol(fds_with_flag_[i].req_.getContentLength());
-						if (
-								content_disposition.find_first_of(".") == content_disposition.find_last_of(".") && 
-								content_disposition.find_first_of(".") != std::string::npos
-							)
+						if (content_disposition.find_first_of(".") == content_disposition.find_last_of(".") && content_disposition.find_first_of(".") != std::string::npos)
+						{
 							if (!content_disposition.substr(content_disposition.find(".") + 1).empty() && fds_with_flag_[i].file_type_.empty())
+							{
 								for(char& c : content_disposition.substr(content_disposition.find(".")))
+								{
 									if (isalnum(c))
 										fds_with_flag_[i].file_type_.push_back(c);
+								}
+
+							}
+						}
 							body_of_post = fds_with_flag_[i].req_.getBody();
 							bool is_accepted_file =fds_with_flag_[i].file_type_ == "txt" || fds_with_flag_[i].file_type_ == "md" || fds_with_flag_[i].req_.isCgi();
 							bool is_accepted_length = (size_t)fds_with_flag_[i].content_length_ <= (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
