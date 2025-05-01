@@ -181,8 +181,6 @@ void Poll::synchroIO()
 	{
 		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 		{
-			// if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd))
-			// 		std::cout << (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd)->cgiPidDone()) << " = CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd)->cgiPidDone()\n";
 			if (CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd) && CgiSingleton::getInstance().access_cgi(fds_with_flag_[i].pollfd_.fd)->cgiPidDone())
 					fds_with_flag_[i].pollfd_.events |= POLLOUT;
 
@@ -190,8 +188,6 @@ void Poll::synchroIO()
 		int activity = polling();
 		if (activity == -1)
 		{
-			// if (errno == EINTR)
-			// 	std::cerr<< RED << "\nError: poll failed! Interupted signal!" << QUIT << std::endl;
 			if (errno == EINVAL)
 				std::cerr<< RED << "\nError: poll failed!File dirrectories exceeding the max fds or wrong time out value!" << QUIT << std::endl;
 			if (errno == ENOMEM)
@@ -199,8 +195,6 @@ void Poll::synchroIO()
 			break;
 		}
 		connecting();
-		// if (activity == 0)
-			// disconnectingPreviousSuccededMethods("POLLSP: ");
 		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 		{
 			int er = errno;
@@ -222,7 +216,6 @@ void Poll::synchroIO()
 //===============POLL STATES ====================================================
 void		Poll::pollhup(size_t& i)
 {
-	// std::cout << GREEN << "ENTERED POLLHUP FUNCTION\n";
 	std::string poll_err = fds_with_flag_[i].pollfd_.revents & POLLERR ? "POLLERR:" :
 							fds_with_flag_[i].pollfd_.revents & POLLHUP ?  "POLLHUP: " :
 							fds_with_flag_[i].pollfd_.revents & POLLNVAL ?  "POLLNVAL: " :
@@ -320,13 +313,12 @@ int	Poll::pollin(size_t i)
 void		Poll::pollout(size_t i)
 {
 	HttpResponse response;
-
-	bool is_cgi = fds_with_flag_[i].req_.isCgi();
-	bool is_valid_cgi = is_cgi
-	&& !(is_cgi && fds_with_flag_[i].req_.isInvalid())
-	&& !(is_cgi && fds_with_flag_[i].req_.isForbidden());
 	if(fds_with_flag_[i].pollfd_.revents & POLLOUT)
 	{
+		bool is_cgi = fds_with_flag_[i].req_.isCgi();
+		bool is_valid_cgi = is_cgi
+		&& !(is_cgi && fds_with_flag_[i].req_.isInvalid())
+		&& !(is_cgi && fds_with_flag_[i].req_.isForbidden());
 		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
 		if (is_valid_cgi)
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
@@ -334,6 +326,7 @@ void		Poll::pollout(size_t i)
 			eAgainAndEWouldblockForResp(i, act);
 		else
 		{
+
 			if (fds_with_flag_[i].final_buffer_.substr(0,4) != "POST" || is_cgi)
 				fds_with_flag_[i].pollfd_.events = POLLHUP;
 		}
