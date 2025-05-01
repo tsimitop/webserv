@@ -372,12 +372,7 @@ void		Poll::pollout(size_t i)
 		if (act < 0)
 			eAgainAndEWouldblockForResp(i, act);
 		else
-		{
-		// // 	// fds_with_flag_[i].final_resp_buffer_.erase(0, act);
-		// 	// if (fds_with_flag_[i].req_.getMethod() != "POST" && is_cgi == YES)
-				// fds_with_flag_[i].pollfd_.events |= POLLHUP;
-		// // 	// fds_with_flag_[i].method_is_finished_ = YES;
-		}
+				fds_with_flag_[i].pollfd_.events |= POLLHUP;
 	}
 	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
 	{
@@ -408,26 +403,19 @@ size_t		Poll::lengthProt(size_t i)
 {
 	size_t chunk_size;
 	(void)i;
-	// size_t location_max_size = (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
-	// if (location_max_size > 2000000)
-	// 	chunk_size = 2000000;
-	// else if (location_max_size > 1000000)
-	// {
-	// 	chunk_size = 1000000;
-	// }
-	// else if (location_max_size > 500000)
-	// 	chunk_size = 500000;
-	// else
-	// 	chunk_size
-	// 		= location_max_size - 100;
-	chunk_size = 4096;
-	// if (chunk_size< 1024)
-	// 	chunk_size= 1025;
-	// if ((size_t)chunk_size> (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_)
-	// {
-	// 	fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_ 
-	// 	= fds_with_flag_[i].connected_server_.client_max_body_size_ - 1;
-	// }
+	size_t location_max_size = (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
+	if (location_max_size > 2000000)
+		chunk_size = 2000000;
+	else if (location_max_size > 1000000)
+	{
+		chunk_size = 1000000;
+	}
+	else if (location_max_size > 500000)
+		chunk_size = 500000;
+	else
+		chunk_size
+			= location_max_size - 100;
+	// chunk_size = 4096;
 	return (chunk_size);
 };
 
