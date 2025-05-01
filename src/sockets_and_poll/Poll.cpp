@@ -291,16 +291,14 @@ int	Poll::pollin(size_t i)
 			// if (checking_signals == SIG)
 			// 	return SIG;
 			// std::cout << "kollisa\n";
-			buffer[bytes] = '\0';
+			// buffer[bytes] = '\0';
 			std::string	temp_buffer = buffer;
 			size_t final_buffer_pre_append_last_element_index;
 			if(!temp_buffer.empty() && temp_buffer[0] != '\0')
 				final_buffer_pre_append_last_element_index= fds_with_flag_[i].final_buffer_.size() - 1;
 			fds_with_flag_[i].final_buffer_.append(temp_buffer);
-			bool	rnrn_found = fds_with_flag_[i].final_buffer_.find_first_of("\r\n\r\n") != std::string::npos;
-			std::cout << fds_with_flag_[i].final_buffer_.find_first_of("\r\n\r\n") << "= in which position" <<std::endl;
+			bool	rnrn_found = fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos;
 			bool	is_post = fds_with_flag_[i].final_buffer_.find("POST ", 0, 4) != std::string::npos;
-			std::cout << "before if\n";
 			if (rnrn_found == NO)
 				return NO;
 			else
@@ -319,7 +317,6 @@ int	Poll::pollin(size_t i)
 					if (fds_with_flag_[i].req_.isValid())
 					{
 						std::string content_disposition = fds_with_flag_[i].req_.getHeaders()["Content-Disposition"];
-						std::cout << content_disposition <<std::endl;
 						fds_with_flag_[i].content_length_ = std::stol(fds_with_flag_[i].req_.getContentLength());
 						if (
 								content_disposition.find_first_of(".") == content_disposition.find_last_of(".") && 
@@ -329,7 +326,6 @@ int	Poll::pollin(size_t i)
 								for(char& c : content_disposition.substr(content_disposition.find(".")))
 									if (isalnum(c))
 										fds_with_flag_[i].file_type_.push_back(c);
-							std::cout << fds_with_flag_[i].file_type_ << " : file_type" << std::endl;
 							body_of_post = fds_with_flag_[i].req_.getBody();
 							bool is_accepted_file = fds_with_flag_[i].file_type_ == "py" || fds_with_flag_[i].file_type_ == "txt" || fds_with_flag_[i].file_type_ == "md";
 							bool is_accepted_length = (size_t)fds_with_flag_[i].content_length_ <= (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
@@ -342,7 +338,6 @@ int	Poll::pollin(size_t i)
 							}
 						
 					}
-						std::cout << body_of_post.length() <<" | "<< fds_with_flag_[i].content_length_ << std::endl;
 					if (
 							(body_of_post.length() < fds_with_flag_[i].content_length_ )
 						)
@@ -376,13 +371,13 @@ void		Poll::pollout(size_t i)
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
 		if (act < 0)
 			eAgainAndEWouldblockForResp(i, act);
-		// else
-		// // {
+		else
+		{
 		// // 	// fds_with_flag_[i].final_resp_buffer_.erase(0, act);
 		// 	// if (fds_with_flag_[i].req_.getMethod() != "POST" && is_cgi == YES)
-		// 		fds_with_flag_[i].pollfd_.events |= POLLHUP;
+				// fds_with_flag_[i].pollfd_.events |= POLLHUP;
 		// // 	// fds_with_flag_[i].method_is_finished_ = YES;
-		// // }
+		}
 	}
 	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
 	{
