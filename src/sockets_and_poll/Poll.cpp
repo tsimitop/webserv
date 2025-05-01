@@ -148,10 +148,7 @@ void	Poll::connecting()
 		{
 			int client_fd = accept(fds_with_flag_[i].pollfd_.fd, NULL, NULL);
 			if (client_fd == -1)
-			{
-				std::cout << "client_fd == -1!!!!!!!\n";
 				continue ;
-			}
 			else
 			{
 				setNonBlockingFd(client_fd);
@@ -242,6 +239,8 @@ int	Poll::pollin(size_t i)
 			answer = eAgainAndEWouldblockForReq(i, bytes);
 		else
 		{
+			if ((size_t)bytes < temp_len)
+				buffer[bytes] = '\0';
 			std::string	temp_buffer = buffer;
 			size_t final_buffer_pre_append_last_element_index;
 			if(!temp_buffer.empty() && temp_buffer[0] != '\0')
@@ -319,6 +318,9 @@ void		Poll::pollout(size_t i)
 		bool is_valid_cgi = is_cgi
 		&& !(is_cgi && fds_with_flag_[i].req_.isInvalid())
 		&& !(is_cgi && fds_with_flag_[i].req_.isForbidden());
+		bool is_agent = YES;
+		if (!fds_with_flag_[i].final_buffer_.empty())
+			is_agent = fds_with_flag_[i].final_buffer_.find("User-Agent: ") != std::string::npos;
 		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
 		if (is_valid_cgi)
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
@@ -327,7 +329,7 @@ void		Poll::pollout(size_t i)
 		else
 		{
 
-			if (fds_with_flag_[i].final_buffer_.substr(0,4) != "POST" || is_cgi)
+			if (fds_with_flag_[i].final_buffer_.substr(0,4) != "POST" || is_cgi || !is_agent)
 				fds_with_flag_[i].pollfd_.events = POLLHUP;
 		}
 	}

@@ -12,60 +12,86 @@
 		margin: 0;
 		padding: 0;
 		font-family: 'Press Start 2P', cursive;
-		color: #00ffe0;
 		background: #000;
-		overflow-x: hidden;
-		background-image: url('https://www.transparenttextures.com/patterns/pixel-weave.png');
-		background-size: 100px;
-		animation: bgScroll 20s linear infinite;
+		color: #ff4d4d;
+		overflow: hidden;
+		background-image: repeating-linear-gradient(
+			45deg,
+			#111 0px,
+			#111 10px,
+			#1a1a1a 10px,
+			#1a1a1a 20px
+		);
+		animation: panelMove 10s linear infinite;
 	}
 
-	@keyframes bgScroll {
-		from { background-position: 0 0; }
-		to { background-position: 1000px 0; }
+	@keyframes panelMove {
+		0% { background-position: 0 0; }
+		100% { background-position: 200px 200px; }
 	}
 
-	body::before {
-		content: "";
-		position: fixed;
-		top: 0;
-		left: 0;
-		height: 100%;
-		width: 100%;
-		background: linear-gradient(180deg, #2b1055, #7597de, #2b1055);
-		z-index: -1;
-		transform: scale(1.2);
-		opacity: 0.2;
-		animation: float 6s ease-in-out infinite;
-	}
-
-	@keyframes float {
-		0%, 100% { transform: translateY(0) scale(1.2); }
-		50% { transform: translateY(-10px) scale(1.25); }
-	}
-
-	h1, h2 {
+	h1 {
 		text-align: center;
-		text-shadow: 0 0 5px #ff00ff, 0 0 10px #00ffff;
-		animation: glitch 1s infinite;
+		font-size: 24px;
+		color: #ff0000;
+		text-shadow: 0 0 5px #ff0000, 0 0 10px #fff;
+		animation: flicker 0.1s infinite alternate;
 	}
 
-	@keyframes glitch {
-		0% { text-shadow: 2px 0 red, -2px 0 cyan; }
-		25% { text-shadow: -2px 0 red, 2px 0 cyan; }
-		50% { text-shadow: 2px 2px red, -2px -2px cyan; }
-		75% { text-shadow: -2px -2px red, 2px 2px cyan; }
-		100% { text-shadow: 2px 0 red, -2px 0 cyan; }
+	@keyframes flicker {
+		from { opacity: 1; }
+		to { opacity: 0.3; }
 	}
 
 	p {
 		text-align: center;
-		font-size: 12px;
 		color: #fff;
+		font-size: 14px;
+		border: 3px dashed #ff0000;
+		padding: 15px;
+		width: 80%;
+		margin: 20px auto;
+		background-color: rgba(255, 0, 0, 0.1);
+		box-shadow: 0 0 20px red, 0 0 30px #ff00ff;
+		animation: shake 0.5s infinite alternate;
 	}
 
-	br {
-		line-height: 2em;
+	@keyframes shake {
+		0% { transform: rotate(-1deg) translateX(-2px); }
+		100% { transform: rotate(1deg) translateX(2px); }
+	}
+
+	.lock-emoji {
+		display: inline-block;
+		animation: bounceLock 1s infinite ease-in-out;
+		font-size: 30px;
+		margin-bottom: 10px;
+	}
+
+	@keyframes bounceLock {
+		0%, 100% { transform: translateY(0); }
+		50% { transform: translateY(-10px); }
+	}
+
+	.warning-strip {
+		width: 100%;
+		background: repeating-linear-gradient(
+			45deg,
+			#ff0000,
+			#ff0000 10px,
+			#000 10px,
+			#000 20px
+		);
+		color: #fff;
+		text-align: center;
+		padding: 8px;
+		font-size: 10px;
+		animation: stripPulse 1s infinite;
+	}
+
+	@keyframes stripPulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.6; }
 	}
 </style>
 </head>

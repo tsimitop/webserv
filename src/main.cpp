@@ -58,4 +58,36 @@ hello
 DELETE /uploads2%2Fup.md HTTP/1.1
 Host: localhost:4242
 Connection: close
+
+POST /uploads HTTP/1.1
+Host: localhost:4242
+Connection: keep-alive
+Content-Length: 297
+sec-ch-ua: "Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"
+sec-ch-ua-platform: "macOS"
+DNT: 1
+Content-Disposition: attachment; filename="up3.md"
+sec-ch-ua-mobile: ?0
+Content-Type: application/octet-stream
+Accept: */*
+Origin: http://localhost:4242
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:4242/index.html
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9
+
+
+
+Host: localhostET / HTTP/1.1
+Host: localhostET / HTTP/1.1
+Host: localhostET / HTTP/1.1
+Host: localhostET / HTTP/1.1
+Host: localhostET / HTTP/1.1
+Host: localhostET / HTTP/1.1
+Host: localhostET / HTTP/1.1
+Host: localhostET / HTTP/1.1
+Host: localhostET / HTTP/1.1
+Host: localhostET / HTTP/1.1klnkkl
 */

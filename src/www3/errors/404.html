@@ -12,17 +12,17 @@
 		margin: 0;
 		padding: 0;
 		font-family: 'Press Start 2P', cursive;
-		color: #00ffe0;
-		background: #000;
+		color: #ff00ff;
+		background: linear-gradient(135deg, #ffcc00, #ff00cc, #00ffff);
+		background-size: 400% 400%;
+		animation: wildBg 5s ease infinite;
 		overflow-x: hidden;
-		background-image: url('https://www.transparenttextures.com/patterns/pixel-weave.png');
-		background-size: 100px;
-		animation: bgScroll 20s linear infinite;
 	}
 
-	@keyframes bgScroll {
-		from { background-position: 0 0; }
-		to { background-position: 1000px 0; }
+	@keyframes wildBg {
+		0% { background-position: 0% 50%; }
+		50% { background-position: 100% 50%; }
+		100% { background-position: 0% 50%; }
 	}
 
 	body::before {
@@ -32,36 +32,65 @@
 		left: 0;
 		height: 100%;
 		width: 100%;
-		background: linear-gradient(180deg, #2b1055, #7597de, #2b1055);
+		background: repeating-linear-gradient(
+			45deg,
+			rgba(255, 0, 255, 0.3),
+			rgba(255, 0, 255, 0.3) 10px,
+			rgba(0, 255, 255, 0.3) 10px,
+			rgba(0, 255, 255, 0.3) 20px
+		);
 		z-index: -1;
-		transform: scale(1.2);
-		opacity: 0.2;
-		animation: float 6s ease-in-out infinite;
+		animation: scanline 0.5s linear infinite;
 	}
 
-	@keyframes float {
-		0%, 100% { transform: translateY(0) scale(1.2); }
-		50% { transform: translateY(-10px) scale(1.25); }
+	@keyframes scanline {
+		0% { transform: translateY(0); }
+		100% { transform: translateY(5px); }
 	}
 
 	h1, h2 {
 		text-align: center;
-		text-shadow: 0 0 5px #ff00ff, 0 0 10px #00ffff;
-		animation: glitch 1s infinite;
+		color: #ffffff;
+		text-shadow: 0 0 10px #ff00ff, 0 0 20px #ffff00, 2px 2px #00ffff;
+		animation: shake 0.3s infinite alternate;
 	}
 
-	@keyframes glitch {
-		0% { text-shadow: 2px 0 red, -2px 0 cyan; }
-		25% { text-shadow: -2px 0 red, 2px 0 cyan; }
-		50% { text-shadow: 2px 2px red, -2px -2px cyan; }
-		75% { text-shadow: -2px -2px red, 2px 2px cyan; }
-		100% { text-shadow: 2px 0 red, -2px 0 cyan; }
+	@keyframes shake {
+		from { transform: translateX(-3px) rotate(-1deg); }
+		to { transform: translateX(3px) rotate(1deg); }
 	}
 
 	p {
 		text-align: center;
-		font-size: 12px;
-		color: #fff;
+		font-size: 14px;
+		color: #000;
+		background: #fff;
+		border: 3px dashed #ff00ff;
+		padding: 10px;
+		margin: 20px auto;
+		width: 60%;
+		box-shadow: 0 0 10px #ff00ff, 0 0 30px #ffff00;
+		transform: rotate(-2deg);
+		animation: bounce 2s infinite;
+	}
+
+	@keyframes bounce {
+		0%, 100% { transform: translateY(0) rotate(-2deg); }
+		50% { transform: translateY(-10px) rotate(2deg); }
+	}
+
+	.glitch-emoji {
+		display: inline-block;
+		animation: emoji-glitch 1s infinite steps(2);
+		font-size: 20px;
+	}
+
+	@keyframes emoji-glitch {
+		0% { transform: translate(0, 0); }
+		25% { transform: translate(-2px, 2px); }
+		50% { transform: translate(2px, -2px); }
+		75% { transform: translate(-1px, 1px); }
+		100% { transform: translate(0, 0); }
 	}
 
 	br {
