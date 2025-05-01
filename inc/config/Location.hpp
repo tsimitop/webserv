@@ -16,9 +16,9 @@
 #define MAGENTA "\033[35m"
 #define CYAN "\033[36m"
 #define QUIT "\033[0m"
-enum answer{YES = 1, NO = 0, SIG = 2, EOF_FLAG = 3};
+enum answer{YES = 1, NO = 0, SIG = 2, EOF_FLAG = 3, NON_SUPPORTED_TYPE=4};
 enum methods{GET = 1, POST = 2, DELETE = 4};
-extern volatile sig_atomic_t poll_flag;//asynchronus signal data type 
+extern volatile sig_atomic_t poll_flag;//asynchronus signal data type
 const std::map<int, std::string> all_posible_errors 
 = {
 	{100, "Continue"},

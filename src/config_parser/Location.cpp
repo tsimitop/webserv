@@ -1,7 +1,6 @@
 #include "../../inc/config/Location.hpp"
 
 volatile sig_atomic_t poll_flag = YES;
-
 Location::Location() : 
 location_lines_(), 
 executable_root_location_(),

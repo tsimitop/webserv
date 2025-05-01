@@ -11,6 +11,7 @@ req_(),
 resp_(), 
 real_max_body_size_ln_(0),
 content_length_(0),
+file_type_(""),
 timeout_(0),
 connected_fds_(),
 connected_server_()
@@ -27,6 +28,7 @@ req_(other.req_),
 resp_(other.resp_),
 real_max_body_size_ln_(other.real_max_body_size_ln_),
 content_length_(other.content_length_),
+file_type_(other.file_type_),
 timeout_(other.timeout_),
 connected_fds_(other.connected_fds_),
 connected_server_(other.connected_server_)
@@ -43,6 +45,7 @@ PollFdWithFlag::PollFdWithFlag(
 	HttpResponse resp,
 	size_t real_max_body_size_ln,	
 	size_t content_length,
+	std::string file_type,
 	size_t timeout,
 	std::vector<size_t> connected_fds,
 	ServerInfo connected_server) :
@@ -56,6 +59,7 @@ req_(req),
 resp_(resp),
 real_max_body_size_ln_(real_max_body_size_ln),
 content_length_(content_length),
+file_type_(file_type),
 timeout_(timeout),
 connected_fds_(connected_fds),
 connected_server_(connected_server)
@@ -74,6 +78,7 @@ PollFdWithFlag& PollFdWithFlag::operator=(const PollFdWithFlag& other)
 		resp_ = other.resp_;
 		real_max_body_size_ln_ = other.real_max_body_size_ln_;
 		content_length_= other.content_length_;
+		file_type_ = other.file_type_;
 		timeout_ = other.timeout_;
 		connected_fds_ = other.connected_fds_;
 		connected_server_ = other.connected_server_;

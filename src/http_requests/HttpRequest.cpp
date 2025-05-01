@@ -437,23 +437,15 @@ const char *HttpRequest::httpParserException::what() const throw()
 // Execute methodes
 const HttpResponse	HttpRequest::postCase(HttpResponse& resp)
 {
-	
-	if (this->filename_.find_last_of(".") != std::string::npos)
-	{
-		
-		std::cout << (this->filename_.find_last_of(".") != std::string::npos && this->filename_.substr(this->filename_.find_last_of(".")) == ".txt") << " = is txt: " <<  this->filename_.substr(this->filename_.find_last_of(".")) << std::endl;
-		std::cout << (this->filename_.find_last_of(".") != std::string::npos && this->filename_.substr(this->filename_.find_last_of(".")) == ".md") << " = is md: " <<  this->filename_.substr(this->filename_.find_last_of(".")) << std::endl;
-	}
-		bool is_text_or_md = (this->filename_.find_last_of(".") != std::string::npos && this->filename_.substr(this->filename_.find_last_of(".")) == ".txt") 
-	|| (this->filename_.find_last_of(".") != std::string::npos && this->filename_.substr(this->filename_.find_last_of(".")) == ".md");
-std::cout << is_text_or_md << " = is_text_or_md";
 	std::string filename = this->filename_.substr(this->filename_.find_last_of("/\\") + 1);
+	std::string file_type;
+	if (!filename.empty() && filename.find(".") != std::string::npos && filename.find_first_of(".") == filename.find_last_of("."))
+		file_type = this->filename_.substr(this->filename_.find(".") + 1);
 	std::filesystem::path current_uploads_path = this->current_server_.uploads_dir_;
 	std::string length = headers_["Content-Length"];
-
 	if ((size_t)this->current_server_.locations_[0].client_max_body_size_ < (size_t)stoul(length))
 		resp.createResponse(413, available_errors_[413]);
-	else if (!is_text_or_md)
+	else if (!file_type.empty() && (file_type != "md" && file_type != "txt"))
 		resp.createResponse(415, available_errors_[415]);
 	else if ((int)(this->getBody().length()) != stoi(length))
 	{
@@ -467,7 +459,7 @@ std::cout << is_text_or_md << " = is_text_or_md";
 		std::ofstream file(current_uploads_path / filename);
 		if (!file.is_open())
 			resp.createResponse(500, available_errors_[500]);
-		else if (is_text_or_md)
+		else
 		{
 			file << this->getBody();
 			file.close();
@@ -482,8 +474,6 @@ std::cout << is_text_or_md << " = is_text_or_md";
 					resp.setContentLength(stoi(it->second));
 			}
 		}
-		else
-			resp.createResponse(415, available_errors_[415]);
 	}
 	return resp;
 }

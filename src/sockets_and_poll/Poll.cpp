@@ -109,7 +109,7 @@ int Poll::binding()
 				{}, {},
 				(HttpRequest){"", s},
 				(HttpResponse){},
-				0, 0, 0,
+				0, 0, "", 0,
 				{}, s});
 			std::string uploads_dir_str_version = s.locations_[0].uploads_dir_.string();
 			std::cout << CYAN <<
@@ -163,7 +163,7 @@ void	Poll::connecting()
 					{}, {},
 					(HttpRequest){"", config_.active_servers_[i]},
 					(HttpResponse){},
-					0, 0, 0,
+					0, 0, "", 0,
 					{(size_t)fds_with_flag_[i].pollfd_.fd}, config_.active_servers_[i]}); // saving with which port they are connected and in which server
 					std::string uploads_dir_str = fds_with_flag_[i].connected_server_.uploads_dir_.string();
 				std::cout <<YELLOW  << "fds_with_flag["<< fds_with_flag_.size() - 1<< "] | Client: " << client_fd << " connected to fd[" << fds_with_flag_[i].pollfd_.fd << "] " 
@@ -199,8 +199,8 @@ void Poll::synchroIO()
 			break;
 		}
 		connecting();
-		if (activity == 0)
-			disconnectingPreviousSuccededMethods("POLLSP: ");
+		// if (activity == 0)
+			// disconnectingPreviousSuccededMethods("POLLSP: ");
 		for (size_t i = config_.active_servers_.size(); i != fds_with_flag_.size(); i++)
 		{
 			int er = errno;
@@ -221,27 +221,37 @@ void Poll::synchroIO()
 };
 void		Poll::disconnectingPreviousSuccededMethods(std::string str)
 {
-	if (config_.active_servers_.size() + 1 < fds_with_flag_.size())
-	{
-		for (size_t i = config_.active_servers_.size(); i + 1!= fds_with_flag_.size(); i++)
-		{
-			if (fds_with_flag_[i].method_is_finished_ == YES)
-			{
-				for(size_t k = i + 1; k != fds_with_flag_.size(); k++)
-				{
-					if(
-						fds_with_flag_[i].connected_server_.listen_ == fds_with_flag_[i].connected_server_.listen_ && 
-						fds_with_flag_[i].method_is_finished_ == fds_with_flag_[k].method_is_finished_ 
-					)
-					{
-						std::cout << "About to disconnect successful method\n";
-						disconecting(i, str);
-						break ;
-					}
-				}
-			}
-		}
-	}
+	(void)str;
+	// if (config_.active_servers_.size() + 1 < fds_with_flag_.size())
+	// {
+	// 	for (size_t i = config_.active_servers_.size(); i + 1!= fds_with_flag_.size(); i++)
+	// 	{
+	// 		if (fds_with_flag_[i].method_is_finished_ == YES)
+	// 		{
+	// 			for(size_t k = i + 1; k != fds_with_flag_.size(); k++)
+	// 			{
+	// 				if(
+	// 					fds_with_flag_[i].connected_server_.listen_ == fds_with_flag_[i].connected_server_.listen_ && 
+	// 					fds_with_flag_[i].method_is_finished_ == fds_with_flag_[k].method_is_finished_ 
+	// 				)
+	// 				{
+	// 					std::cout << "About to disconnect successful method\n";
+	// 					disconecting(i, str);
+	// 					break ;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// for (size_t i = 0; i != fds_with_flag_.size(); i++)
+	// 	if (fds_with_flag_[i].method_is_finished_ == 1)
+	// 	{
+	// 		// exit(0);
+	// 		close(fds_with_flag_[i].pollfd_.fd);
+	// 		fds_with_flag_.erase(fds_with_flag_.begin() + i);
+	// 		i--;
+	// 	}
+			
 }
 //===============POLL STATES ====================================================
 void		Poll::pollhup(size_t& i)
@@ -254,11 +264,10 @@ void		Poll::pollhup(size_t& i)
 							fds_with_flag_[i].pollfd_.revents & POLLRDNORM ? " POLLRDNORM" :
 							"UNCLASSIFIED POLL HUNG UP: ";
 	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
-	{
-		std::cout << "About to disconnect in POLLHUP\n";
 		disconecting(i, poll_err);
-	}
 };
+
+int global_fd;
 
 int	Poll::pollin(size_t i)
 {
@@ -274,64 +283,76 @@ int	Poll::pollin(size_t i)
 			answer = eAgainAndEWouldblockForReq(i, bytes);
 		else
 		{
-			std::cout << "ELSE000\n";
-			buffer[bytes] = '\0';
-			std::cout << "kollisa00\n";
+			// std::cout << "ELSE000\n";
+			// buffer[bytes] = '\0';
+			// std::cout << "kollisa00\n";
 			// int checking_signals = checkingForSignals(buffer, bytes, fds_with_flag_[i].final_buffer_);
 			// std::cout << SIG << " = SIG\t" << checking_signals << " = checking_signals\n";
 			// if (checking_signals == SIG)
 			// 	return SIG;
-			std::cout << "kollisa\n";
-
+			// std::cout << "kollisa\n";
+			buffer[bytes] = '\0';
 			std::string	temp_buffer = buffer;
+			size_t final_buffer_pre_append_last_element_index;
+			if(!temp_buffer.empty() && temp_buffer[0] != '\0')
+				final_buffer_pre_append_last_element_index= fds_with_flag_[i].final_buffer_.size() - 1;
 			fds_with_flag_[i].final_buffer_.append(temp_buffer);
-			bool	rnrn_found = fds_with_flag_[i].final_buffer_.find("\r\n\r\n") != std::string::npos;
+			bool	rnrn_found = fds_with_flag_[i].final_buffer_.find_first_of("\r\n\r\n") != std::string::npos;
+			std::cout << fds_with_flag_[i].final_buffer_.find_first_of("\r\n\r\n") << "= in which position" <<std::endl;
 			bool	is_post = fds_with_flag_[i].final_buffer_.find("POST ", 0, 4) != std::string::npos;
 			std::cout << "before if\n";
 			if (rnrn_found == NO)
-			{
-				std::cout << "rnrn_found == NO\n";
-
 				return NO;
-			}
 			else
 			{
-				std::cout << "ELSE111\n";
 				if (is_post == NO)
 				{
 					definingRequest(i);
+					fds_with_flag_[i].setFinalRespBuffer();
 					fds_with_flag_[i].final_buffer_.push_back('\0');
 					return YES;
 				}
 				else
 				{
-					size_t start = fds_with_flag_[i].final_buffer_.find("Content-Length: ") + 16;
-					size_t end = fds_with_flag_[i].final_buffer_.substr(start).find("\r\n") + start;
-					size_t content_length = std::stol(fds_with_flag_[i].final_buffer_.substr(start, end));
-					std::string body_of_post = fds_with_flag_[i].final_buffer_.substr(fds_with_flag_[i].final_buffer_.find("\r\n\r\n") + 4);
-					size_t start_b = fds_with_flag_[i].final_buffer_.find("filename=") + 10;
-					size_t end_b = fds_with_flag_[i].final_buffer_.substr(start_b).find_first_of("\"");
-					std::string filename = fds_with_flag_[i].final_buffer_.substr(start_b, end_b);
-					bool apparent_filetype = filename.find_last_of(".") != std::string::npos && filename.find_last_of(".") == filename.find_first_of(".");
-					std::string filetype;
-					if (apparent_filetype == true)
-						filetype = filename.substr(apparent_filetype, end_b);
-					if (!filetype.empty())
+					std::string body_of_post;
+					fds_with_flag_[i].req_.readRequest(fds_with_flag_[i].final_buffer_, 1);
+					if (fds_with_flag_[i].req_.isValid())
 					{
-						if (filetype != "txt" && filetype != "md")
-						{
-							definingRequest(i);
-							return YES;
-						}
+						std::string content_disposition = fds_with_flag_[i].req_.getHeaders()["Content-Disposition"];
+						std::cout << content_disposition <<std::endl;
+						fds_with_flag_[i].content_length_ = std::stol(fds_with_flag_[i].req_.getContentLength());
+						if (
+								content_disposition.find_first_of(".") == content_disposition.find_last_of(".") && 
+								content_disposition.find_first_of(".") != std::string::npos
+							)
+							if (!content_disposition.substr(content_disposition.find(".") + 1).empty() && fds_with_flag_[i].file_type_.empty())
+								for(char& c : content_disposition.substr(content_disposition.find(".")))
+									if (isalnum(c))
+										fds_with_flag_[i].file_type_.push_back(c);
+							std::cout << fds_with_flag_[i].file_type_ << " : file_type" << std::endl;
+							body_of_post = fds_with_flag_[i].req_.getBody();
+							bool is_accepted_file = fds_with_flag_[i].file_type_ == "py" || fds_with_flag_[i].file_type_ == "txt" || fds_with_flag_[i].file_type_ == "md";
+							bool is_accepted_length = (size_t)fds_with_flag_[i].content_length_ <= (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
+							if (!is_accepted_file || !is_accepted_length)
+							{
+								definingRequest(i);
+								fds_with_flag_[i].setFinalRespBuffer();
+								global_fd = fds_with_flag_[i].pollfd_.fd;
+								return YES;
+							}
+						
 					}
-					std::cout << filename << " = filename\n";
-
-					if (body_of_post.length() < content_length)
+						std::cout << body_of_post.length() <<" | "<< fds_with_flag_[i].content_length_ << std::endl;
+					if (
+							(body_of_post.length() < fds_with_flag_[i].content_length_ )
+						)
 						return NO;
 					else
 					{
+						if (fds_with_flag_[i].content_length_ != 0)
+							fds_with_flag_[i].final_buffer_[final_buffer_pre_append_last_element_index + bytes] = '\0';
 						definingRequest(i);
-						fds_with_flag_[i].final_buffer_.push_back('\0');
+						fds_with_flag_[i].setFinalRespBuffer();
 						return YES;
 					}
 				}
@@ -348,34 +369,31 @@ void		Poll::pollout(size_t i)
 	bool is_valid_cgi = is_cgi
 	&& !(is_cgi && fds_with_flag_[i].req_.isInvalid())
 	&& !(is_cgi && fds_with_flag_[i].req_.isForbidden());
-
 	if(fds_with_flag_[i].pollfd_.revents & POLLOUT)
 	{
-		if (fds_with_flag_[i].final_resp_buffer_.empty())
-			fds_with_flag_[i].setFinalRespBuffer();
-
 		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
 		if (is_valid_cgi)
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
-		if (act <= 0)
+		if (act < 0)
 			eAgainAndEWouldblockForResp(i, act);
-		else
-		{
-
-			// size_t chunk_length = lengthProt(i);
-			if (fds_with_flag_[i].req_.getMethod() != "POST" || is_cgi == YES )
-			// || std::stoi(fds_with_flag_[i].req_.getContentLength()) < chunk_length)
-				fds_with_flag_[i].pollfd_.events = POLLHUP;
-			fds_with_flag_[i].method_is_finished_ = YES;
-		}
+		// else
+		// // {
+		// // 	// fds_with_flag_[i].final_resp_buffer_.erase(0, act);
+		// 	// if (fds_with_flag_[i].req_.getMethod() != "POST" && is_cgi == YES)
+		// 		fds_with_flag_[i].pollfd_.events |= POLLHUP;
+		// // 	// fds_with_flag_[i].method_is_finished_ = YES;
+		// // }
 	}
 	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
 	{
 		fds_with_flag_[i].setFinalRespBufferIfCgi();
 	}
-	if (fds_with_flag_[i].pollfd_.events & (POLLHUP | POLLERR))
+	if (fds_with_flag_[i].method_is_finished_ == YES)
 	{
 		fds_with_flag_[i].final_buffer_.clear();
+		fds_with_flag_[i].final_resp_buffer_.clear();
+		// close(fds_with_flag_[i].pollfd_.fd);
+
 	}
 };
 //================HELPER METHODS ================================================
@@ -394,18 +412,20 @@ void		Poll::closingServers()
 size_t		Poll::lengthProt(size_t i)
 {
 	size_t chunk_size;
-	size_t location_max_size = (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
-	if (location_max_size > 2000000)
-		chunk_size = 2000000;
-	else if (location_max_size > 1000000)
-	{
-		chunk_size = 1000000;
-	}
-	else if (location_max_size > 500000)
-		chunk_size = 500000;
-	else
-		chunk_size
-			= location_max_size - 100;
+	(void)i;
+	// size_t location_max_size = (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
+	// if (location_max_size > 2000000)
+	// 	chunk_size = 2000000;
+	// else if (location_max_size > 1000000)
+	// {
+	// 	chunk_size = 1000000;
+	// }
+	// else if (location_max_size > 500000)
+	// 	chunk_size = 500000;
+	// else
+	// 	chunk_size
+	// 		= location_max_size - 100;
+	chunk_size = 4096;
 	// if (chunk_size< 1024)
 	// 	chunk_size= 1025;
 	// if ((size_t)chunk_size> (size_t)fds_with_flag_[i].connected_server_.client_max_body_size_)
@@ -513,14 +533,14 @@ int			Poll::eAgainAndEWouldblockForReq(size_t i, int bytes)
 	}
 	else
 	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-			return NO;
-		else if (errno == EINVAL)
-		{
+		// if (errno == EAGAIN || errno == EWOULDBLOCK)
+		// 	return NO;
+		// else if (errno == EINVAL)
+		// {
 			close(fds_with_flag_[i].pollfd_.fd);
 			fds_with_flag_[i].pollfd_.events |= POLLOUT;
 			return YES;
-		}
+	// 	}
 	}
 			// disconecting(i, "(recv)"); // EINVAL ECONNECTRESET ENOTCONN
 	return NO;
@@ -536,17 +556,17 @@ void	Poll::eAgainAndEWouldblockForResp(size_t i, int act)
 			}
 			else
 			{
-				if (errno == EAGAIN || errno == EWOULDBLOCK)
-				{
-					fds_with_flag_[i].pollfd_.events |= POLLOUT;
-					return ;
-				}
-				else if (errno == EINVAL)
-				{
+				// if (errno == EAGAIN || errno == EWOULDBLOCK)
+				// {
+				// 	fds_with_flag_[i].pollfd_.events |= POLLOUT;
+				// 	return ;
+				// }
+				// else if (errno == EINVAL)
+				// {
 					close(fds_with_flag_[i].pollfd_.fd);
 					fds_with_flag_[i].pollfd_.events = POLLERR;
 					return ;
-				}
+				// }
 			}
 };
 int			Poll::updateFinalBuffer(size_t i, int bytes, char buffer[])

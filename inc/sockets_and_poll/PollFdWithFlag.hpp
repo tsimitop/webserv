@@ -22,7 +22,6 @@
 #include "../cgis/CgiSingleton.hpp"
 //===================ENUMERATORS=========================================
 
-// volatile sig_atomic_t SIGNALS_E = NO;
 enum serverOrClient{NON_SETTED = -1, SERVER = 0, CLIENT = 1};
 enum stateOfPoll{FIRST_TIME, NOT_FIRST_TIME};
 struct PollFdWithFlag
@@ -38,6 +37,7 @@ struct PollFdWithFlag
 	HttpResponse		resp_;
 	size_t				real_max_body_size_ln_;
 	size_t				content_length_;
+	std::string			file_type_;
 	size_t				timeout_;
 
 	std::vector<size_t> connected_fds_;
@@ -58,6 +58,7 @@ struct PollFdWithFlag
 		HttpResponse	resp,
 		size_t real_max_body_size_ln,	
 		size_t content_length,
+		std::string file_type,
 		size_t timeout,
 		std::vector<size_t> connected_fds,
 		ServerInfo connected_server
