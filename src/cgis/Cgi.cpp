@@ -206,7 +206,7 @@ HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 	{
 		std::cout<<YELLOW << "Proccess exit number = " << this->getStatus() << "\n" << QUIT;
 		if (this->getStatus() == 2)
-			resp.createResponse(404, available_errors_[404]);
+			resp.createResponse(this->getCgiRequest().getCurrentServer().default_error_page_, available_errors_[this->getCgiRequest().getCurrentServer().default_error_page_]);
 		else
 			resp.createResponse(500, available_errors_[500]);
 		return resp;

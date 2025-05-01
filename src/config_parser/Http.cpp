@@ -25,6 +25,7 @@ Http::Http() :
 		{"server_name", 3}, 
 		{"index",3}, 
 		{"error_pages", 3},
+		{"default_error_page", 3},
 		{"allow_methods", 6},
 		{"location_html", 3},
 		{ "upload_html", 3},
@@ -374,6 +375,8 @@ void Http::parsingServers()
 					s.setClientMaxBodySize(l);
 				else if (k == "error_pages")
 					s.pushToErrors(l);
+				else if (k == "default_error_page")
+					s.setDefaultErrorPage(l);
 				else if (k == "location/" || k == "location")
 					break;
 				if (s.valid_server_ == NO)
