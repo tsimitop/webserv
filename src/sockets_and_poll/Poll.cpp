@@ -327,7 +327,7 @@ int	Poll::pollin(size_t i)
 									if (isalnum(c))
 										fds_with_flag_[i].file_type_.push_back(c);
 							body_of_post = fds_with_flag_[i].req_.getBody();
-							bool is_accepted_file = fds_with_flag_[i].file_type_ == "py" || fds_with_flag_[i].file_type_ == "txt" || fds_with_flag_[i].file_type_ == "md";
+							bool is_accepted_file =fds_with_flag_[i].file_type_ == "txt" || fds_with_flag_[i].file_type_ == "md" || fds_with_flag_[i].req_.isCgi();
 							bool is_accepted_length = (size_t)fds_with_flag_[i].content_length_ <= (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
 							if (!is_accepted_file || !is_accepted_length)
 							{
@@ -372,7 +372,11 @@ void		Poll::pollout(size_t i)
 		if (act < 0)
 			eAgainAndEWouldblockForResp(i, act);
 		else
+		{
+			// fds_with_flag_[i].final_resp_buffer_.erase(0, act);
+			if (fds_with_flag_[i].final_buffer_.substr(0,4) != "POST" || is_valid_cgi)
 				fds_with_flag_[i].pollfd_.events |= POLLHUP;
+		}
 	}
 	else if (fds_with_flag_[i].req_.isCgi() && fds_with_flag_[i].req_.wasExecuted() == false)
 	{
@@ -383,7 +387,6 @@ void		Poll::pollout(size_t i)
 		fds_with_flag_[i].final_buffer_.clear();
 		fds_with_flag_[i].final_resp_buffer_.clear();
 		// close(fds_with_flag_[i].pollfd_.fd);
-
 	}
 };
 //================HELPER METHODS ================================================
@@ -415,7 +418,6 @@ size_t		Poll::lengthProt(size_t i)
 	else
 		chunk_size
 			= location_max_size - 100;
-	// chunk_size = 4096;
 	return (chunk_size);
 };
 
