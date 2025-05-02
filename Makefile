@@ -2,9 +2,7 @@ NAME = webserv
 
 CC = c++
 
-# CFLAGS = -g -fsanitize=address -std=c++17 -Wall -Werror -Wextra
 CFLAGS = -g -std=c++17 -Wall -Werror -Wextra #-fsanitize=address
-#DEBUG = -g
 
 SOURCE	= ./src
 
@@ -59,7 +57,7 @@ docker_compile:
 	docker build -t webserv .
 
 docker_run: docker_compile
-	@docker run --cap-add=NET_ADMIN -it -p 4242:4242 -p 4243:4243 -p 4244:4244 -p 4245:4245 --name webserv webserv
+	@docker run --cap-add=NET_ADMIN -it -p 4242:4242 -p 4243:4243 -p 4244:4244 -p 4245:4245  -p 4246:4246 -p 4247:4247 --name webserv webserv
 
 docker_it:
 	docker exec -it webserv /bin/bash
@@ -67,5 +65,7 @@ docker_it:
 docker_clean:
 	docker stop webserv
 	docker rm webserv
+
+docker_re: docker_clean docker_run
 
 .PHONY: all clean fclean re superclean

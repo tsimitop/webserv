@@ -168,50 +168,6 @@ void	HttpResponse::setReasonPhrase(int sc)
 	reasonPhrase_ = it->second;
 }
 
-// const std::string HttpResponse::respond(const HttpRequest& req)
-// {
-// 	time_t		timestamp;
-// 	std::stringstream temp;
-// 	std::string response;
-
-// 	time(&timestamp);
-// 	response += req.getVersion();
-// 	response += " ";
-// 	response += std::to_string(this->getStatusCode());
-// 	response += " ";
-// 	response += this->getReasonPhrase();
-// 	response += "\r\n";
-// 	response += "Server: Webserv\n";
-// 	response += "Date: ";
-// 	response += ctime(&timestamp);
-// 	response += "Content-Length: ";
-// 	temp << this->getContentLength();
-// 	std::string lengthString;
-// 	temp >> lengthString;
-// 	response += lengthString;
-// 	response += "\r\n";
-// 	if (req.isRedirection())
-// 	{
-// 		response += getBody();
-// 		response += "\r\n";
-// 		if (this->getStatusCode() == 301)
-// 			response += "Connection: close\r\n";
-// 		else
-// 			response += "Connection: keep-alive\r\n";
-// 		response += "\r\n";
-// 		return (response);
-// 	}
-// 	response += "Connection: close\r\n";
-// 	response += "Content-Type: ";
-// 	response += this->getContentType();
-// 	response += "\r\n";
-// 	response += "\r\n";
-// 	response += this->getBody();
-// 	response += "\r\n";
-// 	response += "\r\n";
-// 	return (response);
-// }
-
 const std::string HttpResponse::respond(const HttpRequest& req)
 {
 	time_t		timestamp;
@@ -234,18 +190,14 @@ const std::string HttpResponse::respond(const HttpRequest& req)
 	temp >> lengthString;
 	response += lengthString;
 	response += "\r\n";
+	response += "Connection: close\r\n";
 	if (req.isRedirection())
 	{
 		response += getBody();
 		response += "\r\n";
-		if (this->getStatusCode() == 301)
-			response += "Connection: close\r\n";
-		else
-			response += "Connection: keep-alive\r\n";
 		response += "\r\n";
 		return (response);
 	}
-	response += "Connection: close\r\n";
 	response += "Content-Type: ";
 	response += this->getContentType();
 	response += "\r\n";

@@ -9,7 +9,7 @@ poll_fd_(other.poll_fd_),
 cgi_is_executable_(other.cgi_is_executable_),
 timed_out_(other.timed_out_),
 has_forked_(other.has_forked_),
-cgi_request_(other.cgi_request_),  // <--- directly copy-construct
+cgi_request_(other.cgi_request_),
 cgi_response_(other.cgi_response_),
 exec_complete_(other.exec_complete_),
 www_path_(other.www_path_),
@@ -75,7 +75,7 @@ Cgi::Cgi(int poll_fd, const HttpRequest& request)
 	timeout_total_ = std::chrono::milliseconds(request.getCurrentServer().server_timeout_);
 
 	if (pipe(pipe_fd_) == -1)
-		std::cout << "Error creating pipe\n"; // Change that!
+		std::cout << "Error creating pipe\n";
 	procces_start_ = std::chrono::high_resolution_clock::now();
 }
 
@@ -198,13 +198,12 @@ HttpResponse Cgi::response_of_cgi(HttpResponse& resp)
 {
 	if (this->hasTimedOut() == true)
 	{
-		std::cout<<YELLOW << "Timeout\n" << QUIT;
+		// std::cout<<YELLOW << "Timeout\n" << QUIT;
 		resp.createResponse(504, available_errors_[504]);
 		return resp;
 	}
 	if (this->getStatus() != 0)
 	{
-		std::cout<<YELLOW << "Proccess exit number = " << this->getStatus() << "\n" << QUIT;
 		if (this->getStatus() == 2)
 			resp.createResponse(this->getCgiRequest().getCurrentServer().default_error_page_, available_errors_[this->getCgiRequest().getCurrentServer().default_error_page_]);
 		else
@@ -222,7 +221,7 @@ void Cgi::execution_close()
 {
 	pid_ = fork();
 	if (pid_ == -1)
-		std::cout << "Error forking\n"; // Change that!
+		std::cout << "Error forking\n";
 	has_forked_ = true;
 	if (this->getPid() == 0)
 		this->execute();

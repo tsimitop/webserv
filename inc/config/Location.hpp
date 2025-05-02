@@ -129,6 +129,7 @@ void							printError(std::string type, std::string line);
 std::string						decodingHexToAscii(std::string filename);
 size_t							findTheSizeOfAgivenFile(const std::filesystem::path& file);
 void							signalHandler(int singal);
+void							signalHandlerTwo(int singal);
 template <typename T>
 std::ostream& 					operator<<(std::ostream& os, std::vector<T>& vec)
 	{

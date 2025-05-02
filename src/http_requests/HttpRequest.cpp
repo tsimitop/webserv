@@ -209,8 +209,14 @@ void	HttpRequest::parseLine(std::string line)
 	if (colonPos != std::string::npos)
 	{
 		std::string key = line.substr(0, colonPos);
-		std::string value = line.substr(colonPos + 2, std::string::npos);
-		headers_.insert(std::pair<std::string, std::string>(key, value));
+		std::string value;
+		if (colonPos + 2 < (line.size()))
+		{
+			value = line.substr(colonPos + 2, std::string::npos);
+			headers_.insert(std::pair<std::string, std::string>(key, value));
+		}
+		else
+			value = "";
 	}
 }
 
@@ -344,8 +350,14 @@ bool	HttpRequest::isValid()
 	}
 	auto it = headers_.begin();
 	for (it = headers_.begin(); it != headers_.end(); it++)
+	{
 		if (it->first == "Host")
+		{
+			if (!it->second.empty() && it->second != current_server_.server_name_ && it->second.find("localhost") == std::string::npos)
+				req_is_invalid_ = true;
 			break;
+		}
+	}
 	if (it == headers_.end() || (it->second).empty() || isOnlyWhitespace(it->second))
 	{
 		// std::cout << RED << "Didn't find Host" << QUIT << std::endl;

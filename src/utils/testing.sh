@@ -30,7 +30,7 @@ echo -e "${RED}//==========NEG_MAX_CLIENT_BODY_SIZE:====//${RESET}"
 ./webserv negative_max_client_body_size.conf
 echo ""
 echo -e "${RED}//==========NON_VALID_REDIRECT:==========//${RESET}"
-./webserv non_valid_redirect.conf
+./webserv non_existing_conf.conf
 echo ""
 echo -e "${RED}//==========NON_VALID_SERVER_TIMEOUT:====//${RESET}"
 ./webserv non_valid_server_timeout.conf
@@ -55,6 +55,8 @@ echo -e "${RED}//==========WRONG_REDIR_CODE:============//${RESET}"
 echo ""
 echo -e "${RED}//==========0_MAX_CLIENT_BODY_SIZE:======//${RESET}"
 ./webserv zero_max_client_body_size.conf
+echo -e "${RED}//==========SERVERS_WITH_THE_SAME_PORT:=//${RESET}"
+./webserv servers_with_the_same_port.conf
 echo ""
 echo -e "${GREEN}//==========VALID SERVER:================//${RESET}"
 echo -e "${CYAN}//==========SVR_NOT_IN_THE_FIRST_LINE:===//${RESER}"

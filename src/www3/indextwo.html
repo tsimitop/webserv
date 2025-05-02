@@ -123,7 +123,6 @@
 	</style>
 </head>
 <body>
-	<button id="music-toggle">Play Music</button>
 	<h1>The simplest index ever</h1>
 	<p>Is this a simple index or what?</p>
 	
@@ -256,49 +255,6 @@
 			  console.error("Error:", error);
 			});
 		}
-	</script>
-	<audio id="bg-music" autoplay loop muted>
-		<source src="ai_gen_8_bit.mp3" type="audio/mp3">
-		Your browser does not support the audio element.
-	</audio>
-	<script>
-		document.addEventListener("DOMContentLoaded", () => {
-			const music = document.getElementById("bg-music");
-			const musicBtn = document.getElementById("music-toggle");
-			let isPlaying = false;
-	
-			music.loop = false;
-	
-			setInterval(() => {
-				if (isPlaying && music.currentTime >= 15) {
-					music.currentTime = 0;
-					music.play();
-				}
-			}, 500);
-	
-			window.addEventListener("click", () => {
-				if (!isPlaying) {
-					music.muted = false;
-					music.play();
-					isPlaying = true;
-					if (musicBtn) musicBtn.textContent = 'Pause Music';
-				}
-			}, { once: true });
-	
-			if (musicBtn) {
-				musicBtn.addEventListener("click", () => {
-					if (!isPlaying) {
-						music.muted = false;
-						music.play();
-						musicBtn.textContent = "Pause Music";
-					} else {
-						music.pause();
-						musicBtn.textContent = "Play Music";
-					}
-					isPlaying = !isPlaying;
-				});
-			}
-		});
 	</script>
 	</body>
 </html>

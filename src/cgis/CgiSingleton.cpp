@@ -8,7 +8,6 @@ CgiSingleton::CgiSingleton(){}
 void CgiSingleton::add_event(int poll_fd, std::shared_ptr<Cgi> event)
 {
 	running_cgis_.emplace(poll_fd, event);
-	std::cout << "Added event of fd: " << poll_fd <<std::endl;
 }
 
 void CgiSingleton::remove_event(int poll_fd)
@@ -16,7 +15,6 @@ void CgiSingleton::remove_event(int poll_fd)
 	auto found = running_cgis_.find(poll_fd);
 	if (found != running_cgis_.end())
 	{
-		std::cout << "FD of POLL: " << poll_fd << "-> Removed event.\n";
 		running_cgis_.erase(found);
 	}
 }

@@ -324,9 +324,17 @@ return (size_t)check.tellg();
 };
 void							signalHandler(int singal)
 {
-	if ((singal == SIGINT) | (singal == SIGPIPE))
+	if (singal == SIGINT)
 	{
-		std::cout << "SIGNAL detected\n";
+		std::cout << GREEN << "\nSIGNAL detected\n" << QUIT;
+		poll_flag = NO;
+	}
+};
+void							signalHandlerTwo(int singal)
+{
+	if (singal == SIGPIPE)
+	{
+		std::cout << GREEN << "\nSIGNAL detected\n" << QUIT;
 		poll_flag = NO;
 	}
 };

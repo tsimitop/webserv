@@ -232,7 +232,7 @@ void						ServerInfo::setServerTimeOut(std::string line, int& attribute)
 		if (valid_server_ != NO)
 			attribute = std::stoi(value);
 		else
-			std::cerr << RED << "Error: " << line << std::endl;
+			std::cerr << RED << "Error: " << line << std::endl << QUIT;
 	}
 };
 void						ServerInfo::setListen(std::string line)
@@ -246,7 +246,7 @@ void						ServerInfo::setListen(std::string line)
 		if (valid_server_ != NO)
 			listen_ = std::stoi(value);
 		else
-			std::cerr << RED << "Error: " << line << std::endl;
+			std::cerr << RED << "Error: " << line << QUIT << std::endl;
 	}
 };
 void						ServerInfo::setServerName(std::string line)
@@ -260,7 +260,7 @@ void						ServerInfo::setServerName(std::string line)
 		if (valid_server_ != NO)
 			server_name_ = value;
 		else
-			std::cerr << RED << "Error: " << line << std::endl;
+			std::cerr << RED << "Error: " << line << std::endl << QUIT;
 	}
 };
 void						ServerInfo::setIndex(std::string line)
@@ -274,7 +274,7 @@ void						ServerInfo::setIndex(std::string line)
 		if (valid_server_ != NO)
 			index = value;
 		else
-			std::cerr << RED << "Error: " << line << std::endl;
+			std::cerr << RED << "Error: " << line << std::endl << QUIT;
 	}
 };
 void						ServerInfo::setClientMaxBodySize(std::string line)
@@ -295,7 +295,7 @@ void						ServerInfo::setClientMaxBodySize(std::string line)
 		catch(const std::invalid_argument& e)
 		{
 			valid_server_ = NO;
-			std::cerr << RED << "Error: " << line << std::endl;
+			std::cerr << RED << "Error: " << line << std::endl << QUIT;
 		}
 	}
 };
@@ -319,7 +319,7 @@ void 						ServerInfo::updatePaths(std::filesystem::path absolute_path)
 	else
 	{
 		valid_server_ = NO;
-		std::cerr << RED << "Error: " << absolute_path << std::endl;
+		std::cerr << RED << "Error: " << absolute_path << std::endl << QUIT;
 	}
 };
 void						ServerInfo::pushToErrors(std::string line)
@@ -340,13 +340,13 @@ void						ServerInfo::pushToErrors(std::string line)
 	if (valid_server_ == NO)
 	{
 
-		std::cerr << RED << "Error: " << line << std::endl;
+		std::cerr << RED << "Error: " << line << std::endl << QUIT;
 		return ;
 	}
 	if (!(valid_server_ = validErrorRoot(value)))
 	{
 
-		std::cerr << RED << "Error: " << line << std::endl;
+		std::cerr << RED << "Error: " << line << std::endl << QUIT;
 		return ;
 	}
 	if ( errors.find(std::stoi(error_type)) == errors.end())

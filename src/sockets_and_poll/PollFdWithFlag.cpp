@@ -147,12 +147,8 @@ void PollFdWithFlag::setFinalRespBuffer()
 	{
 		std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(pollfd_.fd);
 		if (cgi == nullptr)
-		{
-			std::cout << RED << "Cgi is not accessible from singleton\n";
 			return;
-		}
 		response_str = cgi->getRespBody();
-		std::cout << GREEN << "RESPONSE\n" << response_str << std::endl << QUIT;
 	}
 	final_resp_buffer_.append(response_str);
 }
@@ -182,7 +178,6 @@ void PollFdWithFlag::setFinalRespBufferIfCgi()
 
 		if (CgiSingleton::getInstance().access_cgi(pollfd_.fd) == nullptr)
 		{
-			std::cout << YELLOW << "ADDING EVENT:" << pollfd_.fd << QUIT<< std::endl;
 			CgiSingleton::getInstance().add_event(pollfd_.fd, std::make_shared<Cgi>(pollfd_.fd, req_));
 		}
 		std::shared_ptr<Cgi> cgi = CgiSingleton::getInstance().access_cgi(pollfd_.fd);
@@ -193,8 +188,8 @@ void PollFdWithFlag::setFinalRespBufferIfCgi()
 			req_.setExecuted(true);
 			response = cgi->response_of_cgi(response);
 			response_str = response.respond(req_);
-																						cgi->setResponseBody(response_str);
+			cgi->setResponseBody(response_str);
 		}
 		final_resp_buffer_.append(response_str);
 	}
-} //tested
+}
