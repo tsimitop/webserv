@@ -75,4 +75,5 @@ struct PollFdWithFlag
 	void setConnectedServer(const ServerInfo& connected_server);
 	void setFinalRespBuffer();
 	void setFinalRespBufferIfCgi();
+	void setFileType();
 };

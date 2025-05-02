@@ -222,9 +222,6 @@ void		Poll::pollhup(size_t& i)
 	if (fds_with_flag_[i].pollfd_.revents & (POLLERR | POLLHUP | POLLNVAL | POLLWRBAND | POLLRDNORM)) // revent = POLLERR & POLLER != 0 || 1 0 0 0 0 , 0 1 0 0 0 0 0
 		disconecting(i, poll_err);
 };
-
-int global_fd;
-
 int	Poll::pollin(size_t i)
 {
 	int answer = YES;
@@ -265,20 +262,7 @@ int	Poll::pollin(size_t i)
 					fds_with_flag_[i].req_.readRequest(fds_with_flag_[i].final_buffer_, 1);
 					if (fds_with_flag_[i].req_.isValid())
 					{
-							std::string content_disposition = fds_with_flag_[i].req_.getHeaders()["Content-Disposition"];
-						fds_with_flag_[i].content_length_ = std::stol(fds_with_flag_[i].req_.getContentLength());
-						if (content_disposition.find_first_of(".") == content_disposition.find_last_of(".") && content_disposition.find_first_of(".") != std::string::npos)
-						{
-							if (!content_disposition.substr(content_disposition.find(".") + 1).empty() && fds_with_flag_[i].file_type_.empty())
-							{
-								for(char& c : content_disposition.substr(content_disposition.find(".")))
-								{
-									if (isalnum(c))
-										fds_with_flag_[i].file_type_.push_back(c);
-								}
-
-							}
-						}
+							fds_with_flag_[i].setFileType();
 							body_of_post = fds_with_flag_[i].req_.getBody();
 							bool is_accepted_file =fds_with_flag_[i].file_type_ == "txt" || fds_with_flag_[i].file_type_ == "md" || fds_with_flag_[i].req_.isCgi();
 							bool is_accepted_length = (size_t)fds_with_flag_[i].content_length_ <= (size_t)fds_with_flag_[i].connected_server_.locations_[0].client_max_body_size_;
@@ -286,10 +270,8 @@ int	Poll::pollin(size_t i)
 							{
 								definingRequest(i);
 								fds_with_flag_[i].setFinalRespBuffer();
-								global_fd = fds_with_flag_[i].pollfd_.fd;
 								return YES;
 							}
-						
 					}
 					if (
 							(body_of_post.length() < fds_with_flag_[i].content_length_ )

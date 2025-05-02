@@ -156,7 +156,23 @@ void PollFdWithFlag::setFinalRespBuffer()
 	}
 	final_resp_buffer_.append(response_str);
 }
+void	PollFdWithFlag::setFileType()
+{
+	std::string content_disposition = req_.getHeaders()["Content-Disposition"];
+	content_length_ = std::stol(req_.getContentLength());
+	if (content_disposition.find_first_of(".") == content_disposition.find_last_of(".") && content_disposition.find_first_of(".") != std::string::npos)
+	{
+		if (!content_disposition.substr(content_disposition.find(".") + 1).empty() && file_type_.empty())
+		{
+			for(char& c : content_disposition.substr(content_disposition.find(".")))
+			{
+				if (isalnum(c))
+					file_type_.push_back(c);
+			}
 
+		}
+	}
+}
 void PollFdWithFlag::setFinalRespBufferIfCgi()
 {
 	HttpResponse response;

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>405 Not Allowed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tektur:wght@400..900&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+	body, html {
+		margin: 0;
+		padding: 0;
+		font-family: 'Press Start 2P', cursive;
+		background: #000;
+		color: #ff4d4d;
+		overflow: hidden;
+		background-image: repeating-linear-gradient(
+			45deg,
+			#111 0px,
+			#111 10px,
+			#1a1a1a 10px,
+			#1a1a1a 20px
+		);
+		animation: panelMove 10s linear infinite;
+	}
+
+	@keyframes panelMove {
+		0% { background-position: 0 0; }
+		100% { background-position: 200px 200px; }
+	}
+
+	h1 {
+		text-align: center;
+		font-size: 24px;
+		color: #ff0000;
+		text-shadow: 0 0 5px #ff0000, 0 0 10px #fff;
+		animation: flicker 0.1s infinite alternate;
+	}
+
+	@keyframes flicker {
+		from { opacity: 1; }
+		to { opacity: 0.3; }
+	}
+
+	p {
+		text-align: center;
+		color: #fff;
+		font-size: 14px;
+		border: 3px dashed #ff0000;
+		padding: 15px;
+		width: 80%;
+		margin: 20px auto;
+		background-color: rgba(255, 0, 0, 0.1);
+		box-shadow: 0 0 20px red, 0 0 30px #ff00ff;
+		animation: shake 0.5s infinite alternate;
+	}
+
+	@keyframes shake {
+		0% { transform: rotate(-1deg) translateX(-2px); }
+		100% { transform: rotate(1deg) translateX(2px); }
+	}
+
+	.lock-emoji {
+		display: inline-block;
+		animation: bounceLock 1s infinite ease-in-out;
+		font-size: 30px;
+		margin-bottom: 10px;
+	}
+
+	@keyframes bounceLock {
+		0%, 100% { transform: translateY(0); }
+		50% { transform: translateY(-10px); }
+	}
+
+	.warning-strip {
+		width: 100%;
+		background: repeating-linear-gradient(
+			45deg,
+			#ff0000,
+			#ff0000 10px,
+			#000 10px,
+			#000 20px
+		);
+		color: #fff;
+		text-align: center;
+		padding: 8px;
+		font-size: 10px;
+		animation: stripPulse 1s infinite;
+	}
+
+	@keyframes stripPulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.6; }
+	}
+</style>
+</head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>Webserv Team</center>
+</body>
+</html>
