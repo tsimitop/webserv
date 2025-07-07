@@ -6,13 +6,13 @@
 
 int main(int argc, char **argv)
 {
-	#if defined(__APPLE__)
-	{
-		std::cout << RED << "Please compile in Docker ❤️❤️❤️\n" << QUIT;
-		std::cout << BLUE << "Use: make docker_run\n" << QUIT;
-		return (0);
-	}
-	#endif
+	// #if defined(__APPLE__)
+	// {
+	// 	std::cout << RED << "Please compile in Docker ❤️❤️❤️\n" << QUIT;
+	// 	std::cout << BLUE << "Use: make docker_run\n" << QUIT;
+	// 	return (0);
+	// }
+	// #endif
 	signal(SIGINT, signalHandler);
 	signal(SIGPIPE, signalHandlerTwo);
 	HttpResponse	response;

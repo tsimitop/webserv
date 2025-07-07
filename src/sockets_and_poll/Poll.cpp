@@ -220,7 +220,7 @@ int	Poll::pollin(size_t i)
 	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
 	{
 		size_t temp_len = lengthProt(i);
-		char buffer[temp_len];
+		char buffer[temp_len]; // maybe replace with 100000 if fails to compile
 		memset(buffer, 0, temp_len); //
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
 		// std::cout << MAGENTA << buffer << QUIT << std::endl;
@@ -299,7 +299,7 @@ void		Poll::pollout(size_t i)
 		bool is_agent = YES;
 		if (!fds_with_flag_[i].final_buffer_.empty())
 			is_agent = (fds_with_flag_[i].final_buffer_.find("User-Agent: ") != std::string::npos);
-		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), 0);
+		int act = send(fds_with_flag_[i].pollfd_.fd, fds_with_flag_[i].final_resp_buffer_.c_str(), fds_with_flag_[i].final_resp_buffer_.length(), MSG_NOSIGNAL);
 		if (is_valid_cgi)
 			CgiSingleton::getInstance().remove_event(fds_with_flag_[i].pollfd_.fd);
 		if (act < 0)
