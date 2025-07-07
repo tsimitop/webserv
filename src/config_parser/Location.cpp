@@ -326,7 +326,7 @@ void							signalHandler(int singal)
 {
 	if (singal == SIGINT)
 	{
-		std::cout << GREEN << "\nSIGNAL detected\n" << QUIT;
+		std::cout << GREEN << "\nSIGINT: SIGNAL detected\n" << QUIT;
 		poll_flag = NO;
 	}
 };
@@ -334,7 +334,7 @@ void							signalHandlerTwo(int singal)
 {
 	if (singal == SIGPIPE)
 	{
-		std::cout << GREEN << "\nSIGNAL detected\n" << QUIT;
+		std::cout << GREEN << "\nSIGPIPE: SIGNAL detected\n" << QUIT;
 		poll_flag = NO;
 	}
 };
