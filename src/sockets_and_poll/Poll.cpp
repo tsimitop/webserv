@@ -219,8 +219,8 @@ int	Poll::pollin(size_t i)
 	int answer = YES;
 	if (fds_with_flag_[i].pollfd_.revents & (POLLIN))
 	{
-		size_t temp_len = lengthProt(i);
-		char buffer[temp_len]; // maybe replace with 100000 if fails to compile
+		size_t temp_len = lengthProt(i); // comment out in case of compilation failure
+		char buffer[temp_len]; // maybe replace temp_len occurences with 100000 in case of compilation failure
 		memset(buffer, 0, temp_len); //
 		int bytes = recv(fds_with_flag_[i].pollfd_.fd, buffer, temp_len, 0);
 		// std::cout << MAGENTA << buffer << QUIT << std::endl;
